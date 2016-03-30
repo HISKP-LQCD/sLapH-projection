@@ -5,6 +5,8 @@ import os
 import struct
 
 import numpy as np
+import itertools as it
+import operator
 
 import utils
 
@@ -34,43 +36,41 @@ verbose = 0
 
 ################################################################################
 
+def scalar_mul(x, y):
+  return sum(it.imap(operator.mul, x, y))
+
+def abs2(x):
+  return scalar_mul(x, x)
+
 #TODO: create np-array with all necessary momenta in z-direction -> dudek paper
 
 count = 0
-for p_cm in range(0, 5):
+for p_cm in range(0, 1):
   print 'p_cm = %i' % p_cm
+
   # create lookup table for all possible 3-momenta that can appear in our 
   # contractions
-  lookup_p3 = np.zeros((0, 3), dtype=int)
-  for px in range(-p_max, p_max+1):
-    for py in range(-p_max, p_max+1):
-      for pz in range(-p_max, p_max+1):
-        p3 = np.asarray((px, py, pz), dtype = int)
-        if np.dot(p3, p3) <= p_max:
-          lookup_p3 = np.vstack((lookup_p3, p3))
+  b = it.ifilter(lambda x: abs2(x) <= p_max, \
+                              it.product(range(-p_max, p_max+1), repeat=3))
  
   # create lookup table for all possible sums of 3-momenta that give the right 
   # center-of-mass momentum 
-  lookup_p = []
-  lookup_p_reduced = []
-  for p1 in lookup_p3:
-    for p2 in lookup_p3:
-      if ((np.dot(p1,p1) + np.dot(p2,p2)) > p_cm_max[p_cm]):
-        continue
-      if (np.dot( (p1+p2), (p1+p2)) == p_cm):
-        lookup_p.append(np.vstack((p1, p2)) )
-      if (np.array_equal((p1+p2), lookup_p3_reduced[p_cm])): 
-        if p_cm == 0 and np.array_equal(p1, p2):
-          continue
-        lookup_p_reduced.append(np.vstack((p1, p2)) )
+  d = it.product(b, repeat=2)
+  e = filter(lambda x: abs2(x[0]) + abs2(x[1]) <= p_cm_max[p_cm], d)
+  lookup_p = it.ifilter(lambda x: abs2(list(it.imap(operator.add, x[0], x[1]))) == p_cm, e)
 
-  lookup_p = np.asarray(lookup_p)
-  lookup_p_reduced = np.asarray(lookup_p_reduced)
+  lookup_p = np.asarray(list(lookup_p))
+  print lookup_p.shape
 
-  if verbose:
-    print lookup_p.shape
-    print lookup_p_reduced.shape
+  #TODO: change that to tuples
+  lookup_p_reduced = it.ifilter( \
+      lambda x: np.array_equal(np.asarray(list(it.imap(operator.add, x[0], x[1]))), \
+                               lookup_p3_reduced[p_cm]) \
+                and (abs2(list(it.imap(operator.add, x[0], x[1]))) != 0 or \
+                not np.array_equal(np.asarray(x[0]), np.asarray(x[1]))), e)
 
+  lookup_p_reduced = np.asarray(list(lookup_p_reduced))
+  print lookup_p_reduced.shape
 
   # create lookup table with all possible 3-momentum combinations that generate
   # 4pt functions with the correct center-of-mass momentum and respect momentum
@@ -214,22 +214,14 @@ for p_cm in range(0, 5):
   for i in range(0, quantum_numbers.shape[0]):
     path = './readdata/p%1i/single/%s' % \
             (p_cm, quantum_numbers[i][-1])
-#             quantum_numbers[i][0][0], quantum_numbers[i][0][1], 
-#             quantum_numbers[i][0][2], \
-#             quantum_numbers[i][1][0], quantum_numbers[i][1][1], 
-#             quantum_numbers[i][1][2], quantum_numbers[i][2],
-#             quantum_numbers[i][3][0], quantum_numbers[i][3][1], 
-#             quantum_numbers[i][3][2], \
-#             quantum_numbers[i][4][0], quantum_numbers[i][4][1], 
-#             quantum_numbers[i][4][2], quantum_numbers[i][5])
     np.save(path, data[i])
   
   # write all operators
-  path = './readdata/p%1i/C20_p%1i' % (p_cm, p_cm)
+  path = './readdata/p%1i/%s_p%1i' % (p_cm, diagram, p_cm)
   np.save(path, data)
   
   # write all quantum numbers
-  path = './readdata/p%1i/C20_p%1i_quantum_numbers' % (p_cm, p_cm)
+  path = './readdata/p%1i/%s_p%1i_quantum_numbers' % (p_cm, diagram, p_cm)
   np.save(path, quantum_numbers)
   
   print '\tfinished writing'
