@@ -1,6 +1,5 @@
 #!/usr/bin/python
 
-#itertools
 import os
 import struct
 
@@ -40,73 +39,74 @@ def scalar_mul(x, y):
 def abs2(x):
   return scalar_mul(x, x)
 
+def set_lookup_p(p_cm, diagram):
+
+  # create lookup table for all possible 3-momenta that can appear in our 
+  # contractions
+  lookup_p3 = it.ifilter(lambda x: abs2(x) <= p_max, \
+                                 it.product(range(-p_max, p_max+1), repeat=3))
+  
+  if diagram == 'C4+B':
+    lookup_p = it.ifilter(lambda (w,x,y,z): \
+               # if the sum of both momenta is the desired center of mass 
+               # momentum
+               tuple(it.imap(operator.add, w, z)) == lookup_p3_reduced[p_cm] \
+               and tuple(it.imap(operator.neg, it.imap(operator.add, x, y))) \
+                                                  == lookup_p3_reduced[p_cm] \
+               # for zero center of mass momentum omit the case were both 
+               # particles are at rest (s-wave)
+               and not (p_cm == 0 and 
+                            (tuple(w) == tuple(z) or tuple(x) == tuple(y) )) \
+               # omit cases for which both particles carry high momentum 
+               # cancelling to the desired cm-momentum
+               and (abs2(w) + abs2(z) <= p_cm_max[p_cm]) and \
+                                      (abs2(x) + abs2(y) <= p_cm_max[p_cm]), \
+                        # create lookup table with all possible combinations 
+                        # of four 3-momenta 
+                        it.product(lookup_p3, repeat=4))
+
+
+  elif diagram == 'C4+D':
+    lookup_p = it.ifilter(lambda (w,x,y,z): \
+               # if the sum of both momenta is the desired center of mass 
+               # momentum
+               tuple(it.imap(operator.add, w, y)) == lookup_p3_reduced[p_cm] \
+               and tuple(it.imap(operator.neg, it.imap(operator.add, x, z))) \
+                                                  == lookup_p3_reduced[p_cm] \
+               # for zero center of mass momentum omit the case were both 
+               # particles are at rest (s-wave)
+               and not (p_cm == 0 and 
+                            (tuple(w) == tuple(y) or tuple(x) == tuple(z) )) \
+               # omit cases for which both particles carry high momentum 
+               # cancelling to the desired cm-momentum
+               and (abs2(w) + abs2(y) <= p_cm_max[p_cm]) and \
+                                      (abs2(x) + abs2(z) <= p_cm_max[p_cm]), \
+                        # create lookup table with all possible combinations 
+                        # of four 3-momenta 
+                        it.product(lookup_p3, repeat=4))
+
+#    #direct diagram
+#    lookup_p_d = []
+#    for p_so in lookup_p:
+#      for p_si in lookup_p:
+#        if (np.array_equal(p_so[0]+p_so[1], p_si[0]+p_si[1])):
+#          lookup_p_d.append(np.vstack((p_so[0], -p_si[0], p_so[1], -p_si[1])) )
+
+  return lookup_p
+  
+ 
 #TODO: create np-array with all necessary momenta in z-direction -> dudek paper
 
-for p_cm in range(2, 3):
+for p_cm in range(0,1):
   print 'p_cm = %i' % p_cm
   for d, diagram in enumerate(diagrams):
     print '\tread diagram %s' % diagram
 
-    # create lookup table for all possible 3-momenta that can appear in our 
-    # contractions
-    lookup_p3 = it.ifilter(lambda x: abs2(x) <= p_max, \
-                                   it.product(range(-p_max, p_max+1), repeat=3))
-   
     # create lookup table with all possible 3-momentum combinations that 
     # generate 4pt functions with the correct center-of-mass momentum and 
     # respect momentum conservation
-    if diagram == 'C4+B':
-      lookup_p = it.ifilter(lambda (w,x,y,z): \
-                 # if the sum of both momenta is the desired center of mass 
-                 # momentum
-                 tuple(it.imap(operator.add, w, z)) == lookup_p3_reduced[p_cm] \
-                 and tuple(it.imap(operator.neg, it.imap(operator.add, x, y))) \
-                                                    == lookup_p3_reduced[p_cm] \
-                 # for zero center of mass momentum omit the case were both 
-                 # particles are at rest (s-wave)
-                 and not (p_cm == 0 and 
-                              (tuple(w) == tuple(z) or tuple(x) == tuple(y) )) \
-                 # omit cases for which both particles carry high momentum 
-                 # cancelling to the desired cm-momentum
-                 and (abs2(w) + abs2(z) <= p_cm_max[p_cm]) and \
-                                        (abs2(x) + abs2(y) <= p_cm_max[p_cm]), \
-                          # create lookup table with all possible combinations 
-                          # of four 3-momenta 
-                          it.product(lookup_p3, repeat=4))
-
-#      # box diagram
-#      lookup_p_b = []
-#      for p_so in lookup_p_reduced:
-#        for p_si in lookup_p_reduced:
-#          if ( (p_cm != 0) or (np.dot(p_so[0], p_so[0]) < 3 and np.dot(p_si[0], p_si[0]) < 3) ):
-#            lookup_p_b.append(np.vstack((p_so[0], -p_si[0], -p_si[1], p_so[1])) )
- 
-    elif diagram == 'C4+D':
-      lookup_p = it.ifilter(lambda (w,x,y,z): \
-                 # if the sum of both momenta is the desired center of mass 
-                 # momentum
-                 tuple(it.imap(operator.add, w, y)) == lookup_p3_reduced[p_cm] \
-                 and tuple(it.imap(operator.neg, it.imap(operator.add, x, z))) \
-                                                    == lookup_p3_reduced[p_cm] \
-                 # for zero center of mass momentum omit the case were both 
-                 # particles are at rest (s-wave)
-                 and not (p_cm == 0 and 
-                              (tuple(w) == tuple(y) or tuple(x) == tuple(z) )) \
-                 # omit cases for which both particles carry high momentum 
-                 # cancelling to the desired cm-momentum
-                 and (abs2(w) + abs2(y) <= p_cm_max[p_cm]) and \
-                                        (abs2(x) + abs2(z) <= p_cm_max[p_cm]), \
-                          # create lookup table with all possible combinations 
-                          # of four 3-momenta 
-                          it.product(lookup_p3, repeat=4))
-#      #direct diagram
-#      lookup_p_d = []
-#      for p_so in lookup_p:
-#        for p_si in lookup_p:
-#          if (np.array_equal(p_so[0]+p_so[1], p_si[0]+p_si[1])):
-#            lookup_p_d.append(np.vstack((p_so[0], -p_si[0], p_so[1], -p_si[1])) )
+    lookup_p = set_lookup_p(p_cm, diagram)
   
-   
     # calculate number of configurations
     nb_cnfg = 0
     for i in range(sta_cnfg, end_cnfg+1, del_cnfg):
@@ -158,7 +158,6 @@ for p_cm in range(2, 3):
                            p[1], np.zeros((3,)), np.asarray(5, dtype=int), \
                            p[2], np.zeros((3,)), np.asarray(5, dtype=int), \
                            p[3], np.zeros((3,)), np.asarray(5, dtype=int), name])
-    
         
         # actual reading of complex number
         read_data = np.zeros(T, dtype=np.complex)
@@ -204,10 +203,11 @@ for p_cm in range(2, 3):
     utils.ensure_dir('./readdata')
     utils.ensure_dir('./readdata/p%1i' % p_cm)
     utils.ensure_dir('./readdata/p%1i/single' % p_cm)
+    utils.ensure_dir('./readdata/p%1i/single/%s' % (p_cm, diagram))
     # write every operator seperately
     for i in range(0, quantum_numbers.shape[0]):
-      path = './readdata/p%1i/single/%s' % \
-              (p_cm, quantum_numbers[i][-1])
+      path = './readdata/p%1i/single/%s/%s' % \
+              (p_cm, diagram, quantum_numbers[i][-1])
       np.save(path, data[i])
     
     # write all operators
