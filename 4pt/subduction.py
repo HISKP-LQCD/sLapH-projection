@@ -31,12 +31,12 @@ if ( (qn_data.shape[0] != data.shape[0])):
 if p in [0]:
   irreps = [['T1']]
 
-  # get factors for the desired irreps
-  for i in irreps[-1]:
-    irreps.insert(-1,cg.coefficients(i))
+# get factors for the desired irreps
+for i in irreps[-1]:
+  irreps.insert(-1,cg.coefficients(i))
 
 correlator = []
-quantum_numbers = []
+qn_subduced = []
 for i, irrep in enumerate(irreps[:-1]):
   correlator_irrep = []
   qn_irrep = []
@@ -67,18 +67,33 @@ for i, irrep in enumerate(irreps[:-1]):
 #            print '\tinto momentum (%i,%i,%i)' % (el[0][0], el[0][1], el[0][2])
 #            print ' '
           correlator_row = np.vstack((correlator_row, subduced))
-          qn_row.append([so[0], so[1], si[0], si[1], 5, 5, irreps[-1][i] ])
+        else:
+          correlator_row = np.vstack((correlator_row, (-1)*np.ones_like(subduced) ))
+        qn_row.append([ so[0], so[1], si[0], si[1], 5, 5, irreps[-1][i] ])
             
     correlator_irrep.append(correlator_row)
     qn_irrep.append(np.asarray(qn_row))
   correlator.append(np.asarray(correlator_irrep))
-  quantum_numbers.append(np.asarray(qn_irrep))
+  qn_subduced.append(np.asarray(qn_irrep))
 
 correlator = np.asarray(correlator)
-quantum_numbers = np.asarray(quantum_numbers)
+qn_subduced = np.asarray(qn_subduced)
 
 print correlator.shape
-print quantum_numbers.shape
+print qn_subduced.shape
+
+utils.ensure_dir('./readdata')
+utils.ensure_dir('./readdata/p%1i/' % p)
+
+################################################################################
+# write data to disc
+
+# write all subduced correlators
+path = './readdata/p%1i/%s_p%1i_single_subduced' % (p, 'C4', p)
+np.save(path, correlator)
+path = './readdata/p%1i/%s_p%1i_single_subduced_quantum_numbers' % (p, 'C4', p)
+np.save(path, qn_subduced)
+ 
 
 
 

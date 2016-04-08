@@ -13,7 +13,7 @@ import utils
 ################################################################################
 bootstrap_original_data = False
 
-p = 2         # momentum
+p = 0         # momentum
 
 nb_boot = 500
 
@@ -71,8 +71,9 @@ def bootstrap(X, boot_size):
 def bootstrap_ensembles(p, nb_boot, bootstrap_original_data):
   ################################################################################
   # read original data and call bootrap procedure
+  diagram = 'C4'
+
   if bootstrap_original_data:
-    diagram = 'C4+B'
     path = './readdata/p%1i/%s_p%1i.npy' % (p, diagram, p)
     data = np.load(path)
     path = './readdata/p%1i/%s_p%1i_quantum_numbers.npy' % (p, diagram, p)
@@ -96,19 +97,19 @@ def bootstrap_ensembles(p, nb_boot, bootstrap_original_data):
   
   ################################################################################
   # read subduced data and call bootrap procedure
-#  path = './readdata/p%1i/C20_p%1i_single_subduced.npy' % (p, p)
-#  data = np.load(path)
-#  path = './readdata/p%1i/C20_p%1i_single_subduced_quantum_numbers.npy' % (p, p)
-#  qn_subduced = np.load(path)
-#  if ( (qn_subduced.shape[0] != data.shape[0])):
-#    print 'Bootstrapped operators do not aggree with expected operators'
-#    exit(0)
-#  
-#  binned_data = prebinning(data, 50)
-#  print 'Bootstrapping subduced data:'
-#  boot = bootstrap(binned_data, 100)
-#  print boot.shape
-#  print '\tfinished bootstrapping subduced operators'
+  path = './readdata/p%1i/%s_p%1i_single_subduced.npy' % (p, diagram, p)
+  data = np.load(path)
+  path = './readdata/p%1i/%s_p%1i_single_subduced_quantum_numbers.npy' % (p, diagram, p)
+  qn_subduced = np.load(path)
+  if ( (qn_subduced.shape[0] != data.shape[0])):
+    print 'Bootstrapped operators do not aggree with expected operators'
+    exit(0)
+  
+  binned_data = prebinning(data, nb_boot)
+  print 'Bootstrapping subduced data:'
+  boot = bootstrap(binned_data, nb_boot)
+  print boot.shape
+  print '\tfinished bootstrapping subduced operators'
   
   ################################################################################
   # Write data to disc ###########################################################
@@ -153,11 +154,11 @@ def bootstrap_ensembles(p, nb_boot, bootstrap_original_data):
   ################################################################################
   # write all subduced correlators
   
-#  path = './bootdata/p%1i/C20_p%1i_single_subduced' % (p, p)
-#  np.save(path, boot)
-#  path = './bootdata/p%1i/C20_p%1i_single_subduced_quantum_numbers' % (p, p)
-#  np.save(path, qn_subduced)
-#   
+  path = './bootdata/p%1i/%s_p%1i_single_subduced' % (p, diagram, p)
+  np.save(path, boot)
+  path = './bootdata/p%1i/%s_p%1i_single_subduced_quantum_numbers' % (p, diagram, p)
+  np.save(path, qn_subduced)
+   
 #  # write means over all operators subducing into same irrep
 #  if p not in [1,3,4]:
 #    path = './bootdata/p%1i/C20_p%1i_avg_subduced' % (p, p)
@@ -205,4 +206,4 @@ def bootstrap_ensembles(p, nb_boot, bootstrap_original_data):
 #  
 #  print '\tfinished writing'
 
-bootstrap_ensembles(2, 500, True)
+bootstrap_ensembles(0, 500, False)

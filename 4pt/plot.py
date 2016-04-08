@@ -326,6 +326,113 @@ def plot_grouped(mean_real, err_real, mean_imag, err_imag, quantum_numbers, gamm
 
   return 
 
+################################################################################
+def plot_avg(mean_sin, err_sin, qn_sin, pdfplot):
+
+  cmap_brg = plt.cm.brg(np.asarray(range(0, qn_sin.shape[2])) * \
+                                   256/(qn_sin.shape[2]-1))
+
+  for i, irrep in enumerate(qn_sin):
+    for r, row in enumerate(irrep):
+      print 'plot row %i of irrep %s' % (r, irrep[r,0,-1])
+
+      shift = 1./3/row.shape[0]
+
+      # set plot title, labels etc.
+#      plt.title(r'$%s$ - $%s$ Operators subduced into $p = %i$ under $%s$ ' \
+#                 'irrep' % \
+#                  (irrep_gamma[0,-3], irrep_gamma[0,-2], p, irrep_gamma[0,-1]),\
+#                fontsize=12)
+#      plt.xlabel(r'$t/a$', fontsize=12)
+#      plt.ylabel(r'$C_2^0(t/a)$', fontsize=12)
+  
+      for so in [1,2]:
+        for si in [1,2]:
+          for op in range(0, row.shape[0]):
+            if np.sum(np.square(row[op][0])) == so and np.sum(np.square(row[op][1])) == so:
+              if np.sum(np.square(row[op][2])) == si and np.sum(np.square(row[op][3])) == si:
+  
+        #        label = r'$p_{so} = (%2i,%2i,%2i)$' % (np.int(irrep_gamma[op][0]), \
+        #                         np.int(irrep_gamma[op][1]), np.int(irrep_gamma[op][2]))
+        #        label = r'$\mu = %i$' % op
+                label = r'$p_{so} = (%2i,%2i,%2i), (%2i,%2i,%2i)  ' \
+                          'p_{si} = (%2i,%2i,%2i), (%2i,%2i,%2i)$' % \
+                          (row[op][0][0], row[op][0][1], row[op][0][2], \
+                           row[op][1][0], row[op][1][1], row[op][1][2], \
+                           row[op][2][0], row[op][2][1], row[op][2][2], \
+                           row[op][3][0], row[op][3][1], row[op][3][2])
+        
+                # prepare data for plotting
+                # TODO: put that in subduction
+                plot = (-1)*mean_sin[i,r,op,:23]
+        #        if j == 1 or j == 6:
+        #          plot = 2*mean_sin[i,j,op,:23]
+               
+                plt.yscale('log')
+                # plotting single correlators subduced into irrep
+        #        plt.errorbar(np.asarray(range(0, mean_sin.shape[-1]))+op*shift, plot, err_sin[i,j,op], \
+                plt.errorbar(np.asarray(range(0, 23))+op*shift, plot, err_sin[i,r,op,:23], \
+                             fmt=symbol[op%len(symbol)], color=cmap_brg[op], \
+                             label=label, markersize=3, capsize=3, capthick=0.5, \
+                             elinewidth=0.5, markeredgecolor=cmap_brg[op], \
+                                                                        linewidth='0.0')
+
+#      if plot_mean == True:
+#        # prepare data for plotting
+#        plot = -2*mean_avg[i,j]
+#        if j == 1 or j == 6:
+#          plot = 2*mean_avg[i,j]
+#  
+#        plt.yscale('log')
+#  
+#        # plotting average for irrep
+#        plt.errorbar(range(0, mean_avg.shape[-1]), plot, err_avg[i,j], \
+#                     fmt='o', color='black', label=r'$avg$', \
+#                     markersize=3, capsize=3, capthick=0.75, elinewidth=0.75, \
+#                                      markeredgecolor='black', linewidth='0.0')
+       
+          plt.legend(numpoints=1, loc=1, fontsize=6)
+          pdfplot.savefig()
+          plt.clf()
+  
+#  if plot_mean == True:
+#    # plot averages from all irreps into one plot
+#    cmap_brg = plt.cm.brg(np.asarray(range(0, qn_avg.shape[0]*qn_avg.shape[1])) *\
+#                                     224/(qn_avg.shape[0]*qn_avg.shape[1]-1))
+#  
+#    plt.title(r'Averages of operators subduced into $p = %i$' % p, fontsize=12)
+#    plt.xlabel(r'$t/a$', fontsize=12)
+#    plt.ylabel(r'$C_2^0(t/a)$', fontsize=12)
+#  
+#    for i in range(0, qn_avg.shape[0]):
+#      for j in range(0, qn_avg.shape[1]):
+#        # index for cmap
+#        c = i*qn_avg.shape[1]+j
+#        label = r'$%s \ %s - %s$' % \
+#                                  (qn_avg[i,j,-1], qn_avg[i,j,-3], qn_avg[i,j,-2])
+#  
+#        # in overview plot only plot diagonal elements
+#        if j not in [0,4,8]:
+#          continue
+#  
+#        # prepare data for plotting
+#        plot = -2*mean_avg[i,j]
+#        if j == 1 or j == 6:
+#          plot = 2*mean_avg[i,j]
+#  
+#        plt.yscale('log')
+#        plt.errorbar(range(0, mean_avg.shape[-1]), plot/plot[6], \
+#                     err_avg[i,j]/plot[6], fmt='o', color=cmap_brg[c], \
+#                     label=label, markersize=3, capsize=3, capthick=0.75, \
+#                     elinewidth=0.75, markeredgecolor=cmap_brg[c], \
+#                                                                  linewidth='0.0')
+#    plt.legend(numpoints=1, loc=5, fontsize=6)
+#    pdfplot.savefig()
+#    plt.clf()
+ 
+  return
+
+
 
 #################################################################################
 def plot_avg_and_gevp(mean_avg, err_avg, qn_avg, mean_gevp, err_gevp, qn_gevp, pdfplot):
@@ -447,9 +554,10 @@ def plot_mass(avg, qn_avg, pdfplot):
 ################################################################################
 # read data
 
-for p in range(2,3):
+for p in [0]:
+
   # bootstrapped correlators
-  diagram = 'C4+B'
+  diagram = 'C4'
   filename = './bootdata/p%1i/%s_p%1i_real.npy' % (p, diagram, p)
   data = np.load(filename)
   mean_real, err_real = mean_error_print(data)
@@ -469,7 +577,21 @@ for p in range(2,3):
     exit(0)
   
   print qn.shape
+
+  # subduced correlators
+  filename = './bootdata/p%1i/%s_p%1i_single_subduced.npy' % (p, diagram, p)
+  data = np.load(filename)
+  mean_sub_sin, err_sub_sin = mean_error_print(data)
   
+  filename = './bootdata/p%1i/%s_p%1i_single_subduced_quantum_numbers.npy' % \
+                                                                 (p, diagram, p)
+  qn_sub_sin = np.load(filename)
+  if ( (qn_sub_sin.shape[0] != mean_sub_sin.shape[0]) ):
+    print 'Bootstrapped operators do not aggree with expected operators'
+    exit(0)
+
+  print qn_sub_sin.shape
+
  
   ################################################################################
   # pick a cmap and get the colors. cool (blueish) for real, autumn (redish) for
@@ -487,9 +609,14 @@ for p in range(2,3):
 
   utils.ensure_dir('./plots')
 
-  plot_path = './plots/Correlators_single_p%1i.pdf' % p
+#  plot_path = './plots/Correlators_single_p%1i.pdf' % p
+#  pdfplot = PdfPages(plot_path)
+#  plot_single(mean_real, err_real, mean_imag, err_imag, qn, pdfplot)
+#  pdfplot.close()
+
+  plot_path = './plots/Correlators_avg_subduced_p%1i.pdf' % p
   pdfplot = PdfPages(plot_path)
-  plot_single(mean_real, err_real, mean_imag, err_imag, qn, pdfplot)
+  plot_avg(mean_sub_sin, err_sub_sin, qn_sub_sin, pdfplot)
   pdfplot.close()
 
 #  plot_path = './plots/Correlators_grouped_p%1i.pdf' % p
