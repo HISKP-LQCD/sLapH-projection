@@ -94,7 +94,24 @@ def set_lookup_p(p_cm, diagram):
 
   return lookup_p
   
- 
+def set_qn(p, name, diagram):
+
+  # switch momenta so that the first two momenta are always at the source and
+  # the last two at sink, independent of the quark line flow
+  if diagram == 'C4+B':
+    return [p[0], np.zeros((3,)), np.asarray(5, dtype=int), \
+            p[3], np.zeros((3,)), np.asarray(5, dtype=int), \
+            p[1], np.zeros((3,)), np.asarray(5, dtype=int), \
+            p[2], np.zeros((3,)), np.asarray(5, dtype=int), name]
+  elif diagram == 'C4+D':
+    return [p[0], np.zeros((3,)), np.asarray(5, dtype=int), \
+            p[2], np.zeros((3,)), np.asarray(5, dtype=int), \
+            p[1], np.zeros((3,)), np.asarray(5, dtype=int), \
+            p[3], np.zeros((3,)), np.asarray(5, dtype=int), name]
+  else:
+    print 'in set_qn: diagram unknown! Quantum numbers corrupted.'
+  return
+
 #TODO: create np-array with all necessary momenta in z-direction -> dudek paper
 
 for p_cm in range(0,1):
@@ -154,10 +171,7 @@ for p_cm in range(0,1):
  
         # set up quantum numbers and reference shape in first iteration
         if cnfg == 0:
-          ensemble_data.append([p[0], np.zeros((3,)), np.asarray(5, dtype=int), \
-                           p[1], np.zeros((3,)), np.asarray(5, dtype=int), \
-                           p[2], np.zeros((3,)), np.asarray(5, dtype=int), \
-                           p[3], np.zeros((3,)), np.asarray(5, dtype=int), name])
+          ensemble_data.append(set_qn(p, name, diagram))
         
         # actual reading of complex number
         read_data = np.zeros(T, dtype=np.complex)
