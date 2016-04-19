@@ -17,17 +17,21 @@ p = 0         # momentum
 
 nb_boot = 500
 
+verbose = 0
+
 ################################################################################
 # Functions ####################################################################
 
 ################################################################################
 # prebinning
 def prebinning(X, binsize):
-  print X.shape
+  if verbose:
+    print X.shape
   nb_bins = int(X.shape[-1]/binsize)
   if X.shape[-1] % binsize > 0:
     nb_bins = nb_bins+1
-  print nb_bins
+  if verbose:
+    print nb_bins
   bins = np.zeros(X[...,0].shape +  (nb_bins,))
   for i in range(0, nb_bins-1):
     bins[...,i] = np.mean(X[...,i*binsize:(i+1)*binsize], axis=-1)
@@ -71,7 +75,7 @@ def bootstrap(X, boot_size):
 def bootstrap_ensembles(p, nb_boot, bootstrap_original_data):
   ################################################################################
   # read original data and call bootrap procedure
-  diagram = 'C4'
+  diagram = 'C4+B'
 
   if bootstrap_original_data:
     path = './readdata/p%1i/%s_p%1i.npy' % (p, diagram, p)
@@ -86,7 +90,7 @@ def bootstrap_ensembles(p, nb_boot, bootstrap_original_data):
     print 'Bootstrapping original data for p = %1i. Real part:' % p
     boot_real = bootstrap(binned_data, nb_boot)
     print 'Bootstrapping original data. Imaginary part:'
-    binned_data = prebinning(data.imag, 5)
+    binned_data = prebinning(data.imag, 1)
     boot_imag = bootstrap(binned_data, nb_boot)
     print boot_real.shape
     
@@ -105,9 +109,14 @@ def bootstrap_ensembles(p, nb_boot, bootstrap_original_data):
     print 'Bootstrapped operators do not aggree with expected operators'
     exit(0)
   
-  binned_data = prebinning(data, nb_boot)
   print 'Bootstrapping subduced data:'
-  boot = bootstrap(binned_data, nb_boot)
+  boot = []
+  for irrep in data:
+    for mom in irrep:
+      for row in mom:
+        binned_data = prebinning(row, 1)
+        boot.append(bootstrap(binned_data, nb_boot))
+  boot = np.asarray(boot).reshape(data.shape)
   print boot.shape
   print '\tfinished bootstrapping subduced operators'
   
@@ -133,32 +142,56 @@ def bootstrap_ensembles(p, nb_boot, bootstrap_original_data):
     np.save(path, qn_data)
   
     # write every operator seperately
-    for i in range(0, qn_data.shape[0]):
-      path = './bootdata/p%1i/single/C20_single_p%i%i%i.d%i%i%i.g%i_' \
-             'p%i%i%i.d%i%i%i.g%i_real' % \
-              (p, qn_data[i][0][0], qn_data[i][0][1], qn_data[i][0][2], \
-               qn_data[i][1][0], qn_data[i][1][1], qn_data[i][1][2], \
-               qn_data[i][2], qn_data[i][3][0], qn_data[i][3][1], \
-               qn_data[i][3][2], qn_data[i][4][0], qn_data[i][4][1], \
-               qn_data[i][4][2], qn_data[i][5])
-      np.save(path, boot_real[i])
-      path = './bootdata/p%1i/single/C20_single_p%i%i%i.d%i%i%i.g%i_' \
-             'p%i%i%i.d%i%i%i.g%i_imag' % \
-              (p, qn_data[i][0][0], qn_data[i][0][1], qn_data[i][0][2], \
-               qn_data[i][1][0], qn_data[i][1][1], qn_data[i][1][2], \
-               qn_data[i][2], qn_data[i][3][0], qn_data[i][3][1], \
-               qn_data[i][3][2], qn_data[i][4][0], qn_data[i][4][1], \
-               qn_data[i][4][2], qn_data[i][5])
-      np.save(path, boot_imag[i])
+#    for i in range(0, qn_data.shape[0]):
+#      path = './bootdata/p%1i/single/C20_single_p%i%i%i.d%i%i%i.g%i_' \
+#             'p%i%i%i.d%i%i%i.g%i_real' % \
+#              (p, qn_data[i][0][0], qn_data[i][0][1], qn_data[i][0][2], \
+#               qn_data[i][1][0], qn_data[i][1][1], qn_data[i][1][2], \
+#               qn_data[i][2], qn_data[i][3][0], qn_data[i][3][1], \
+#               qn_data[i][3][2], qn_data[i][4][0], qn_data[i][4][1], \
+#               qn_data[i][4][2], qn_data[i][5])
+#      np.save(path, boot_real[i])
+#      path = './bootdata/p%1i/single/C20_single_p%i%i%i.d%i%i%i.g%i_' \
+#             'p%i%i%i.d%i%i%i.g%i_imag' % \
+#              (p, qn_data[i][0][0], qn_data[i][0][1], qn_data[i][0][2], \
+#               qn_data[i][1][0], qn_data[i][1][1], qn_data[i][1][2], \
+#               qn_data[i][2], qn_data[i][3][0], qn_data[i][3][1], \
+#               qn_data[i][3][2], qn_data[i][4][0], qn_data[i][4][1], \
+#               qn_data[i][4][2], qn_data[i][5])
+#      np.save(path, boot_imag[i])
    
   ################################################################################
   # write all subduced correlators
   
-  path = './bootdata/p%1i/%s_p%1i_single_subduced' % (p, diagram, p)
+  path = './bootdata/p%1i/%s_p%1i_subduced' % (p, diagram, p)
   np.save(path, boot)
-  path = './bootdata/p%1i/%s_p%1i_single_subduced_quantum_numbers' % (p, diagram, p)
+  path = './bootdata/p%1i/%s_p%1i_subduced_quantum_numbers' % (p, diagram, p)
   np.save(path, qn_subduced)
-   
+
+  # write means over all operators subducing into same irrep
+  avg = np.zeros_like(boot)
+  qn_avg = np.zeros_like(qn_subduced)
+  for i in range(boot.shape[0]):
+    for k in range(boot.shape[1]):
+      for r in range(boot.shape[2]):
+        avg[i,k,r] = np.sum(boot[i,k,r], axis=0) 
+        qn_avg[i,k,r] = qn_subduced[i,k,r][0,4:]
+  avg = np.asarray(avg.tolist())
+  qn_avg = np.asarray(qn_avg.tolist())
+  path = './bootdata/p%1i/%s_p%1i_subduced_avg_vecks' % (p, diagram, p)
+  np.save(path, avg)
+  path = './bootdata/p%1i/%s_p%1i_subduced_avg_vecks_quantum_numbers' % (p, diagram, p)
+  np.save(path, qn_avg)
+
+  avg = np.mean(avg, axis=-3)
+  path = './bootdata/p%1i/%s_p%1i_subduced_avg_rows' % (p, diagram, p)
+  np.save(path, avg)
+
+  qn_avg = qn_avg[...,0,:]
+  path = './bootdata/p%1i/%s_p%1i_subduced_avg_rows_quantum_numbers' % (p, diagram, p)
+  np.save(path, qn_avg)
+
+  
 #  # write means over all operators subducing into same irrep
 #  if p not in [1,3,4]:
 #    path = './bootdata/p%1i/C20_p%1i_avg_subduced' % (p, p)

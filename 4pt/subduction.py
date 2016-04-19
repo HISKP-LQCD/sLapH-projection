@@ -19,7 +19,7 @@ import utils as utils
 p = 0
 p_max = 4
 
-diagram = 'C4+D'
+diagram = 'C4+B'
 
 ################################################################################
 # read original data and call bootrap procedure
@@ -120,20 +120,20 @@ for i, irrep in enumerate(irreps[:-1]):
                 continue
               subduced[0] = subduced[0] + factor.real * data[op].real + \
                                                          factor.imag * data[op].imag
-#            if(subduced.any() != 0):
+            if(subduced.any() != 0):
     #          if verbose:
     #            print '\tinto momentum (%i,%i,%i)' % (el[0][0], el[0][1], el[0][2])
     #            print ' '
             # if correlator is 0, still stack subduced
-            correlator_row = np.vstack((correlator_row, subduced))
+              correlator_row = np.vstack((correlator_row, subduced))
 #            else:
 #              correlator_row = np.vstack((correlator_row, (-1)*np.zeros_like(subduced) ))
-            qn_row.append([ so_3mom[0], so_3mom[1], si_3mom[0], si_3mom[1], so_mom, si_mom, 5, 5, irreps[-1][i] ])
+              qn_row.append([ so_3mom[0], so_3mom[1], si_3mom[0], si_3mom[1], so_mom, si_mom, 5, 5, irreps[-1][i] ])
                 
         correlator_mom.append(correlator_row)
-        qn_mom.append(qn_row)
+        qn_mom.append(np.asarray(qn_row))
       correlator_mom = np.asarray(correlator_mom)
-      if correlator_mom.any() != 0:
+      if(np.any(correlator_mom != 0)):
         correlator_irrep.append(correlator_mom)
         qn_irrep.append(np.asarray(qn_mom))
   correlator.append(np.asarray(correlator_irrep))
