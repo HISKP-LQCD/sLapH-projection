@@ -75,7 +75,7 @@ def bootstrap(X, boot_size):
 def bootstrap_ensembles(p, nb_boot, bootstrap_original_data):
   ################################################################################
   # read original data and call bootrap procedure
-  diagram = 'C4'
+  diagram = 'C3+'
 
   if bootstrap_original_data:
     path = './readdata/p%1i/%s_p%1i.npy' % (p, diagram, p)
@@ -112,10 +112,11 @@ def bootstrap_ensembles(p, nb_boot, bootstrap_original_data):
   print 'Bootstrapping subduced data:'
   boot = []
   for irrep in data:
-    for mom in irrep:
-      for row in mom:
-        binned_data = prebinning(row, 1)
-        boot.append(bootstrap(binned_data, nb_boot))
+    for gamma in irrep:
+      for mom in gamma:
+        for row in mom:
+          binned_data = prebinning(row, 1)
+          boot.append(bootstrap(binned_data, nb_boot))
   boot = np.asarray(boot).reshape(data.shape)
   print boot.shape
   print '\tfinished bootstrapping subduced operators'
@@ -172,10 +173,11 @@ def bootstrap_ensembles(p, nb_boot, bootstrap_original_data):
   avg = np.zeros_like(boot)
   qn_avg = np.zeros_like(qn_subduced)
   for i in range(boot.shape[0]):
-    for k in range(boot.shape[1]):
-      for r in range(boot.shape[2]):
-        avg[i,k,r] = np.sum(boot[i,k,r], axis=0) 
-        qn_avg[i,k,r] = qn_subduced[i,k,r][0,4:]
+    for g in range(boot.shape[1]):
+      for k in range(boot.shape[2]):
+        for r in range(boot.shape[3]):
+          avg[i,g,k,r] = np.sum(boot[i,g,k,r], axis=0) 
+          qn_avg[i,g,k,r] = qn_subduced[i,g,k,r][0,4:]
   avg = np.asarray(avg.tolist())
   qn_avg = np.asarray(qn_avg.tolist())
   path = './bootdata/p%1i/%s_p%1i_subduced_avg_vecks' % (p, diagram, p)

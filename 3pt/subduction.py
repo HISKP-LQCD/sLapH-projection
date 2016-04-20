@@ -7,7 +7,8 @@ import cmath
 import operator
 import collections
 
-import clebsch_gordan as cg
+import clebsch_gordan_2pt as cg_2pt
+import clebsch_gordan_4pt as cg_4pt
 import utils as utils
 
 # loop over irrep
@@ -19,7 +20,16 @@ import utils as utils
 p = 0
 p_max = 4
 
-diagram = 'C4'
+diagram = 'C3+'
+
+# Operators entering the Gevp. Last entry must contain the name in LaTeX 
+# compatible notation for plot labels
+gamma_i =   [1, 2, 3, '\gamma_i']
+gamma_0i =  [10, 11, 12, '\gamma_0\gamma_i']
+gamma_50i = [15, 14, 13, '\gamma_5\gamma_0\gamma_i']
+
+gammas = [gamma_i, gamma_0i, gamma_50i]
+gamma_for_filenames = ['gi', 'g0gi', 'g5g0gi']
 
 ################################################################################
 # read original data and call bootrap procedure
@@ -78,47 +88,60 @@ lookup_p = list(it.ifilterfalse(lambda x: x[0] < x[1], \
 #  print d
 
 if p in [0]:
-  irreps = [['T1']]
+  irreps_2pt = [['T1']]
+  irreps_4pt = [['T1']]
 else:
-  irreps = [[]]
+  irreps_2pt = [[]]
+  irreps_4pt = [[]]
+
 
 # get factors for the desired irreps
-for i in irreps[-1]:
-  irreps.insert(-1,cg.coefficients(i))
+for i in irreps_2pt[-1]:
+  irreps_2pt.insert(-1,cg_2pt.coefficients(i))
+for i in irreps_4pt[-1]:
+  irreps_4pt.insert(-1,cg_4pt.coefficients(i))
+if len(irreps_4pt) != len(irreps_2pt):
+  print 'in subduction.py: irrep for 2pt and 4pt functions contain ' \
+        'different number of rows'
 
 correlator = []
 qn_subduced = []
-for i, irrep in enumerate(irreps[:-1]):
+for i, (irrep_so, irrep_si) in enumerate(zip(irreps_4pt[:-1], irreps_2pt[:-1])):
   correlator_irrep = []
   qn_irrep = []
-  for so_mom in lookup_p:
-    for si_mom in lookup_p:
+  for gamma in gammas:
+    correlator_gamma = []
+    qn_gamma = []
+    for so_mom in lookup_p:
       correlator_mom = []
       qn_mom = []
-      for row in irrep:
+      for row in range(len(irrep_so)):
     
         correlator_row = np.zeros((0, ) + data[0].shape, dtype=np.double)
         qn_row = []
     
-        for so_3mom in row:
-          for si_3mom in row:
-            if not (((np.dot(so_3mom[0], so_3mom[0]), np.dot(so_3mom[1], so_3mom[1])) == so_mom) \
-                   and ((np.dot(si_3mom[0], si_3mom[0]), np.dot(si_3mom[1], si_3mom[1])) == si_mom)):
+        for so_3mom in irrep_so[row]:
+          for si_3mom in irrep_si[row]:
+            if not (((np.dot(so_3mom[0], so_3mom[0]), \
+                                    np.dot(so_3mom[1], so_3mom[1])) == so_mom) \
+                   and (np.dot(si_3mom[0], si_3mom[0]) == p)):
               continue
-  
+    
             subduced = np.zeros((1,) + data[0].shape)
     
             for op, qn in enumerate(qn_data):
               if not ((np.array_equal(so_3mom[0], qn[0]) and \
-                                                     np.array_equal(so_3mom[1], qn[3])) \
-                      and (np.array_equal((-1)*si_3mom[0], qn[6]) and \
-                                                np.array_equal((-1)*si_3mom[1], qn[9]))):
+                                                     np.array_equal(so_3mom[1], qn[6])) \
+                     and (np.array_equal((-1)*si_3mom[0], qn[3]))):
                 continue
-   
-              factor = so_3mom[-1] * np.conj(si_3mom[-1])
-              if factor == 0:
-                continue
-              subduced[0] = subduced[0] + factor.real * data[op].real + \
+              for g_si in range(0,3):
+                if not (gamma[g_si] == qn[5]):
+                  continue
+    
+                factor = so_3mom[-1] * np.conj(si_3mom[g_si+1])
+                if factor == 0:
+                  continue
+                subduced[0] = subduced[0] + factor.real * data[op].real + \
                                                          factor.imag * data[op].imag
             if(subduced.any() != 0):
     #          if verbose:
@@ -128,14 +151,17 @@ for i, irrep in enumerate(irreps[:-1]):
               correlator_row = np.vstack((correlator_row, subduced))
 #            else:
 #              correlator_row = np.vstack((correlator_row, (-1)*np.zeros_like(subduced) ))
-              qn_row.append([ so_3mom[0], so_3mom[1], si_3mom[0], si_3mom[1], so_mom, si_mom, 5, 5, irreps[-1][i] ])
+              qn_row.append([ so_3mom[0], so_3mom[1], si_3mom[0], \
+                                          so_mom, p, 5, gamma[g_si], irreps_4pt[-1][i] ])
                 
         correlator_mom.append(correlator_row)
         qn_mom.append(np.asarray(qn_row))
       correlator_mom = np.asarray(correlator_mom)
       if(np.any(correlator_mom != 0)):
-        correlator_irrep.append(correlator_mom)
-        qn_irrep.append(np.asarray(qn_mom))
+        correlator_gamma.append(correlator_mom)
+        qn_gamma.append(np.asarray(qn_mom))
+    correlator_irrep.append(correlator_gamma)
+    qn_irrep.append(np.asarray(qn_gamma))
   correlator.append(np.asarray(correlator_irrep))
   qn_subduced.append(np.asarray(qn_irrep))
 
@@ -145,10 +171,11 @@ qn_subduced = np.asarray(qn_subduced)
 print correlator.shape
 print qn_subduced.shape
 
-#for i in correlator:
-#  for j in i:
-#    for k in j:
-#      print k.shape
+#for i in range(correlator.shape[0]):
+#  for j in range(correlator[i].shape[0]):
+#    for k in range(correlator[i,j].shape[0]):
+#      for l in range(correlator[i,j,k].shape[0]):
+#        print i, j, k, l, correlator[i,j,k,l].shape
 
 utils.ensure_dir('./readdata')
 utils.ensure_dir('./readdata/p%1i/' % p)
