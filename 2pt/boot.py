@@ -13,9 +13,9 @@ import utils
 ################################################################################
 bootstrap_original_data = False
 
-p = 2         # momentum
+p = 0         # momentum
 
-nb_boot = 2000
+nb_boot = 500
 
 ################################################################################
 # Functions ####################################################################
@@ -103,9 +103,9 @@ def bootstrap_ensembles(p, nb_boot, bootstrap_original_data):
     print 'Bootstrapped operators do not aggree with expected operators'
     exit(0)
   
-  binned_data = prebinning(data, 50)
+  binned_data = prebinning(data, 1)
   print 'Bootstrapping subduced data:'
-  boot = bootstrap(binned_data, 100)
+  boot = bootstrap(binned_data, nb_boot)
   print boot.shape
   print '\tfinished bootstrapping subduced operators'
   
@@ -163,45 +163,45 @@ def bootstrap_ensembles(p, nb_boot, bootstrap_original_data):
     np.save(path, np.mean(boot, axis=2) )
     path = './bootdata/p%1i/C20_p%1i_avg_subduced_quantum_numbers' % (p, p)
     np.save(path, qn_subduced[...,0,-3:])
-  else:
-    # if p in [1,3,4], the 2dim E2 irrep appears. Both rows can be averaged, thus
-    # the average is taken and appended in the end for plotting
-    path = './bootdata/p%1i/C20_p%1i_avg_subduced' % (p, p)
-    E2 = np.zeros((1,) + np.mean(boot, axis=2)[0].shape)
-    for j in range(0,boot.shape[1]):
-      E2[0,j] = np.mean(np.vstack((boot[1,j], boot[2,j])), axis=0)
-    np.save(path, np.vstack((np.mean(boot, axis=2), E2 )) )
-    path = './bootdata/p%1i/C20_p%1i_avg_subduced_quantum_numbers' % (p, p)
-    E2_qn = np.zeros((1,qn_subduced.shape[1], qn_subduced[...,-3:].shape[-1]), \
-                                                                  dtype=((str,256)))
-    E2_qn[0] = qn_subduced[0,:,0,-3:]
-    for j in range(0,boot.shape[1]):
-      E2_qn[0,j,-1] = 'E2'
-    np.save(path, np.vstack((qn_subduced[...,0,-3:], E2_qn)) )
-  
-  ################################################################################
-  # write the subduced correlators for each irrep and gamma seperately
-  for i in ( range(0, boot.shape[0]) ):
-    for j in ( range(0, boot.shape[1]) ):
-      path = './bootdata/p%1i/single/C20_p%1i_single_%s_%s_%s' % (p, p, \
-              qn_subduced[i,j,0,-3], qn_subduced[i,j,0,-2], qn_subduced[i,j,0,-1])
-      np.save(path, boot[i,j])
-      path = './bootdata/p%1i/single/C20_p%1i_single_%s_%s_%s_quantum_numbers' % \
-              (p, p, qn_subduced[i,j,0,-3], qn_subduced[i,j,0,-2], 
-                                                            qn_subduced[i,j,0,-1])
-      np.save(path, qn_subduced[i,j])
-  
-  # write means over all operators subducing into same irrep for each irrep and 
-  # gamma seperately
-  for i in ( range(0, boot.shape[0]) ):
-    for j in ( range(0, boot.shape[1]) ):
-      path = './bootdata/p%1i/avg/C20_p%1i_avg_%s_%s_%s' % (p, p, \
-              qn_subduced[i,j,0,-3], qn_subduced[i,j,0,-2], qn_subduced[i,j,0,-1])
-      np.save(path, np.mean(boot[i,j], axis=0) )
-      path = './bootdata/p%1i/avg/C20_p%1i_avg_%s_%s_%s_quantum_numbers' % (p, p, \
-              qn_subduced[i,j,0,-3], qn_subduced[i,j,0,-2], qn_subduced[i,j,0,-1])
-      np.save(path, qn_subduced[i,j,0,-1])
+#  else:
+#    # if p in [1,3,4], the 2dim E2 irrep appears. Both rows can be averaged, thus
+#    # the average is taken and appended in the end for plotting
+#    path = './bootdata/p%1i/C20_p%1i_avg_subduced' % (p, p)
+#    E2 = np.zeros((1,) + np.mean(boot, axis=2)[0].shape)
+#    for j in range(0,boot.shape[1]):
+#      E2[0,j] = np.mean(np.vstack((boot[1,j], boot[2,j])), axis=0)
+#    np.save(path, np.vstack((np.mean(boot, axis=2), E2 )) )
+#    path = './bootdata/p%1i/C20_p%1i_avg_subduced_quantum_numbers' % (p, p)
+#    E2_qn = np.zeros((1,qn_subduced.shape[1], qn_subduced[...,-3:].shape[-1]), \
+#                                                                  dtype=((str,256)))
+#    E2_qn[0] = qn_subduced[0,:,0,-3:]
+#    for j in range(0,boot.shape[1]):
+#      E2_qn[0,j,-1] = 'E2'
+#    np.save(path, np.vstack((qn_subduced[...,0,-3:], E2_qn)) )
+#  
+#  ################################################################################
+#  # write the subduced correlators for each irrep and gamma seperately
+#  for i in ( range(0, boot.shape[0]) ):
+#    for j in ( range(0, boot.shape[1]) ):
+#      path = './bootdata/p%1i/single/C20_p%1i_single_%s_%s_%s' % (p, p, \
+#              qn_subduced[i,j,0,-3], qn_subduced[i,j,0,-2], qn_subduced[i,j,0,-1])
+#      np.save(path, boot[i,j])
+#      path = './bootdata/p%1i/single/C20_p%1i_single_%s_%s_%s_quantum_numbers' % \
+#              (p, p, qn_subduced[i,j,0,-3], qn_subduced[i,j,0,-2], 
+#                                                            qn_subduced[i,j,0,-1])
+#      np.save(path, qn_subduced[i,j])
+#  
+#  # write means over all operators subducing into same irrep for each irrep and 
+#  # gamma seperately
+#  for i in ( range(0, boot.shape[0]) ):
+#    for j in ( range(0, boot.shape[1]) ):
+#      path = './bootdata/p%1i/avg/C20_p%1i_avg_%s_%s_%s' % (p, p, \
+#              qn_subduced[i,j,0,-3], qn_subduced[i,j,0,-2], qn_subduced[i,j,0,-1])
+#      np.save(path, np.mean(boot[i,j], axis=0) )
+#      path = './bootdata/p%1i/avg/C20_p%1i_avg_%s_%s_%s_quantum_numbers' % (p, p, \
+#              qn_subduced[i,j,0,-3], qn_subduced[i,j,0,-2], qn_subduced[i,j,0,-1])
+#      np.save(path, qn_subduced[i,j,0,-1])
   
   print '\tfinished writing'
 
-bootstrap_ensembles(2, 2000, True)
+bootstrap_ensembles(0, 500, True)

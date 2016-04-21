@@ -16,7 +16,7 @@ import irreps as representation
 
 ################################################################################
 T = 48
-p = 2
+p = 0
 
 verbose = 1
   
@@ -798,7 +798,7 @@ def plot_mass(avg, qn_avg, pdfplot):
 ################################################################################
 # read data
 
-for p in range(2,3):
+for p in range(0,1):
   # bootstrapped correlators
   filename = './bootdata/p%1i/C20_p%1i_real.npy' % (p, p)
   data = np.load(filename)
@@ -878,23 +878,23 @@ for p in range(2,3):
 #  plot_single(mean_real, err_real, mean_imag, err_imag, qn, pdfplot)
 #  pdfplot.close()
 
-#  plot_path = './plots/Correlators_grouped_p%1i.pdf' % p
-#  pdfplot = PdfPages(plot_path)
-#  avg = plot_grouped(mean_real, err_real, mean_imag, err_imag, qn, \
-#                                        gamma, pdfplot, False)
-#  pdfplot.close()
+  plot_path = './plots/Correlators_grouped_p%1i.pdf' % p
+  pdfplot = PdfPages(plot_path)
+  avg = plot_grouped(mean_real, err_real, mean_imag, err_imag, qn, \
+                                        gamma, pdfplot, False)
+  pdfplot.close()
 
-#  plot_path = './plots/Correlators_grouped_2_p%1i.pdf' % p
-#  pdfplot = PdfPages(plot_path)
-#  avg = plot_grouped_2(mean_real, err_real, mean_imag, err_imag, qn, \
-#                                        gamma, pdfplot, False)
-#  pdfplot.close()
-#
-#  plot_path = './plots/Correlators_grouped_3_p%1i.pdf' % p
-#  pdfplot = PdfPages(plot_path)
-#  avg = plot_grouped_3(mean_real, err_real, mean_imag, err_imag, qn, \
-#                                        gamma, pdfplot, False)
-#  pdfplot.close()
+  plot_path = './plots/Correlators_grouped_2_p%1i.pdf' % p
+  pdfplot = PdfPages(plot_path)
+  avg = plot_grouped_2(mean_real, err_real, mean_imag, err_imag, qn, \
+                                        gamma, pdfplot, False)
+  pdfplot.close()
+
+  plot_path = './plots/Correlators_grouped_3_p%1i.pdf' % p
+  pdfplot = PdfPages(plot_path)
+  avg = plot_grouped_3(mean_real, err_real, mean_imag, err_imag, qn, \
+                                        gamma, pdfplot, False)
+  pdfplot.close()
 
 #  plot_path = './plots/Subduced_avg_p%1i.pdf' % p
 #  pdfplot = PdfPages(plot_path)
@@ -907,11 +907,11 @@ for p in range(2,3):
 #  avg = plot_avg_2(mean_sub_avg, err_sub_avg, qn_sub_avg, pdfplot)
 #  pdfplot.close()
 
-  plot_path = './plots/Subduced_avg_3_p%1i.pdf' % p
-  pdfplot = PdfPages(plot_path)
-  avg = plot_avg_3(mean_sub_sin, err_sub_sin, qn_sub_sin, \
-                                   mean_sub_avg, err_sub_avg, qn_sub_avg, pdfplot,plot_mean=False)
-  pdfplot.close()
+#  plot_path = './plots/Subduced_avg_3_p%1i.pdf' % p
+#  pdfplot = PdfPages(plot_path)
+#  avg = plot_avg_3(mean_sub_sin, err_sub_sin, qn_sub_sin, \
+#                                   mean_sub_avg, err_sub_avg, qn_sub_avg, pdfplot,plot_mean=False)
+#  pdfplot.close()
  
 #  plot_path = './plots/Subduced_avg_2_diag_p%1i.pdf' % p
 #  pdfplot = PdfPages(plot_path)

@@ -1,17 +1,17 @@
 import read
-import subduction
-import boot
+#import subduction
+#import boot
 
 ################################################################################
 # parameters for reading #######################################################
 sta_cnfg = 714
-end_cnfg = 2750
+end_cnfg = 1214
 del_cnfg = 2
 
 T = 48        # number of timeslices
 #p = 2         # momenta
 
-verbose = 1
+verbose = 0
 
 directory = '/hiskp2/knippsch/Rho_Feb2016/'
 
@@ -25,7 +25,6 @@ gamma_0i =  [10, 11, 12, '\gamma_0\gamma_i']
 gamma_50i = [15, 14, 13, '\gamma_5\gamma_0\gamma_i']
 
 gamma = [gamma_i, gamma_0i, gamma_50i]
-#gamma_for_filenames = ['gi', 'g0gi', 'g5g0gi']
 gamma_for_filenames = {'\gamma_i' : 'gi', '\gamma_0\gamma_i' : 'g0gi', \
                        '\gamma_5\gamma_0\gamma_i' : 'g5g0gi'}
 
@@ -35,7 +34,7 @@ nb_boot = 2000
 
 ################################################################################
 
-for p in [0,1,3,4]:
+for p in [0]:
   read.read_ensembles(sta_cnfg, end_cnfg, del_cnfg, p, T, directory, missing_configs, verbose)
-  subduction.subduce_ensembles(p, gamma, gamma_for_filenames, verbose)
-  boot.bootstrap_ensembles(p, nb_boot, bootstrap_original_data)
+#  subduction.subduce_ensembles(p, gamma, gamma_for_filenames, verbose)
+#  boot.bootstrap_ensembles(p, nb_boot, bootstrap_original_data)

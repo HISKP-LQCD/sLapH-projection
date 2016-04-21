@@ -14,11 +14,11 @@ import utils
 # parameters ###################################################################
 
 sta_cnfg = 714
-end_cnfg = 2750
+end_cnfg = 1214
 del_cnfg = 2
 
 T = 48        # number of timeslices
-p = 2         # momentum
+p = 0         # momentum
 
 verbose = 0
 
@@ -83,9 +83,7 @@ def read_ensembles(sta_cnfg, end_cnfg, del_cnfg, p, T, directory, missing_config
         if name.startswith('C20_uu'):
         # filename and path
           filename = os.path.join(root, name)
-          if verbose:
-            print 'Reading data from file:'
-            print '\t\t' + filename
+
           # getting momentum, displacement and gamma structure from name
           split = name.replace('_p', ' ').replace('.d', ' '). \
                   replace('.g', ' ').replace('.dat', ' ').split()
@@ -94,20 +92,21 @@ def read_ensembles(sta_cnfg, end_cnfg, del_cnfg, p, T, directory, missing_config
                            split_to_vector(split[4]), split_to_vector(split[5]), \
                            np.asarray(split[6], dtype=int) ]
   
-          # ensure p = 0
+          # ensure p is correct
           if not ( (np.dot(ensemble_data[0], ensemble_data[0]) == p) and \
                    (np.dot(ensemble_data[3], ensemble_data[3]) == p) ):
             continue
   
           read_data = np.zeros(T, dtype=np.complex)
-  
+
+          if verbose:
+            print 'Reading data from file:'
+            print '\t\t' + filename
           try:
             f = open(filename, 'rb')
           except IOError:
             continue
-          if verbose:
-            print f
-          
+         
           # actual reading of complex number
           for t in range(0,T):
             read_data[t] = complex(struct.unpack('d', f.read(8))[0], \
@@ -209,4 +208,4 @@ def read_ensembles(sta_cnfg, end_cnfg, del_cnfg, p, T, directory, missing_config
   #avg_imag = bootstrap(avg.imag, nb_boot)
   #print avg.shape
 
-read_ensembles(sta_cnfg, end_cnfg, del_cnfg, p, T, directory, missing_configs, verbose=0)
+#read_ensembles(sta_cnfg, end_cnfg, del_cnfg, p, T, directory, missing_configs, verbose=0)

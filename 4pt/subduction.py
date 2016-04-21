@@ -10,12 +10,6 @@ import collections
 import clebsch_gordan as cg
 import utils as utils
 
-# loop over irrep
-# loop over row
-# loop over qn
-# if qn belongs to row: 
-# add correlator to subduced
-
 p = 0
 p_max = 4
 
@@ -88,56 +82,65 @@ for i in irreps[-1]:
 
 correlator = []
 qn_subduced = []
+# loop over irreducible representations subducing into p
 for i, irrep in enumerate(irreps[:-1]):
   correlator_irrep = []
   qn_irrep = []
+  # loop over absolute values of momenta at source and sink [k1, k2]
   for so_mom in lookup_p:
     for si_mom in lookup_p:
       correlator_mom = []
       qn_mom = []
+      # loop over rows of irrep 
       for row in irrep:
-    
         correlator_row = np.zeros((0, ) + data[0].shape, dtype=np.double)
         qn_row = []
-    
+        # loop over entries in CG-coefficient: First two elements are the 
+        # momenta, last element is the corresponding coefficient for a 
+        # spin singlet
         for so_3mom in row:
           for si_3mom in row:
-            if not (((np.dot(so_3mom[0], so_3mom[0]), np.dot(so_3mom[1], so_3mom[1])) == so_mom) \
-                   and ((np.dot(si_3mom[0], si_3mom[0]), np.dot(si_3mom[1], si_3mom[1])) == si_mom)):
+            # enforce chosen momenta to belong to [k1, k2]
+            if not (((np.dot(so_3mom[0], so_3mom[0]), \
+                                    np.dot(so_3mom[1], so_3mom[1])) == so_mom) \
+                   and ((np.dot(si_3mom[0], si_3mom[0]), 
+                                    np.dot(si_3mom[1], si_3mom[1])) == si_mom)):
               continue
   
             subduced = np.zeros((1,) + data[0].shape)
     
+            # loop over contracted operators
             for op, qn in enumerate(qn_data):
               if not ((np.array_equal(so_3mom[0], qn[0]) and \
-                                                     np.array_equal(so_3mom[1], qn[3])) \
+                                            np.array_equal(so_3mom[1], qn[3])) \
                       and (np.array_equal((-1)*si_3mom[0], qn[6]) and \
-                                                np.array_equal((-1)*si_3mom[1], qn[9]))):
+                                       np.array_equal((-1)*si_3mom[1], qn[9]))):
                 continue
    
+              # CG = CG(source) * CG(sink)*
               factor = so_3mom[-1] * np.conj(si_3mom[-1])
               if factor == 0:
                 continue
               subduced[0] = subduced[0] + factor.real * data[op].real + \
-                                                         factor.imag * data[op].imag
+                                                     factor.imag * data[op].imag
+            # Omit correlator if no contracted operators are contributing
             if(subduced.any() != 0):
-    #          if verbose:
-    #            print '\tinto momentum (%i,%i,%i)' % (el[0][0], el[0][1], el[0][2])
-    #            print ' '
-            # if correlator is 0, still stack subduced
               correlator_row = np.vstack((correlator_row, subduced))
-#            else:
-#              correlator_row = np.vstack((correlator_row, (-1)*np.zeros_like(subduced) ))
-              qn_row.append([ so_3mom[0], so_3mom[1], si_3mom[0], si_3mom[1], so_mom, si_mom, 5, 5, irreps[-1][i] ])
+              qn_row.append([ so_3mom[0], so_3mom[1], si_3mom[0], si_3mom[1], \
+                                          so_mom, si_mom, 5, 5, irreps[-1][i] ])
                 
+        # end loop over entries in CG-coefficient
         correlator_mom.append(correlator_row)
         qn_mom.append(np.asarray(qn_row))
+      # end loop over rows of irrep 
       correlator_mom = np.asarray(correlator_mom)
       if(np.any(correlator_mom != 0)):
         correlator_irrep.append(correlator_mom)
         qn_irrep.append(np.asarray(qn_mom))
+  # end loop over [k1, k2]
   correlator.append(np.asarray(correlator_irrep))
   qn_subduced.append(np.asarray(qn_irrep))
+# end loop over irreps
 
 correlator = np.asarray(correlator)
 qn_subduced = np.asarray(qn_subduced)
@@ -159,7 +162,8 @@ utils.ensure_dir('./readdata/p%1i/' % p)
 # write all subduced correlators
 path = './readdata/p%1i/%s_p%1i_single_subduced' % (p, diagram, p)
 np.save(path, correlator)
-path = './readdata/p%1i/%s_p%1i_single_subduced_quantum_numbers' % (p, diagram, p)
+path = './readdata/p%1i/%s_p%1i_single_subduced_quantum_numbers' % \
+                                                                 (p, diagram, p)
 np.save(path, qn_subduced)
  
 
