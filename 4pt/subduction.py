@@ -37,7 +37,7 @@ def abs2(x):
     x = list(x)
   return scalar_mul(x, x)
 
-
+# taken from https://docs.python.org/2/library/itertools.html#module-itertools
 def unique_everseen(iterable, key=None):
   "List unique elements, preserving order. Remember all elements ever seen."
   # unique_everseen('AAAABBBCCDAABBB') --> A B C D
@@ -66,11 +66,9 @@ lookup_p = list(it.ifilterfalse(lambda x: x[0] < x[1], \
                and not (p == 0 and tuple(x) == tuple(y) ) \
     ,it.product(lookup_p3, repeat=2)) \
       )) ))
-#TODO: for p != 0 there are equivalent combinations with p1 <-> p2
-#TODO: critical for moving frames only group by summed 3-momentum at source and sink
-#for d in lookup_p:
-#  print d
 
+###############################################################################
+# From analytic calculation: Irreps contributing to momenta 0 <= p <= 4
 if p in [0]:
   irreps = [['T1']]
 else:

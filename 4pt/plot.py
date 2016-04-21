@@ -590,29 +590,27 @@ def plot_vecks(mean_sin, err_sin, qn_sin, mean_avg, err_avg, pdfplot):
         if verbose:
           print row.shape[0] 
         shift = 1./3/row.shape[0]
+
+        # set plot title, labels etc.
+        plt.title(r'$%s%s$ - $%s%s$ Operators ' \
+                  r'subduced into $p = %i$, $[%i,%i] \ \to \ [%i,%i]$ ' \
+                  r'under $\Lambda = %s$ $\mu = %i$' % \
+                    (gamma_5[-1][-1], gamma_5[-1][-1], gamma_5[-1][-1], \
+                     gamma_5[-1][-1], p, row[op][-5][0], row[op][-5][1], \
+                     row[op][-4][0], row[op][-4][1], row[op][-1], r+1),\
+                  fontsize=12)
+        plt.xlabel(r'$t/a$', fontsize=12)
+        plt.ylabel(r'$%s(t/a)$' % diagram, fontsize=12)
+ 
         for op in range(0, row.shape[0]):
 
-        #TODO: title
-          # set plot title, labels etc.
-          plt.title(r'$%s%s$ - $%s%s$ Operators ' \
-                    r'subduced into $p = %i$, $[%i,%i] \ \to \ [%i,%i]$ ' \
-                    r'under $\Lambda = %s$ $\mu = %i$' % \
-                      (gamma_5[-1][-1], gamma_5[-1][-1], gamma_5[-1][-1], \
-                       gamma_5[-1][-1], p, row[op][-5][0], row[op][-5][1], \
-                       row[op][-4][0], row[op][-4][1], row[op][-1], r+1),\
-                    fontsize=12)
-          plt.xlabel(r'$t/a$', fontsize=12)
-          plt.ylabel(r'$%s(t/a)$' % diagram, fontsize=12)
-  
-#          if abs(mean_sin[i,k,r][op,0]) >= 0.05*abs(np.max(mean_sin[i,k,r][:,0])):
           label = r'$[(%2i,%2i,%2i), (%2i,%2i,%2i)] \ \to \ ' \
                   r'[(%2i,%2i,%2i), (%2i,%2i,%2i)]$' % \
                     (row[op][0][0], row[op][0][1], row[op][0][2], \
                      row[op][1][0], row[op][1][1], row[op][1][2], \
                      row[op][2][0], row[op][2][1], row[op][2][2], \
                      row[op][3][0], row[op][3][1], row[op][3][2])
-#          else:
-#            label = '_nolegend_'
+#          label = '_nolegend_'
           
           # prepare data for plotting
           # TODO: put that in subduction

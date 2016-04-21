@@ -48,7 +48,7 @@ def subduce_ensembles(p, gamma, gamma_for_filenames, verbose=0):
     print '\tRead correlators do not aggree with quantum numbers'
     exit(0)
   
-  ################################################################################
+  ##############################################################################
   # From analytic calculation: Irreps contributing to momenta 0 <= p <= 4
   if p in [0]:
     irreps = [['T1']]
@@ -61,7 +61,7 @@ def subduce_ensembles(p, gamma, gamma_for_filenames, verbose=0):
   for i in irreps[-1]:
     irreps.insert(-1,cg.coefficients(i))
   
-  ################################################################################
+  ##############################################################################
   # loop over all momenta and add the correlators with correct subduction 
   # coefficients if the operators are correct
   # TODO: alert when necessary operator for subduction missing in data
@@ -152,41 +152,41 @@ def subduce_ensembles(p, gamma, gamma_for_filenames, verbose=0):
   path = './readdata/p%1i/C20_p%1i_single_subduced_quantum_numbers' % (p, p)
   np.save(path, qn_subduced)
   
-  # write all subduced and averaged correlators
-  # average is always over subduced operators contributing to same irrep
-  # TODO: change that to 'E2_1' in irreps[-1]
-  if p not in [1,3,4]:
-    path = './readdata/p%1i/C20_p%1i_avg_subduced' % (p, p)
-    np.save(path, np.mean(correlator, axis=1))
-    path = './readdata/p%1i/C20_p%1i_avg_subduced_quantum_numbers' % (p, p)
-    np.save(path, qn_subduced[...,0,3])
-  else:
-    # I hate the E2 irrep. 
-    # Average E2_1 and E2_2 additionally and append the result
-    path = './readdata/p%1i/C20_p%1i_avg_subduced' % (p, p)
-    E2 = np.zeros((1,) + np.mean(correlator, axis=2)[0].shape)
-    for j in range(0,correlator.shape[1]):
-      E2[0, j] = np.mean(np.vstack((correlator[1,j], correlator[2,j])), axis=0)
-    np.save(path, np.vstack((np.mean(correlator, axis=2), E2 )) )
-    path = './readdata/p%1i/C20_p%1i_avg_subduced_quantum_numbers' % (p, p)
-    E2_qn = np.zeros((1,qn_subduced.shape[1], \
-                      qn_subduced[...,-3:].shape[-1]),dtype=((str,256)))
-    E2_qn[0] = qn_subduced[0,:,0,-3:]
-    for j in range(0,correlator.shape[1]):
-      E2_qn[0,j,-1] = 'E2'
-    np.save(path, np.vstack((qn_subduced[...,0,-3:], E2_qn)) )
-  
-  ################################################################################
-  # write all subduced correlators for each irrep and gamma seperately in ascii 
-  # format
-  if(correlator.shape[0] != (len(irreps)-1) ):
-    print '\tThe number of calculated irreps is not the number of existing ' \
-          'ones!'
-    exit(0)
-  if(correlator.shape[1] != len(gamma)*len(gamma) ):
-    print '\tThe number of calculated gamma combinations is not the number of ' \
-          'existing ones!'
-    exit(0)
+#  # write all subduced and averaged correlators
+#  # average is always over subduced operators contributing to same irrep
+#  # TODO: change that to 'E2_1' in irreps[-1]
+#  if p not in [1,3,4]:
+#    path = './readdata/p%1i/C20_p%1i_avg_subduced' % (p, p)
+#    np.save(path, np.mean(correlator, axis=1))
+#    path = './readdata/p%1i/C20_p%1i_avg_subduced_quantum_numbers' % (p, p)
+#    np.save(path, qn_subduced[...,0,3])
+#  else:
+#    # I hate the E2 irrep. 
+#    # Average E2_1 and E2_2 additionally and append the result
+#    path = './readdata/p%1i/C20_p%1i_avg_subduced' % (p, p)
+#    E2 = np.zeros((1,) + np.mean(correlator, axis=2)[0].shape)
+#    for j in range(0,correlator.shape[1]):
+#      E2[0, j] = np.mean(np.vstack((correlator[1,j], correlator[2,j])), axis=0)
+#    np.save(path, np.vstack((np.mean(correlator, axis=2), E2 )) )
+#    path = './readdata/p%1i/C20_p%1i_avg_subduced_quantum_numbers' % (p, p)
+#    E2_qn = np.zeros((1,qn_subduced.shape[1], \
+#                      qn_subduced[...,-3:].shape[-1]),dtype=((str,256)))
+#    E2_qn[0] = qn_subduced[0,:,0,-3:]
+#    for j in range(0,correlator.shape[1]):
+#      E2_qn[0,j,-1] = 'E2'
+#    np.save(path, np.vstack((qn_subduced[...,0,-3:], E2_qn)) )
+#  
+#  ################################################################################
+#  # write all subduced correlators for each irrep and gamma seperately in ascii 
+#  # format
+#  if(correlator.shape[0] != (len(irreps)-1) ):
+#    print '\tThe number of calculated irreps is not the number of existing ' \
+#          'ones!'
+#    exit(0)
+#  if(correlator.shape[1] != len(gamma)*len(gamma) ):
+#    print '\tThe number of calculated gamma combinations is not the number of ' \
+#          'existing ones!'
+#    exit(0)
   
 #  #TODO: finish output to binary files with dictionary
 #  #TODO: somehow make this dictionary more elegant

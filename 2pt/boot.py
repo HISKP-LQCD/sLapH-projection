@@ -156,13 +156,31 @@ def bootstrap_ensembles(p, nb_boot, bootstrap_original_data):
   np.save(path, boot)
   path = './bootdata/p%1i/C20_p%1i_single_subduced_quantum_numbers' % (p, p)
   np.save(path, qn_subduced)
-   
+
   # write means over all operators subducing into same irrep
-  if p not in [1,3,4]:
-    path = './bootdata/p%1i/C20_p%1i_avg_subduced' % (p, p)
-    np.save(path, np.mean(boot, axis=2) )
-    path = './bootdata/p%1i/C20_p%1i_avg_subduced_quantum_numbers' % (p, p)
-    np.save(path, qn_subduced[...,0,-3:])
+  path = './bootdata/p%1i/C20_p%1i_subduced_avg_vecks' % (p, p)
+  # TODO: mp.mean or np.sum?
+  avg = np.mean(boot, axis=3)
+  print avg.shape
+  qn_avg = qn_subduced[...,0,-3:]
+  np.save(path, avg)
+  path = './bootdata/p%1i/C20_p%1i_subduced_avg_vecks_quantum_numbers' % (p, p)
+  np.save(path, qn_avg)
+
+   # write means over all operators subducing into same irrep
+  path = './bootdata/p%1i/C20_p%1i_subduced_avg_rows' % (p, p)
+  avg = np.mean(avg, axis=2)
+  print avg.shape
+  np.save(path, avg)
+  path = './bootdata/p%1i/C20_p%1i_subduced_avg_rows_quantum_numbers' % (p, p)
+  np.save(path, qn_avg)
+ 
+#  # write means over all operators subducing into same irrep
+#  if p not in [1,3,4]:
+#    path = './bootdata/p%1i/C20_p%1i_avg_subduced' % (p, p)
+#    np.save(path, np.mean(boot, axis=2) )
+#    path = './bootdata/p%1i/C20_p%1i_avg_subduced_quantum_numbers' % (p, p)
+#    np.save(path, qn_subduced[...,0,-3:])
 #  else:
 #    # if p in [1,3,4], the 2dim E2 irrep appears. Both rows can be averaged, thus
 #    # the average is taken and appended in the end for plotting
