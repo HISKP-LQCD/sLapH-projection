@@ -141,6 +141,13 @@ for i, (irrep_so, irrep_si) in enumerate(zip(irreps_4pt[:-1], irreps_2pt[:-1])):
                 factor = so_3mom[-1] * np.conj(si_3mom[g_si+1])
                 if factor == 0:
                   continue
+
+                # calculating the Correlators yields imaginary parts for all of
+                # them. Switching real and imaginary part in the subduction 
+                # factor accounts for this.
+                if (gamma[g_si] in gamma_50i):
+                  factor = factor.imag + factor.real * 1j
+
                 subduced[0] = subduced[0] + factor.real * data[op].real + \
                                                          factor.imag * data[op].imag
             if(subduced.any() != 0):

@@ -13,7 +13,7 @@ import utils as utils
 # parameters ###################################################################
 
 ################################################################################
-p = 0         # momentum
+p = 2         # momentum
 
 verbose = 0
 
@@ -75,10 +75,12 @@ def subduce_ensembles(p, gamma, gamma_for_filenames, verbose=0):
     qn_irrep = []
     # loop over gamma structure at source and sink 
     # (\gamma_i, \gamma_0\gamma_i, ...)
-    for so_gamma in gamma:
-      for si_gamma in gamma:
-        correlator_gamma = [] 
-        qn_gamma = []
+    for gevp_row in gamma:
+      correlator_gevp_row = [] 
+      qn_gevp_row = []
+      for gevp_col in gamma:
+        correlator_gevp_col = [] 
+        qn_gevp_col = []
         # loop over rows of irrep
         for row in irrep:
           correlator_row = np.zeros((0,) + data[0].shape, dtype=np.double)
@@ -104,16 +106,16 @@ def subduce_ensembles(p, gamma, gamma_for_filenames, verbose=0):
                     # calculating the Correlators yields imaginary parts in 
                     # gi-g0gi, gi-gjgk and cc. Switching real and imaginary
                     # part in the subduction factor accounts for this.
-                    if (so_gamma[g_so] in gamma_i) != \
-                                                    (si_gamma[g_si] in gamma_i):
+                    if (gevp_row[g_so] in gamma_i) != \
+                                                    (gevp_col[g_si] in gamma_i):
                       factor = factor.imag + factor.real * 1j
   
-                    if (so_gamma[g_so] == qn[2]) and (si_gamma[g_si] == qn[5]):
+                    if (gevp_row[g_so] == qn[2]) and (gevp_col[g_si] == qn[5]):
                       subduced[0] = subduced[0] + factor.real * data[op].real \
                                                    + factor.imag * data[op].imag
                       if verbose:
                         print '\tsubduced g_so = %i, g_si = %i' % \
-                                                (so_gamma[g_so], si_gamma[g_si])
+                                                (gevp_row[g_so], gevp_col[g_si])
                         print '\t\tsubduction coefficient = % .2f + % .2fi' % \
                                                       (factor.real, factor.imag)
             # Omit correlator if no contracted operators are contributing
@@ -123,12 +125,14 @@ def subduce_ensembles(p, gamma, gamma_for_filenames, verbose=0):
                                                   (el[0][0], el[0][1], el[0][2])
                 print ' '
               correlator_row = np.vstack((correlator_row, subduced))
-              qn_row.append([ el[0], so_gamma[-1], si_gamma[-1], irreps[-1][i] ])
+              qn_row.append([ el[0], gevp_row[-1], gevp_col[-1], irreps[-1][i] ])
 
-          correlator_gamma.append(correlator_row)
-          qn_gamma.append(qn_row)
-        correlator_irrep.append(correlator_gamma)
-        qn_irrep.append(qn_gamma)
+          correlator_gevp_col.append(correlator_row)
+          qn_gevp_col.append(qn_row)
+        correlator_gevp_row.append(correlator_gevp_col)
+        qn_gevp_row.append(qn_gevp_col)
+      correlator_irrep.append(correlator_gevp_row)
+      qn_irrep.append(qn_gevp_row)
     correlator.append(np.asarray(correlator_irrep))
     qn_subduced.append(np.asarray(qn_irrep))
 

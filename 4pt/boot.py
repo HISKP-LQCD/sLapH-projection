@@ -171,6 +171,8 @@ def bootstrap_ensembles(p, nb_boot, bootstrap_original_data):
   # write means over all operators subducing into same irrep
   avg = np.zeros_like(boot)
   qn_avg = np.zeros_like(qn_subduced)
+  # recursive if shape[-2] != T: for i in np.ndindex(): boot else: boot
+  # recursive if not double but np.array: for i in np.ndindex(): boot else: boot
   for i in range(boot.shape[0]):
     for k in range(boot.shape[1]):
       for r in range(boot.shape[2]):

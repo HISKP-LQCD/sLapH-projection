@@ -15,16 +15,10 @@ sqrt6 = np.sqrt(6.)
 
 ################################################################################
 # T1
-T1 = [[[np.asarray([0, 0, 0], dtype=int), 1, 0, 0]], \
-      [[np.asarray([0, 0, 0], dtype=int), 0, 1, 0]], \
-      [[np.asarray([0, 0, 0], dtype=int), 0, 0, 1]]]
+T1 = [[[np.asarray([0, 0, 0], dtype=int),  1j/sqrt2, -1./sqrt2, 0]], \
+      [[np.asarray([0, 0, 0], dtype=int),  0,         0,        1j]], \
+      [[np.asarray([0, 0, 0], dtype=int), -1j/sqrt2,  1./sqrt2, 0]]]
 T1 = np.asarray(T1)
-
-#TODO:
-#T1 = [[[np.asarray([0, 0, 0], dtype=int), 1, i, 0]], \
-#      [[np.asarray([0, 0, 0], dtype=int), 0, 0, i]], \
-#      [[np.asarray([0, 0, 0], dtype=int), 1, -i, 0]]]
-#T1 = np.asarray(T1)
 
 ################################################################################
 # A1

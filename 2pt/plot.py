@@ -157,69 +157,66 @@ def plot_single(mean_real, err_real, mean_imag, err_imag, qn, pdfplot):
 def plot_vecks(mean_sin, err_sin, qn_sin, mean_avg, err_avg, qn_avg, pdfplot, \
                                                                 plot_mean=True):
 
-  # in the CM-frame there is only one momentum
-  if p == 0:
-    return
-
   for i, irrep in enumerate(qn_sin):
-    for g, gamma in enumerate(irrep):
-      for r, row in enumerate(gamma):
-
-        print 'plot row %i of irrep $%s$, $%s$ - $%s$' % \
-                                          (r+1, row[0,-3], row[0,-2], row[0,-1])
-
-        cmap_brg = plt.cm.brg(np.asarray(range(0, row.shape[0])) * \
-                                                           256/(row.shape[0]-1))
-        shift = 1./3/row.shape[0]
-
-        # set plot title, labels etc.
-        plt.title(r'$%s$ - $%s$ Operators subduced into $p = %i$ under '
-                   '$\Lambda = %s$, $\mu = %i$' % \
-                                    (row[0,-3], row[0,-2], p, row[0,-1], r+1), \
-                  fontsize=12)
-        plt.xlabel(r'$t/a$', fontsize=12)
-        plt.ylabel(r'$C_2^0(t/a)$', fontsize=12)
-    
-        for op in range(0, row.shape[0]):
-    
-          label = r'$p_{so} = (%2i,%2i,%2i)$' % \
-                    (np.int(row[op,0][0]), np.int(row[op,0][1]), np.int(row[op,0][2]))
+    for g1, gevp_row in enumerate(irrep):
+      for g2, gevp_col in enumerate(gevp_row):
+        for r, row in enumerate(gevp_col):
   
-          # prepare data for plotting
-          # TODO: put that in subduction
-          mean = -2*mean_sin[i,g,r,op,:23]
-          if g == 1 or g == 6:
-            mean = 2*mean_sin[i,g,r,op,:23]
-          err = err_sin[i,g,r,op,:23]
-         
-          plt.yscale('log')
-          # plotting single correlators subduced into irrep
-  #        plt.errorbar(np.asarray(range(0, mean_sin.shape[-1]))+op*shift, plot, err_sin[i,g,op], \
-          plt.errorbar(np.asarray(range(0, mean.shape[0]))+op*shift, mean, err, \
-                       fmt=symbol[op%len(symbol)], color=cmap_brg[op], \
-                       label=label, markersize=3, capsize=3, capthick=0.5, \
-                       elinewidth=0.5, markeredgecolor=cmap_brg[op], \
-                                                                  linewidth='0.0')
+          print 'plot row %i of irrep %s, %s - %s' % (r+1, row[0,-1], \
+                 gamma_for_filenames[row[0,-3]], gamma_for_filenames[row[0,-2]])
   
-        # plotting average for irrep
-        if plot_mean == True:
-          # prepare data for plotting
-          mean = -2*mean_avg[i,g,r]
-          if g == 1 or g == 6:
-            mean = 2*mean_avg[i,g,r]
-          err = err_avg[i,g,r]
+          cmap_brg = plt.cm.brg(np.asarray(range(0, row.shape[0])) * \
+                                                             256/(row.shape[0]-1))
+          shift = 1./3/row.shape[0]
+  
+          # set plot title, labels etc.
+          plt.title(r'$%s$ - $%s$ Operators subduced into $p = %i$ under '
+                     '$\Lambda = %s$, $\mu = %i$' % \
+                                      (row[0,-3], row[0,-2], p, row[0,-1], r+1), \
+                    fontsize=12)
+          plt.xlabel(r'$t/a$', fontsize=12)
+          plt.ylabel(r'$C_2^0(t/a)$', fontsize=12)
+      
+          for op in range(0, row.shape[0]):
+      
+            label = r'$p_{so} = (%2i,%2i,%2i)$' % \
+                      (np.int(row[op,0][0]), np.int(row[op,0][1]), np.int(row[op,0][2]))
     
-          plt.yscale('log')
-          plt.errorbar(range(0, mean.shape[0]), mean, err, \
-                       fmt='o', color='black', label=r'$avg$', \
-                       markersize=3, capsize=3, capthick=0.75, elinewidth=0.75, \
-                                        markeredgecolor='black', linewidth='0.0')
-         
-        plt.legend(numpoints=1, loc=1, fontsize=6)
-        pdfplot.savefig()
-        plt.clf()
+            # prepare data for plotting
+            # TODO: put that in subduction
+            mean = -2*mean_sin[i,g1,g2,r,op]
+            if (g1 == 0 and g2 == 1) or (g1 == 2 and g2 == 0):
+#            if g == 1 or g == 6:
+              mean = 2*mean_sin[i,g1,g2,r,op]
+            err = err_sin[i,g1,g2,r,op]
+           
+            plt.yscale('log')
+            # plotting single correlators subduced into irrep
+    #        plt.errorbar(np.asarray(range(0, mean_sin.shape[-1]))+op*shift, plot, err_sin[i,g,op], \
+            plt.errorbar(np.asarray(range(0, mean.shape[0]))+op*shift, mean, err, \
+                         fmt=symbol[op%len(symbol)], color=cmap_brg[op], \
+                         label=label, markersize=3, capsize=3, capthick=0.5, \
+                         elinewidth=0.5, markeredgecolor=cmap_brg[op], \
+                                                                    linewidth='0.0')
     
-  #TODO: there must be a more pythonic way to do this
+          # plotting average for irrep
+          if plot_mean == True:
+            # prepare data for plotting
+            mean = -2*mean_avg[i,g1,g2,r]
+            if (g1 == 0 and g2 == 1) or (g1 == 2 and g2 == 0):
+              mean = 2*mean_avg[i,g1,g2,r]
+            err = err_avg[i,g1,g2,r]
+      
+            plt.yscale('log')
+            plt.errorbar(range(0, mean.shape[0]), mean, err, \
+                         fmt='o', color='black', label=r'$avg$', \
+                         markersize=3, capsize=3, capthick=0.75, elinewidth=0.75, \
+                                          markeredgecolor='black', linewidth='0.0')
+           
+          plt.legend(numpoints=1, loc=1, fontsize=6)
+          pdfplot.savefig()
+          plt.clf()
+    
   if plot_mean == True:
     # plot averages from all irreps into one plot
   
@@ -227,39 +224,64 @@ def plot_vecks(mean_sin, err_sin, qn_sin, mean_avg, err_avg, qn_avg, pdfplot, \
     plt.xlabel(r'$t/a$', fontsize=12)
     plt.ylabel(r'$C_2^0(t/a)$', fontsize=12)
 
-    cmap_brg = plt.cm.brg(np.asarray(range(0, \
-                          qn_avg.shape[0]*qn_avg.shape[1]*qn_avg.shape[2])) * \
-                          256/(qn_avg.shape[0]*qn_avg.shape[1]*qn_avg.shape[2] \
-                                                                            -1))
-
+    cmap_brg = plt.cm.brg(np.asarray(range(0, np.product(qn_avg.shape[1:4])) * \
+                                         256/(np.product(qn_avg.shape[1:4])-1)))
     for i in range(qn_avg.shape[0]):
-      for g in range(qn_avg.shape[1]):
-        for r in range(qn_avg.shape[2]):
-
-          # index for cmap
-          c = i*qn_avg.shape[1]*qn_avg.shape[2]+g*qn_avg.shape[2]+r
-          label = r'$%s \ %s - %s$' % \
-                                    (qn_avg[i,g,r,-1], qn_avg[i,g,r,-3], qn_avg[i,g,r,-2])
-      
-          # in overview plot only plot diagonal elements
-          if g not in [0,4,8]:
-            continue
-      
-          # prepare data for plotting
-          mean = -2*mean_avg[i,g]
-          if g == 1 or g == 6:
-            mean = 2*mean_avg[i,g]
-          err = err_avg[i,g]
-      
-          plt.yscale('log')
-          plt.errorbar(range(0, mean.shape[-1]), mean/mean[6], \
-                       err/plot[6], fmt='o', color=cmap_brg[c], \
-                       label=label, markersize=3, capsize=3, capthick=0.75, \
-                       elinewidth=0.75, markeredgecolor=cmap_brg[c], \
-                                                                    linewidth='0.0')
+      for j in np.ndindex(qn_avg.shape[1:4]):
+  
+        c = np.ravel_multi_index(j, qn_avg.shape[1:4])
+        print c
+        label = r'$%s \ %s - %s$' % \
+                 (qn_avg[(i,)+j+(2,)], qn_avg[(i,)+j+(0,)], qn_avg[(i,)+j+(1,)])
+        
+        # in overview plot only plot diagonal elements
+        if j[0] != j[1]:
+          continue
+        
+        # prepare data for plotting
+        mean = -2*mean_avg[(i,)+j]
+        if (j[0] == 0 and j[1] == 1) or (j[0] == 2 and j[1] == 0):
+          mean = 2*mean_avg[(i,)+j]
+        err = err_avg[(i,)+j]
+        
+        plt.yscale('log')
+        plt.errorbar(range(0, mean.shape[-1]), mean/mean[6], \
+                     err/mean[6], fmt='o', color=cmap_brg[c], \
+                     label=label, markersize=3, capsize=3, capthick=0.75, \
+                     elinewidth=0.75, markeredgecolor=cmap_brg[c], \
+                                                                  linewidth='0.0')
       plt.legend(numpoints=1, loc=5, fontsize=6)
       pdfplot.savefig()
       plt.clf()
+ 
+#    for i in range(qn_avg.shape[0]):
+#      for g in range(qn_avg.shape[1]):
+#        for r in range(qn_avg.shape[2]):
+#
+#          # index for cmap
+#          c = i*qn_avg.shape[1]*qn_avg.shape[2]+g*qn_avg.shape[2]+r
+#          label = r'$%s \ %s - %s$' % \
+#                                    (qn_avg[i,g1,g2,r,-1], qn_avg[i,g1,g2,r,-3], qn_avg[i,g1,g2,r,-2])
+#      
+#          # in overview plot only plot diagonal elements
+#          if g not in [0,4,8]:
+#            continue
+#      
+#          # prepare data for plotting
+#          mean = -2*mean_avg[i,g1,g2]
+#          if g == 1 or g == 6:
+#            mean = 2*mean_avg[i,g1,g2]
+#          err = err_avg[i,g1,g2]
+#      
+#          plt.yscale('log')
+#          plt.errorbar(range(0, mean.shape[-1]), mean/mean[6], \
+#                       err/plot[6], fmt='o', color=cmap_brg[c], \
+#                       label=label, markersize=3, capsize=3, capthick=0.75, \
+#                       elinewidth=0.75, markeredgecolor=cmap_brg[c], \
+#                                                                    linewidth='0.0')
+#      plt.legend(numpoints=1, loc=5, fontsize=6)
+#      pdfplot.savefig()
+#      plt.clf()
  
   return
 
@@ -825,7 +847,7 @@ def plot_mass(avg, qn_avg, pdfplot):
 ################################################################################
 # read data
 
-for p in range(0,1):
+for p in range(2,3):
   # bootstrapped correlators
   filename = './bootdata/p%1i/C20_p%1i_real.npy' % (p, p)
   data = np.load(filename)
@@ -949,19 +971,21 @@ for p in range(0,1):
 #                                        gamma, pdfplot, False)
 #  pdfplot.close()
 
-  # TODO: test the if-condition
-  if not all(qn_sub_vecks[:][tuple(it.repeat(0, qn_sub_vecks.ndim-2)) + (-1,)]) in ['B1', 'B2']:
+  if not np.all(qn_sub_vecks[i][tuple(it.repeat(0, qn_sub_vecks.ndim-2)) + \
+                (-1,)] \
+                 in ['A1', 'B1', 'B2'] for i in range(qn_sub_vecks.shape[0])):
     plot_path = './plots/C20_rows_p%1i.pdf' % p
     pdfplot = PdfPages(plot_path)
     avg = plot_rows(mean_sub_vecks, err_sub_vecks, qn_sub_vecks, \
                                 mean_sub_rows, err_sub_rows, qn_sub_rows, pdfplot)
     pdfplot.close()
 
+ 
   if p != 0:
     plot_path = './plots/C20_vecks_p%1i.pdf' % p
     pdfplot = PdfPages(plot_path)
-    avg = plot_vecks(mean_sub, err_sub, qn_sub, mean_sub_avg, \
-                                 err_sub_avg, qn_sub_avg, pdfplot,plot_mean=True)
+    avg = plot_vecks(mean_sub, err_sub, qn_sub, mean_sub_vecks, \
+                                 err_sub_vecks, qn_sub_vecks, pdfplot,plot_mean=True)
     pdfplot.close()
 
 #  plot_path = './plots/Subduced_avg_2_p%1i.pdf' % p

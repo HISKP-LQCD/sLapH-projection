@@ -177,7 +177,7 @@ def bootstrap_ensembles(p, nb_boot, bootstrap_original_data):
       for k in range(boot.shape[2]):
         for r in range(boot.shape[3]):
           avg[i,g,k,r] = np.sum(boot[i,g,k,r], axis=0) 
-          qn_avg[i,g,k,r] = qn_subduced[i,g,k,r][0,4:]
+          qn_avg[i,g,k,r] = qn_subduced[i,g,k,r][0,3:]
   avg = np.asarray(avg.tolist())
   qn_avg = np.asarray(qn_avg.tolist())
   path = './bootdata/p%1i/%s_p%1i_subduced_avg_vecks' % (p, diagram, p)

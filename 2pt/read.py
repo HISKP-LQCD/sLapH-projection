@@ -90,7 +90,7 @@ def read_ensembles(sta_cnfg, end_cnfg, del_cnfg, p, T, directory, missing_config
           ensemble_data = [split_to_vector(split[1]), split_to_vector(split[2]), \
                            np.asarray(split[3], dtype=int), \
                            split_to_vector(split[4]), split_to_vector(split[5]), \
-                           np.asarray(split[6], dtype=int) ]
+                           np.asarray(split[6], dtype=int), name]
   
           # ensure p is correct
           if not ( (np.dot(ensemble_data[0], ensemble_data[0]) == p) and \
@@ -152,16 +152,21 @@ def read_ensembles(sta_cnfg, end_cnfg, del_cnfg, p, T, directory, missing_config
   utils.ensure_dir('./readdata/p%1i/single' % p)
   # write every operator seperately
   for i in range(0, data.shape[0]):
-    path = './readdata/p%1i/single/C20_p%i%i%i.d%i%i%i.g%i_p%i%i%i.d%i%i%i.g%i' % \
-            (p, quantum_numbers[i][0][0], quantum_numbers[i][0][1], 
-             quantum_numbers[i][0][2], \
-             quantum_numbers[i][1][0], quantum_numbers[i][1][1], 
-             quantum_numbers[i][1][2], quantum_numbers[i][2],
-             quantum_numbers[i][3][0], quantum_numbers[i][3][1], 
-             quantum_numbers[i][3][2], \
-             quantum_numbers[i][4][0], quantum_numbers[i][4][1], 
-             quantum_numbers[i][4][2], quantum_numbers[i][5])
+    path = './readdata/p%1i/single/%s' % \
+            (p, quantum_numbers[i][-1])
     np.save(path, data[i])
+
+#  for i in range(0, data.shape[0]):
+#    path = './readdata/p%1i/single/C20_p%i%i%i.d%i%i%i.g%i_p%i%i%i.d%i%i%i.g%i' % \
+#            (p, quantum_numbers[i][0][0], quantum_numbers[i][0][1], 
+#             quantum_numbers[i][0][2], \
+#             quantum_numbers[i][1][0], quantum_numbers[i][1][1], 
+#             quantum_numbers[i][1][2], quantum_numbers[i][2],
+#             quantum_numbers[i][3][0], quantum_numbers[i][3][1], 
+#             quantum_numbers[i][3][2], \
+#             quantum_numbers[i][4][0], quantum_numbers[i][4][1], 
+#             quantum_numbers[i][4][2], quantum_numbers[i][5])
+#    np.save(path, data[i])
   
   # write all operators
   path = './readdata/p%1i/C20_p%1i' % (p, p)
@@ -208,4 +213,4 @@ def read_ensembles(sta_cnfg, end_cnfg, del_cnfg, p, T, directory, missing_config
   #avg_imag = bootstrap(avg.imag, nb_boot)
   #print avg.shape
 
-#read_ensembles(sta_cnfg, end_cnfg, del_cnfg, p, T, directory, missing_configs, verbose=0)
+read_ensembles(sta_cnfg, end_cnfg, del_cnfg, p, T, directory, missing_configs, verbose=0)

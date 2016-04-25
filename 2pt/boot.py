@@ -13,9 +13,14 @@ import utils
 ################################################################################
 bootstrap_original_data = False
 
-p = 0         # momentum
+p = 2         # momentum
 
+nb_bins = 1
 nb_boot = 500
+
+gamma_for_filenames = {'\gamma_i' : 'gi', \
+                       '\gamma_0\gamma_i' : 'g0gi', \
+                       '\gamma_5\gamma_0\gamma_i' : 'g5g0gi'}
 
 ################################################################################
 # Functions ####################################################################
@@ -28,7 +33,7 @@ def prebinning(X, binsize):
   if X.shape[-1] % binsize > 0:
     nb_bins = nb_bins+1
   print nb_bins
-  bins = np.zeros(X[...,0].shape +  (nb_bins,))
+  bins = np.zeros(X[...,0].shape + (nb_bins,))
   for i in range(0, nb_bins-1):
     bins[...,i] = np.mean(X[...,i*binsize:(i+1)*binsize], axis=-1)
   bins[...,nb_bins-1] = np.mean(X[...,(nb_bins-1)*binsize:], axis=-1)
@@ -50,25 +55,10 @@ def bootstrap(X, boot_size):
     boot[...,i] = np.mean(X[...,rnd], axis=-1)
   return boot
 
-## bootstrap an arbitrary array with nb_cnfg as last dimension
-#def bootstrap(X, boot_size):
-#  np.random.seed(1227)
-#  boot = np.zeros(X[:,:,0].shape + (boot_size, ), dtype=float)
-#  length = X.shape[-1]
-#  # writing the mean value in the first sample
-#  boot[:,:,0] = np.mean(X, axis=-1) 
-#  # doing all other samples
-#  for i in range(1, boot_size): 
-#    if i % (boot_size/10) == 0:
-#      print '\tbootstrap sample %i' % i
-#    rnd = np.random.random_integers(0, high=length-1, size=length)
-#    boot[:,:,i] = np.mean(X[:,:,rnd], axis=-1)
-#  return boot
-
 ################################################################################
 # Bootstrap routine ############################################################
 
-def bootstrap_ensembles(p, nb_boot, bootstrap_original_data):
+def bootstrap_ensembles(p, nb_bins, nb_boot, bootstrap_original_data):
   ################################################################################
   # read original data and call bootrap procedure
   if bootstrap_original_data:
@@ -80,12 +70,12 @@ def bootstrap_ensembles(p, nb_boot, bootstrap_original_data):
       print '\tBootstrapped operators do not aggree with expected operators'
       exit(0)
 
-    binned_data = prebinning(data.real, 50)
+    binned_data = prebinning(data.real, nb_bins)
     print 'Bootstrapping original data for p = %1i. Real part:' % p
-    boot_real = bootstrap(binned_data, 100)
+    boot_real = bootstrap(binned_data, nb_boot)
     print 'Bootstrapping original data. Imaginary part:'
-    binned_data = prebinning(data.imag, 50)
-    boot_imag = bootstrap(binned_data, 100)
+    binned_data = prebinning(data.imag, nb_bins)
+    boot_imag = bootstrap(binned_data, nb_boot)
     print boot_real.shape
     
     if (boot_real.shape[0] != boot_imag.shape[0]):
@@ -97,16 +87,17 @@ def bootstrap_ensembles(p, nb_boot, bootstrap_original_data):
   # read subduced data and call bootrap procedure
   path = './readdata/p%1i/C20_p%1i_single_subduced.npy' % (p, p)
   data = np.load(path)
+  data = data[...,:251]
   path = './readdata/p%1i/C20_p%1i_single_subduced_quantum_numbers.npy' % (p, p)
   qn_subduced = np.load(path)
+  qn_subduced = qn_subduced[...,:251]
   if ( (qn_subduced.shape[0] != data.shape[0])):
     print 'Bootstrapped operators do not aggree with expected operators'
     exit(0)
   
-  binned_data = prebinning(data, 1)
+  binned_data = prebinning(data, nb_bins)
   print 'Bootstrapping subduced data:'
   boot = bootstrap(binned_data, nb_boot)
-  print boot.shape
   print '\tfinished bootstrapping subduced operators'
   
   ################################################################################
@@ -116,6 +107,7 @@ def bootstrap_ensembles(p, nb_boot, bootstrap_original_data):
   utils.ensure_dir('./bootdata')
   utils.ensure_dir('./bootdata/p%1i' % p)
   utils.ensure_dir('./bootdata/p%1i/single' % p)
+  utils.ensure_dir('./bootdata/p%1i/single_subduced' % p)
   utils.ensure_dir('./bootdata/p%1i/avg' % p)
   
   ################################################################################
@@ -132,27 +124,19 @@ def bootstrap_ensembles(p, nb_boot, bootstrap_original_data):
   
     # write every operator seperately
     for i in range(0, qn_data.shape[0]):
-      path = './bootdata/p%1i/single/C20_single_p%i%i%i.d%i%i%i.g%i_' \
-             'p%i%i%i.d%i%i%i.g%i_real' % \
-              (p, qn_data[i][0][0], qn_data[i][0][1], qn_data[i][0][2], \
-               qn_data[i][1][0], qn_data[i][1][1], qn_data[i][1][2], \
-               qn_data[i][2], qn_data[i][3][0], qn_data[i][3][1], \
-               qn_data[i][3][2], qn_data[i][4][0], qn_data[i][4][1], \
-               qn_data[i][4][2], qn_data[i][5])
+      path = './bootdata/p%1i/single/%s_real' % \
+              (p, qn_data[i][-1])
       np.save(path, boot_real[i])
-      path = './bootdata/p%1i/single/C20_single_p%i%i%i.d%i%i%i.g%i_' \
-             'p%i%i%i.d%i%i%i.g%i_imag' % \
-              (p, qn_data[i][0][0], qn_data[i][0][1], qn_data[i][0][2], \
-               qn_data[i][1][0], qn_data[i][1][1], qn_data[i][1][2], \
-               qn_data[i][2], qn_data[i][3][0], qn_data[i][3][1], \
-               qn_data[i][3][2], qn_data[i][4][0], qn_data[i][4][1], \
-               qn_data[i][4][2], qn_data[i][5])
+      path = './bootdata/p%1i/single/%s_imag' % \
+              (p, qn_data[i][-1])
       np.save(path, boot_imag[i])
    
   ################################################################################
+  # write subduced correlators
+
   # write all subduced correlators
-  
   path = './bootdata/p%1i/C20_p%1i_single_subduced' % (p, p)
+  print boot.shape
   np.save(path, boot)
   path = './bootdata/p%1i/C20_p%1i_single_subduced_quantum_numbers' % (p, p)
   np.save(path, qn_subduced)
@@ -160,7 +144,7 @@ def bootstrap_ensembles(p, nb_boot, bootstrap_original_data):
   # write means over all operators subducing into same irrep
   path = './bootdata/p%1i/C20_p%1i_subduced_avg_vecks' % (p, p)
   # TODO: mp.mean or np.sum?
-  avg = np.mean(boot, axis=3)
+  avg = np.mean(boot, axis=4)
   print avg.shape
   qn_avg = qn_subduced[...,0,-3:]
   np.save(path, avg)
@@ -169,11 +153,21 @@ def bootstrap_ensembles(p, nb_boot, bootstrap_original_data):
 
    # write means over all operators subducing into same irrep
   path = './bootdata/p%1i/C20_p%1i_subduced_avg_rows' % (p, p)
-  avg = np.mean(avg, axis=2)
+  avg = np.mean(avg, axis=3)
   print avg.shape
   np.save(path, avg)
   path = './bootdata/p%1i/C20_p%1i_subduced_avg_rows_quantum_numbers' % (p, p)
   np.save(path, qn_avg)
+
+   # write the subduced correlators for each irrep, row and gamma seperately
+  for i in np.ndindex(qn_subduced[...,0].shape):
+    path = './bootdata/p%1i/single_subduced/C20_uu_%s_%1i_p%1i%1i%1i.d000.%s_' \
+                                                   'p%1i%1i%1i.d000.%s' % \
+            (p, qn_subduced[i][-1], i[-2], qn_subduced[i][0][0], qn_subduced[i][0][1], \
+             qn_subduced[i][0][2], gamma_for_filenames[qn_subduced[i][1]], \
+             -qn_subduced[i][0][0], -qn_subduced[i][0][1], \
+             -qn_subduced[i][0][2], gamma_for_filenames[qn_subduced[i][2]])
+    np.save(path, boot[i])
  
 #  # write means over all operators subducing into same irrep
 #  if p not in [1,3,4]:
@@ -196,30 +190,7 @@ def bootstrap_ensembles(p, nb_boot, bootstrap_original_data):
 #    for j in range(0,boot.shape[1]):
 #      E2_qn[0,j,-1] = 'E2'
 #    np.save(path, np.vstack((qn_subduced[...,0,-3:], E2_qn)) )
-#  
-#  ################################################################################
-#  # write the subduced correlators for each irrep and gamma seperately
-#  for i in ( range(0, boot.shape[0]) ):
-#    for j in ( range(0, boot.shape[1]) ):
-#      path = './bootdata/p%1i/single/C20_p%1i_single_%s_%s_%s' % (p, p, \
-#              qn_subduced[i,j,0,-3], qn_subduced[i,j,0,-2], qn_subduced[i,j,0,-1])
-#      np.save(path, boot[i,j])
-#      path = './bootdata/p%1i/single/C20_p%1i_single_%s_%s_%s_quantum_numbers' % \
-#              (p, p, qn_subduced[i,j,0,-3], qn_subduced[i,j,0,-2], 
-#                                                            qn_subduced[i,j,0,-1])
-#      np.save(path, qn_subduced[i,j])
-#  
-#  # write means over all operators subducing into same irrep for each irrep and 
-#  # gamma seperately
-#  for i in ( range(0, boot.shape[0]) ):
-#    for j in ( range(0, boot.shape[1]) ):
-#      path = './bootdata/p%1i/avg/C20_p%1i_avg_%s_%s_%s' % (p, p, \
-#              qn_subduced[i,j,0,-3], qn_subduced[i,j,0,-2], qn_subduced[i,j,0,-1])
-#      np.save(path, np.mean(boot[i,j], axis=0) )
-#      path = './bootdata/p%1i/avg/C20_p%1i_avg_%s_%s_%s_quantum_numbers' % (p, p, \
-#              qn_subduced[i,j,0,-3], qn_subduced[i,j,0,-2], qn_subduced[i,j,0,-1])
-#      np.save(path, qn_subduced[i,j,0,-1])
-  
+
   print '\tfinished writing'
 
-bootstrap_ensembles(0, 500, True)
+bootstrap_ensembles(p, nb_bins, nb_boot, bootstrap_original_data)
