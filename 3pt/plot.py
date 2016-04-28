@@ -35,6 +35,9 @@ gamma_50i = [15, 14, 13, \
              ['\gamma_5\gamma_0\gamma_1', '\gamma_5\gamma_0\gamma_2', \
               '\gamma_5\gamma_0\gamma_3', '\gamma_5\gamma_0\gamma_i']]
 gamma_5 = [5, ['\gamma_5']]
+gamma_for_filenames = {'\gamma_i' : 'gi', \
+                       '\gamma_0\gamma_i' : 'g0gi', \
+                       '\gamma_5\gamma_0\gamma_i' : 'g5g0gi'}
 
 gammas = [gamma_i, gamma_0i, gamma_50i]
 
@@ -110,6 +113,71 @@ def symmetrize(data, sinh):
 ################################################################################
 
 ################################################################################
+# plots all correlators into  one plot for each operator. Real and imaginary 
+# part into same plot with their own axes
+def plot_single(mean_real, err_real, mean_imag, err_imag, qn, pdfplot):
+
+  # pick a cmap and get the colors. cool (blueish) for real, autumn (redish) for
+  # imaginary correlators
+  cmap_real = plt.cm.cool(np.asarray(range(0,qn.shape[0]))*256/(qn.shape[0]-1))
+  cmap_imag= plt.cm.autumn(np.asarray(range(0,qn.shape[0]))*256/(qn.shape[0]-1))
+
+  for op in range(0, qn.shape[0]):
+    if verbose:
+      print 'plot_single op %i' % op
+    plt.title(r'$p_{so} = [(%i,%i,%i),(%i,%i,%i)] \ d_{so} = ' \
+               '[(%i,%i,%i),(%i,%i,%i)] \ \gamma_{so} = [%2i,%2i] ' \
+               '\quad p_{si} = (%i,%i,%i) \ d_{si} = (%i,%i,%i) \ ' \
+               '\gamma_{si} = %2i$' % \
+               (qn[op][0][0], qn[op][0][1], qn[op][0][2], \
+                                     qn[op][6][0], qn[op][6][1], qn[op][6][2], \
+                qn[op][1][0], qn[op][1][1], qn[op][1][2], \
+                qn[op][7][0], qn[op][7][1], qn[op][7][2], qn[op][2], qn[op][8], \
+                qn[op][3][0], qn[op][3][1], qn[op][3][2], \
+                         qn[op][4][0], qn[op][4][1], qn[op][4][2], qn[op][5]), \
+              fontsize=12)
+  
+    plt.axis('off')
+    plt.subplots_adjust(right=0.75)
+   
+    host = host_subplot(111, axes_class=AA.Axes)
+    
+    # create parasite plots with their own axes for real and imaginary part
+    par1 = host.twinx()
+    par2 = host.twinx()
+    offset = 60
+    new_fixed_axis = par2.get_grid_helper().new_fixed_axis
+    par2.axis["right"] = new_fixed_axis(loc="right", axes=par2, \
+                                                             offset=(offset, 0))
+    par2.axis["right"].toggle(all=True)
+    host.set_xlim(-1, mean_real.shape[1]+1)
+    host.set_yticklabels([])
+    par1.axis["right"].label.set_color(cmap_real[op])
+    par2.axis["right"].label.set_color(cmap_imag[op])
+  
+    # set labels
+    host.set_xlabel(r'$t/a$', fontsize=12)
+    host.set_ylabel(r'$C_2^0(t/a)$', fontsize=12)
+    par1.set_ylabel('real', fontsize=12)
+    par2.set_ylabel('imag', fontsize=12)
+
+    # plotting
+    real = par1.errorbar(range(0, mean_real.shape[-1]), mean_real[op], \
+                         err_real[op], fmt=symbol[op%len(symbol)], \
+                         color=cmap_real[op], label='real', markersize=3, \
+                         capsize=3, capthick=0.5, elinewidth=0.5, \
+                                 markeredgecolor=cmap_real[op], linewidth='0.0')
+    imag = par2.errorbar(range(0, mean_imag.shape[-1]), mean_imag[op], \
+                         err_imag[op], fmt=symbol[op%len(symbol)], \
+                         color=cmap_imag[op], label='imag', markersize=3, \
+                         capsize=3, capthick=0.5, elinewidth=0.5, \
+                                 markeredgecolor=cmap_imag[op], linewidth='0.0')
+  
+    pdfplot.savefig()
+    plt.clf()
+
+
+################################################################################
 # plot all combinations of momenta at source/ sink subducing into the same
 # \Lambda, [|\vec{k1}|, |\vec{k2}|], \mu, \vec{P}
 def plot_vecks(mean_sin, err_sin, qn_sin, mean_avg, err_avg, gammas, pdfplot):
@@ -119,9 +187,9 @@ def plot_vecks(mean_sin, err_sin, qn_sin, mean_avg, err_avg, gammas, pdfplot):
   # TODO: include loop over gamma structure and create additional 
   # array-dimension with just \gamma_5 as entry
   for i, irrep in enumerate(qn_sin):
-    for g, gamma in enumerate(irrep):
-      for k, k1k2 in enumerate(gamma):
-        for r, row in enumerate(k1k2):
+    for k, gevp_row in enumerate(irrep):
+      for g, gevp_col in enumerate(gevp_row):
+        for r, row in enumerate(gevp_col):
           print 'plot row %i of irrep %s, [%i,%i] -> %i' % (r, row[0,-1], \
                  row[0,-5][0], row[0,-5][1], p)
   
@@ -148,15 +216,15 @@ def plot_vecks(mean_sin, err_sin, qn_sin, mean_avg, err_avg, gammas, pdfplot):
             label = r'$[(%2i,%2i,%2i), (%2i,%2i,%2i)] \ \to \ ' \
                     r'[(%2i,%2i,%2i)]$' % \
                       (row[op][0][0], row[op][0][1], row[op][0][2], \
-                       row[op][2][0], row[op][2][1], row[op][2][2], \
-                       row[op][1][0], row[op][1][1], row[op][1][2])
+                       row[op][1][0], row[op][1][1], row[op][1][2], \
+                       row[op][2][0], row[op][2][1], row[op][2][2])
   #          else:
   #            label = '_nolegend_'
             
             # prepare data for plotting
             # TODO: put that in subduction
-            mean = mean_sin[i,g,k,r][op,:23]
-            err = err_sin[i,g,k,r][op,:23]
+            mean = mean_sin[i,k,g,r][op,]
+            err = err_sin[i,k,g,r][op,]
                   
   #            # Shrink current axis by 20%
   #            box = ax.get_position()
@@ -166,15 +234,15 @@ def plot_vecks(mean_sin, err_sin, qn_sin, mean_avg, err_avg, gammas, pdfplot):
   #            ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
   
   #          plt.yscale('log')
-            plt.errorbar(np.asarray(range(0, 23))+op*shift, mean, err, \
+            plt.errorbar(np.asarray(range(0, mean.shape[-1]))+op*shift, mean, err, \
                          fmt=symbol[op%len(symbol)], color=cmap_brg[op], \
                          label=label, markersize=3, capsize=3, capthick=0.5, \
                          elinewidth=0.5, markeredgecolor=cmap_brg[op], \
                                                                     linewidth='0.0')
   
-          mean = mean_avg[i,g,k,r,:23]
-          err = err_avg[i,g,k,r,:23]
-          plt.errorbar(np.asarray(range(0, 23))+op*shift, mean, err, \
+          mean = mean_avg[i,k,g,r,]
+          err = err_avg[i,k,g,r,]
+          plt.errorbar(np.asarray(range(0, mean.shape[-1]))+op*shift, mean, err, \
                        fmt='o', color='black', \
                        label='average', markersize=3, capsize=3, capthick=0.5, \
                        elinewidth=0.5, markeredgecolor='black', \
@@ -190,22 +258,22 @@ def plot_vecks(mean_sin, err_sin, qn_sin, mean_avg, err_avg, gammas, pdfplot):
 ################################################################################
 # plot all rows for averages over all combinations of momenta at source/ sink 
 # subducing into the same \Lambda, [|\vec{k1}|, |\vec{k2}|]
-def plot_rows(mean_sin, err_sin, qn_sin, mean_avg, err_avg, gammas, pdfplot):
+def plot_rows(mean_sin, err_sin, qn_sin, mean_avg, err_avg, gammas, pdfplot, plot_mean=True):
 
   # TODO: include loop over gamma structure and create additional 
   # array-dimension with just \gamma_5 as entry
   for i, irrep in enumerate(qn_sin):
-    for g, gamma in enumerate(irrep):
-      for k, k1k2 in enumerate(gamma):
-        print 'plot irrep %s, [%i,%i] -> %i' % (k1k2[0,-1], \
-               k1k2[0,-5][0], k1k2[0,-5][1], p)
+    for k, gevp_row in enumerate(irrep):
+      for g, gevp_col in enumerate(gevp_row):
+        print 'plot irrep %s, [%i,%i] -> %i' % (gevp_col[0,-1], \
+               gevp_col[0,-5][0], gevp_col[0,-5][1], p)
   
-        cmap_brg = plt.cm.brg(np.asarray(range(0, k1k2.shape[0])) * \
-                                         256/(k1k2.shape[0]-1))
+        cmap_brg = plt.cm.brg(np.asarray(range(0, gevp_col.shape[0])) * \
+                                         256/(gevp_col.shape[0]-1))
         if verbose:
-          print k1k2.shape[0] 
-        shift = 1./3/k1k2.shape[0]
-        for op in range(k1k2.shape[0]):
+          print gevp_col.shape[0] 
+        shift = 1./3/gevp_col.shape[0]
+        for op in range(gevp_col.shape[0]):
   
           #TODO: title
           # set plot title, labels etc.
@@ -213,8 +281,8 @@ def plot_rows(mean_sin, err_sin, qn_sin, mean_avg, err_avg, gammas, pdfplot):
                     r'subduced into $p = %i$, $[%i,%i] \ \to \ [%i]$ ' \
                     r'under $\Lambda = %s$' % \
                       (gamma_5[-1][-1], gamma_5[-1][-1], gammas[g][-1][-1], p, \
-                       k1k2[op][-5][0], k1k2[op][-5][1], \
-                       p, k1k2[op][-1]),\
+                       gevp_col[op][-5][0], gevp_col[op][-5][1], \
+                       p, gevp_col[op][-1]),\
                     fontsize=12)
           plt.xlabel(r'$t/a$', fontsize=12)
           plt.ylabel(r'$%s(t/a)$' % diagram, fontsize=12)
@@ -227,24 +295,31 @@ def plot_rows(mean_sin, err_sin, qn_sin, mean_avg, err_avg, gammas, pdfplot):
           
           # prepare data for plotting
           # TODO: put that in subduction
-          mean = mean_sin[i,g,k,op,:23]
-          err = err_sin[i,g,k,op,:23]
+          mean = mean_sin[i,k,g,op]
+          err = err_sin[i,k,g,op]
+
+          print i, k, g, op
+          if g == 0:
+            mean = (-1) * mean
+          if (op+1) == 2:
+            mean = (-1) * mean
                 
           plt.yscale('log')
-          plt.errorbar(np.asarray(range(0, 23))+op*shift, mean, err, \
+          plt.errorbar(np.asarray(range(0, mean.shape[-1]))+op*shift, mean, err, \
                        fmt=symbol[op%len(symbol)], color=cmap_brg[op], \
                        label=label, markersize=3, capsize=3, capthick=0.5, \
                        elinewidth=0.5, markeredgecolor=cmap_brg[op], \
                                                                   linewidth='0.0')
   
-        mean = mean_avg[i,g,k,:23]
-        err = err_avg[i,g,k,:23]
-        plt.yscale('log')
-        plt.errorbar(np.asarray(range(0, 23))+op*shift, mean, err, \
-                     fmt='o', color='black', \
-                     label='average', markersize=3, capsize=3, capthick=0.5, \
-                     elinewidth=0.5, markeredgecolor='black', \
-                                                                linewidth='0.0')
+        if plot_mean:
+          mean = mean_avg[i,k,g]
+          err = err_avg[i,k,g]
+          plt.yscale('log')
+          plt.errorbar(np.asarray(range(0, mean.shape[-1]))+op*shift, mean, err, \
+                       fmt='o', color='black', \
+                       label='average', markersize=3, capsize=3, capthick=0.5, \
+                       elinewidth=0.5, markeredgecolor='black', \
+                                                                  linewidth='0.0')
       
         plt.legend(numpoints=1, loc='best', fontsize=6)
         pdfplot.savefig()
@@ -263,9 +338,9 @@ def plot_abs(mean_sin, err_sin, qn_sin, mean_avg, err_avg, gammas, pdfplot):
   # TODO: include loop over gamma structure and create additional 
   # array-dimension with just \gamma_5 as entry
   for i, irrep in enumerate(qn_sin):
-    for g, gamma in enumerate(irrep):
-      for k, k1k2 in enumerate(gamma):
-        for r, row in enumerate(k1k2):
+    for k, gevp_row in enumerate(irrep):
+      for g, gevp_col in enumerate(gevp_row):
+        for r, row in enumerate(gevp_col):
           print 'plot row %i of irrep %s, [%i,%i] -> %i' % (r, row[0,-1], \
                  row[0,-5][0], row[0,-5][1], p)
   
@@ -299,10 +374,10 @@ def plot_abs(mean_sin, err_sin, qn_sin, mean_avg, err_avg, gammas, pdfplot):
             # prepare data for plotting
             # TODO: takewhile breaks one iteration to early
             mean = it.takewhile(lambda (x,y): x/y > 0, \
-                                it.izip(mean_sin[i,g,k,r][op,1:22], mean_sin[i,g,k,r][op,2:23]))
+                                it.izip(mean_sin[i,k,g,r][op,1:22], mean_sin[i,k,g,r][op,2:23]))
             mean = np.asarray(list(abs(m[1]) for m in mean))
-            mean = np.insert(mean, 0, abs(mean_sin[i,g,k,r][op,1]))
-            err = err_sin[i,g,k,r][op,1:(mean.shape[0]+1)]
+            mean = np.insert(mean, 0, abs(mean_sin[i,k,g,r][op,1]))
+            err = err_sin[i,k,g,r][op,1:(mean.shape[0]+1)]
                   
   #            # Shrink current axis by 20%
   #            box = ax.get_position()
@@ -312,7 +387,7 @@ def plot_abs(mean_sin, err_sin, qn_sin, mean_avg, err_avg, gammas, pdfplot):
   #            ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
   
             plt.yscale('log')
-            plt.errorbar(np.asarray(range(1, mean.shape[0]+1))+op*shift, mean, err, \
+            plt.errorbar(np.asarray(range(1, mean.shape[-1]+1))+op*shift, mean, err, \
                          fmt=symbol[op%len(symbol)], color=cmap_brg[op], \
                          label=label, markersize=3, capsize=3, capthick=0.5, \
                          elinewidth=0.5, markeredgecolor=cmap_brg[op], \
@@ -418,25 +493,25 @@ for p in [0]:
 
   # bootstrapped correlators
   diagram = 'C3+'
-#  filename = './bootdata/p%1i/%s_p%1i_real.npy' % (p, diagram, p)
-#  data = np.load(filename)
-#  mean_real, err_real = mean_error_print(data)
-#  filename = './bootdata/p%1i/%s_p%1i_imag.npy' % (p, diagram, p)
-#  data = np.load(filename)
-#  mean_imag, err_imag = mean_error_print(data)
-#  
-#  print mean_real.shape
-#  print mean_imag.shape
-#  
-#  filename = './bootdata/p%1i/%s_p%1i_quantum_numbers.npy' % (p, diagram,  p)
-#  qn = np.load(filename)
-#  
-#  if ( (qn.shape[0] != mean_real.shape[0]) or \
-#       (qn.shape[0] != mean_imag.shape[0]) ):
-#    print 'Bootstrapped operators do not aggree with expected operators'
-#    exit(0)
-#  
-#  print qn.shape
+  filename = './bootdata/p%1i/%s_p%1i_real.npy' % (p, diagram, p)
+  data = np.load(filename)
+  mean_real, err_real = mean_error_print(data)
+  filename = './bootdata/p%1i/%s_p%1i_imag.npy' % (p, diagram, p)
+  data = np.load(filename)
+  mean_imag, err_imag = mean_error_print(data)
+  
+  print mean_real.shape
+  print mean_imag.shape
+  
+  filename = './bootdata/p%1i/%s_p%1i_quantum_numbers.npy' % (p, diagram,  p)
+  qn = np.load(filename)
+  
+  if ( (qn.shape[0] != mean_real.shape[0]) or \
+       (qn.shape[0] != mean_imag.shape[0]) ):
+    print 'Bootstrapped operators do not aggree with expected operators'
+    exit(0)
+  
+  print qn.shape
 
   # subduced correlators
   filename = './bootdata/p%1i/%s_p%1i_subduced.npy' % (p, diagram, p)
@@ -493,25 +568,25 @@ for p in [0]:
 
   utils.ensure_dir('./plots')
 
-#  plot_path = './plots/Correlators_single_p%1i.pdf' % p
+  plot_path = './plots/%s_single_p%1i.pdf' % (diagram, p)
+  pdfplot = PdfPages(plot_path)
+  plot_single(mean_real, err_real, mean_imag, err_imag, qn, pdfplot)
+  pdfplot.close()
+
+#  plot_path = './plots/%s_vecks_p%1i.pdf' % (diagram, p)
 #  pdfplot = PdfPages(plot_path)
-#  plot_single(mean_real, err_real, mean_imag, err_imag, qn, pdfplot)
+#  plot_vecks(mean_sub, err_sub, qn_sub, mean_sub_vecks, err_sub_vecks, gammas, pdfplot)
 #  pdfplot.close()
 
-  plot_path = './plots/%s_vecks_p%1i.pdf' % (diagram, p)
-  pdfplot = PdfPages(plot_path)
-  plot_vecks(mean_sub, err_sub, qn_sub, mean_sub_vecks, err_sub_vecks, gammas, pdfplot)
-  pdfplot.close()
-
-  plot_path = './plots/%s_rows_p%1i.pdf' % (diagram, p)
-  pdfplot = PdfPages(plot_path)
-  plot_rows(mean_sub_vecks, err_sub_vecks, qn_sub_vecks, mean_sub_rows, err_sub_rows, gammas, pdfplot)
-  pdfplot.close()
-
-  plot_path = './plots/%s_abs_p%1i.pdf' % (diagram, p)
-  pdfplot = PdfPages(plot_path)
-  plot_abs(mean_sub, err_sub, qn_sub, mean_sub_vecks, err_sub_vecks, gammas, pdfplot)
-  pdfplot.close()
+#  plot_path = './plots/%s_rows_p%1i.pdf' % (diagram, p)
+#  pdfplot = PdfPages(plot_path)
+#  plot_rows(mean_sub_vecks, err_sub_vecks, qn_sub_vecks, mean_sub_rows, err_sub_rows, gammas, pdfplot, False)
+#  pdfplot.close()
+#
+#  plot_path = './plots/%s_abs_p%1i.pdf' % (diagram, p)
+#  pdfplot = PdfPages(plot_path)
+#  plot_abs(mean_sub, err_sub, qn_sub, mean_sub_vecks, err_sub_vecks, gammas, pdfplot)
+#  pdfplot.close()
 
 #  plot_path = './plots/Correlators_grouped_p%1i.pdf' % p
 #  pdfplot = PdfPages(plot_path)

@@ -17,7 +17,7 @@ sqrt6 = np.sqrt(6.)
 # T1
 T1 = [[[np.asarray([0, 0, 0], dtype=int),  1j/sqrt2, -1./sqrt2, 0]], \
       [[np.asarray([0, 0, 0], dtype=int),  0,         0,        1j]], \
-      [[np.asarray([0, 0, 0], dtype=int), -1j/sqrt2,  1./sqrt2, 0]]]
+      [[np.asarray([0, 0, 0], dtype=int), -1j/sqrt2, -1./sqrt2, 0]]]
 T1 = np.asarray(T1)
 
 # In the CM-Frame this is equivalent to only taking the diagonal combinations

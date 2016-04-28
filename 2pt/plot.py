@@ -100,6 +100,12 @@ def symmetrize(data, sinh):
 # plots all correlators into  one plot for each operator. Real and imaginary 
 # part into same plot with their own axes
 def plot_single(mean_real, err_real, mean_imag, err_imag, qn, pdfplot):
+
+  # pick a cmap and get the colors. cool (blueish) for real, autumn (redish) for
+  # imaginary correlators
+  cmap_real = plt.cm.cool(np.asarray(range(0,qn.shape[0]))*256/(qn.shape[0]-1))
+  cmap_imag= plt.cm.autumn(np.asarray(range(0,qn.shape[0]))*256/(qn.shape[0]-1))
+ 
   for op in range(0, qn.shape[0]):
     if verbose:
       print 'plot_single op %i' % op
@@ -847,7 +853,7 @@ def plot_mass(avg, qn_avg, pdfplot):
 ################################################################################
 # read data
 
-for p in range(2,3):
+for p in range(0,1):
   # bootstrapped correlators
   filename = './bootdata/p%1i/C20_p%1i_real.npy' % (p, p)
   data = np.load(filename)
@@ -932,26 +938,16 @@ for p in range(2,3):
 #          'number'
 #    exit(0)
   
-  ################################################################################
-  # pick a cmap and get the colors. cool (blueish) for real, autumn (redish) for
-  # imaginary correlators
-  
-  #TODO: put that into function calls
-  cmap_real = plt.cm.cool(np.asarray(range(0,qn.shape[0]))*256/(qn.shape[0]-1))
-  cmap_imag= plt.cm.autumn(np.asarray(range(0,qn.shape[0]))*256/(qn.shape[0]-1))
-  
-
-
 ################################################################################
 # plotting #####################################################################
 ################################################################################
 
   utils.ensure_dir('./plots')
 
-#  plot_path = './plots/Correlators_single_p%1i.pdf' % p
-#  pdfplot = PdfPages(plot_path)
-#  plot_single(mean_real, err_real, mean_imag, err_imag, qn, pdfplot)
-#  pdfplot.close()
+  plot_path = './plots/Correlators_single_p%1i.pdf' % p
+  pdfplot = PdfPages(plot_path)
+  plot_single(mean_real, err_real, mean_imag, err_imag, qn, pdfplot)
+  pdfplot.close()
 
 #  plot_path = './plots/Correlators_grouped_p%1i.pdf' % p
 #  pdfplot = PdfPages(plot_path)
@@ -971,22 +967,22 @@ for p in range(2,3):
 #                                        gamma, pdfplot, False)
 #  pdfplot.close()
 
-  if not np.all(qn_sub_vecks[i][tuple(it.repeat(0, qn_sub_vecks.ndim-2)) + \
-                (-1,)] \
-                 in ['A1', 'B1', 'B2'] for i in range(qn_sub_vecks.shape[0])):
-    plot_path = './plots/C20_rows_p%1i.pdf' % p
-    pdfplot = PdfPages(plot_path)
-    avg = plot_rows(mean_sub_vecks, err_sub_vecks, qn_sub_vecks, \
-                                mean_sub_rows, err_sub_rows, qn_sub_rows, pdfplot)
-    pdfplot.close()
-
- 
-  if p != 0:
-    plot_path = './plots/C20_vecks_p%1i.pdf' % p
-    pdfplot = PdfPages(plot_path)
-    avg = plot_vecks(mean_sub, err_sub, qn_sub, mean_sub_vecks, \
-                                 err_sub_vecks, qn_sub_vecks, pdfplot,plot_mean=True)
-    pdfplot.close()
+#  if not np.all(qn_sub_vecks[i][tuple(it.repeat(0, qn_sub_vecks.ndim-2)) + \
+#                (-1,)] \
+#                 in ['A1', 'B1', 'B2'] for i in range(qn_sub_vecks.shape[0])):
+#    plot_path = './plots/C20_rows_p%1i.pdf' % p
+#    pdfplot = PdfPages(plot_path)
+#    avg = plot_rows(mean_sub_vecks, err_sub_vecks, qn_sub_vecks, \
+#                                mean_sub_rows, err_sub_rows, qn_sub_rows, pdfplot)
+#    pdfplot.close()
+#
+# 
+#  if p != 0:
+#    plot_path = './plots/C20_vecks_p%1i.pdf' % p
+#    pdfplot = PdfPages(plot_path)
+#    avg = plot_vecks(mean_sub, err_sub, qn_sub, mean_sub_vecks, \
+#                                 err_sub_vecks, qn_sub_vecks, pdfplot,plot_mean=True)
+#    pdfplot.close()
 
 #  plot_path = './plots/Subduced_avg_2_p%1i.pdf' % p
 #  pdfplot = PdfPages(plot_path)

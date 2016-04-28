@@ -11,10 +11,11 @@ import utils
 # Parameters ###################################################################
 
 ################################################################################
-bootstrap_original_data = False
+bootstrap_original_data = True
 
 p = 0         # momentum
 
+nb_bins = 1
 nb_boot = 500
 
 verbose = 0
@@ -72,7 +73,7 @@ def bootstrap(X, boot_size):
 ################################################################################
 # Bootstrap routine ############################################################
 
-def bootstrap_ensembles(p, nb_boot, bootstrap_original_data):
+def bootstrap_ensembles(p, nb_bins, nb_boot, bootstrap_original_data):
   ################################################################################
   # read original data and call bootrap procedure
   diagram = 'C3+'
@@ -86,11 +87,11 @@ def bootstrap_ensembles(p, nb_boot, bootstrap_original_data):
       print '\tBootstrapped operators do not aggree with expected operators'
       exit(0)
 
-    binned_data = prebinning(data.real, 5)
+    binned_data = prebinning(data.real, nb_bins)
     print 'Bootstrapping original data for p = %1i. Real part:' % p
     boot_real = bootstrap(binned_data, nb_boot)
     print 'Bootstrapping original data. Imaginary part:'
-    binned_data = prebinning(data.imag, 1)
+    binned_data = prebinning(data.imag, nb_bins)
     boot_imag = bootstrap(binned_data, nb_boot)
     print boot_real.shape
     
@@ -112,10 +113,10 @@ def bootstrap_ensembles(p, nb_boot, bootstrap_original_data):
   print 'Bootstrapping subduced data:'
   boot = []
   for irrep in data:
-    for gamma in irrep:
-      for mom in gamma:
-        for row in mom:
-          binned_data = prebinning(row, 1)
+    for gevp_row in irrep:
+      for gevp_col in gevp_row:
+        for row in gevp_col:
+          binned_data = prebinning(row, nb_bins)
           boot.append(bootstrap(binned_data, nb_boot))
   boot = np.asarray(boot).reshape(data.shape)
   print boot.shape
@@ -173,11 +174,11 @@ def bootstrap_ensembles(p, nb_boot, bootstrap_original_data):
   avg = np.zeros_like(boot)
   qn_avg = np.zeros_like(qn_subduced)
   for i in range(boot.shape[0]):
-    for g in range(boot.shape[1]):
-      for k in range(boot.shape[2]):
+    for k in range(boot.shape[1]):
+      for g in range(boot.shape[2]):
         for r in range(boot.shape[3]):
-          avg[i,g,k,r] = np.sum(boot[i,g,k,r], axis=0) 
-          qn_avg[i,g,k,r] = qn_subduced[i,g,k,r][0,3:]
+          avg[i,k,g,r] = np.sum(boot[i,k,g,r], axis=0) 
+          qn_avg[i,k,g,r] = qn_subduced[i,k,g,r][0,3:]
   avg = np.asarray(avg.tolist())
   qn_avg = np.asarray(qn_avg.tolist())
   path = './bootdata/p%1i/%s_p%1i_subduced_avg_vecks' % (p, diagram, p)
@@ -241,4 +242,4 @@ def bootstrap_ensembles(p, nb_boot, bootstrap_original_data):
 #  
 #  print '\tfinished writing'
 
-bootstrap_ensembles(0, 500, False)
+bootstrap_ensembles(p, nb_bins, nb_boot, bootstrap_original_data)
