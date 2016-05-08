@@ -61,10 +61,11 @@ def mean_error_print_foreach_row(boot, write = 0):
   mean = np.zeros_like(boot)
   err  = np.zeros_like(boot)
   for i,irrep in enumerate(boot):
-    for k,k1k2 in enumerate(irrep):
-      for r,row in enumerate(k1k2):
-        mean[i,k,r] = np.mean(row, axis=-1)
-        err[i,k,r]  = np.std(row, axis=-1)
+    for k1, gevp_row in enumerate(irrep):
+      for k2, gevp_col in enumerate(gevp_row):
+        for r,row in enumerate(gevp_col):
+          mean[i,k1,k2,r] = np.mean(row, axis=-1)
+          err[i,k1,k2,r]  = np.std(row, axis=-1)
   if write:
     for t, m, e in zip(range(0, len(mean)), mean, err):
       print t, m, e
@@ -580,68 +581,69 @@ def plot_vecks(mean_sin, err_sin, qn_sin, mean_avg, err_avg, pdfplot):
   # TODO: include loop over gamma structure and create additional 
   # array-dimension with just \gamma_5 as entry
   for i, irrep in enumerate(qn_sin):
-    for k, k1k2 in enumerate(irrep):
-      for r, row in enumerate(k1k2):
-        print 'plot row %i of irrep %s, [%i,%i] -> [%i,%i]' % (r, row[0,-1], \
-               row[0,-5][0], row[0,-5][1], row[0,-4][0], row[0,-4][1])
+    for k1, gevp_row in enumerate(irrep):
+      for k2, gevp_col in enumerate(gevp_row):
+        for r, row in enumerate(gevp_col):
+          print 'plot row %i of irrep %s, [%i,%i] -> [%i,%i]' % (r, row[0,-1], \
+                 row[0,-5][0], row[0,-5][1], row[0,-4][0], row[0,-4][1])
 
-        cmap_brg = plt.cm.brg(np.asarray(range(0, row.shape[0])) * \
-                                         256/(row.shape[0]-1))
-        if verbose:
-          print row.shape[0] 
-        shift = 1./3/row.shape[0]
+          cmap_brg = plt.cm.brg(np.asarray(range(0, row.shape[0])) * \
+                                           256/(row.shape[0]-1))
+          if verbose:
+            print row.shape[0] 
+          shift = 1./3/row.shape[0]
 
-        # set plot title, labels etc.
-        plt.title(r'$%s%s$ - $%s%s$ Operators ' \
-                  r'subduced into $p = %i$, $[%i,%i] \ \to \ [%i,%i]$ ' \
-                  r'under $\Lambda = %s$ $\mu = %i$' % \
-                    (gamma_5[-1][-1], gamma_5[-1][-1], gamma_5[-1][-1], \
-                     gamma_5[-1][-1], p, row[op][-5][0], row[op][-5][1], \
-                     row[op][-4][0], row[op][-4][1], row[op][-1], r+1),\
-                  fontsize=12)
-        plt.xlabel(r'$t/a$', fontsize=12)
-        plt.ylabel(r'$%s(t/a)$' % diagram, fontsize=12)
+          # set plot title, labels etc.
+          plt.title(r'$%s%s$ - $%s%s$ Operators ' \
+                    r'subduced into $p = %i$, $[%i,%i] \ \to \ [%i,%i]$ ' \
+                    r'under $\Lambda = %s$ $\mu = %i$' % \
+                      (gamma_5[-1][-1], gamma_5[-1][-1], gamma_5[-1][-1], \
+                       gamma_5[-1][-1], p, row[0][-5][0], row[0][-5][1], \
+                       row[0][-4][0], row[0][-4][1], row[0][-1], r+1),\
+                    fontsize=12)
+          plt.xlabel(r'$t/a$', fontsize=12)
+          plt.ylabel(r'$%s(t/a)$' % diagram, fontsize=12)
  
-        for op in range(0, row.shape[0]):
+          for op in range(0, row.shape[0]):
 
-          label = r'$[(%2i,%2i,%2i), (%2i,%2i,%2i)] \ \to \ ' \
-                  r'[(%2i,%2i,%2i), (%2i,%2i,%2i)]$' % \
-                    (row[op][0][0], row[op][0][1], row[op][0][2], \
-                     row[op][1][0], row[op][1][1], row[op][1][2], \
-                     row[op][2][0], row[op][2][1], row[op][2][2], \
-                     row[op][3][0], row[op][3][1], row[op][3][2])
-#          label = '_nolegend_'
-          
-          # prepare data for plotting
-          # TODO: put that in subduction
-          mean = mean_sin[i,k,r][op,:23]
-          err = err_sin[i,k,r][op,:23]
-                
-#            # Shrink current axis by 20%
-#            box = ax.get_position()
-#            ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+            label = r'$[(%2i,%2i,%2i), (%2i,%2i,%2i)] \ \to \ ' \
+                    r'[(%2i,%2i,%2i), (%2i,%2i,%2i)]$' % \
+                      (row[op][0][0], row[op][0][1], row[op][0][2], \
+                       row[op][1][0], row[op][1][1], row[op][1][2], \
+                       row[op][2][0], row[op][2][1], row[op][2][2], \
+                       row[op][3][0], row[op][3][1], row[op][3][2])
+#            label = '_nolegend_'
+            
+            # prepare data for plotting
+            # TODO: put that in subduction
+            mean = mean_sin[i,k1,k2,r][op,:23]
+            err = err_sin[i,k1,k2,r][op,:23]
+                  
+#              # Shrink current axis by 20%
+#              box = ax.get_position()
+#              ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
 #
-#            # Put a legend to the right of the current axis
-#            ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+#              # Put a legend to the right of the current axis
+#              ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 
-#          plt.yscale('log')
+#            plt.yscale('log')
+            plt.errorbar(np.asarray(range(0, 23))+op*shift, mean, err, \
+                         fmt=symbol[op%len(symbol)], color=cmap_brg[op], \
+                         label=label, markersize=3, capsize=3, capthick=0.5, \
+                         elinewidth=0.5, markeredgecolor=cmap_brg[op], \
+                                                                    linewidth='0.0')
+
+          mean = mean_avg[i,k1,k2,r,:23]
+          err = err_avg[i,k1,k2,r,:23]
           plt.errorbar(np.asarray(range(0, 23))+op*shift, mean, err, \
-                       fmt=symbol[op%len(symbol)], color=cmap_brg[op], \
-                       label=label, markersize=3, capsize=3, capthick=0.5, \
-                       elinewidth=0.5, markeredgecolor=cmap_brg[op], \
+                       fmt='o', color='black', \
+                       label='average', markersize=3, capsize=3, capthick=0.5, \
+                       elinewidth=0.5, markeredgecolor='black', \
                                                                   linewidth='0.0')
-
-        mean = mean_avg[i,k,r,:23]
-        err = err_avg[i,k,r,:23]
-        plt.errorbar(np.asarray(range(0, 23))+op*shift, mean, err, \
-                     fmt='o', color='black', \
-                     label='average', markersize=3, capsize=3, capthick=0.5, \
-                     elinewidth=0.5, markeredgecolor='black', \
-                                                                linewidth='0.0')
     
-        plt.legend(numpoints=1, loc='best', fontsize=6).get_frame().set_alpha(0.5)
-        pdfplot.savefig()
-        plt.clf()
+          plt.legend(numpoints=1, loc='best', fontsize=6).get_frame().set_alpha(0.5)
+          pdfplot.savefig()
+          plt.clf()
 
   print ' '
   return
@@ -654,60 +656,61 @@ def plot_rows(mean_sin, err_sin, qn_sin, mean_avg, err_avg, pdfplot):
   # TODO: include loop over gamma structure and create additional 
   # array-dimension with just \gamma_5 as entry
   for i, irrep in enumerate(qn_sin):
-    for k, k1k2 in enumerate(irrep):
-      print 'plot irrep %s, [%i,%i] -> [%i,%i]' % (k1k2[0,-1], \
-             k1k2[0,-5][0], k1k2[0,-5][1], k1k2[0,-4][0], k1k2[0,-4][1])
+    for k1, gevp_row in enumerate(irrep):
+      for k2, gevp_col in enumerate(gevp_row):
+        print 'plot irrep %s, [%i,%i] -> [%i,%i]' % (gevp_col[0,-1], \
+               gevp_col[0,-5][0], gevp_col[0,-5][1], gevp_col[0,-4][0], gevp_col[0,-4][1])
 
-      cmap_brg = plt.cm.brg(np.asarray(range(0, k1k2.shape[0])) * \
-                                       256/(k1k2.shape[0]-1))
-      if verbose:
-        print k1k2.shape[0] 
-      shift = 1./3/k1k2.shape[0]
-      for op in range(k1k2.shape[0]):
+        cmap_brg = plt.cm.brg(np.asarray(range(0, gevp_col.shape[0])) * \
+                                         256/(gevp_col.shape[0]-1))
+        if verbose:
+          print gevp_col.shape[0] 
+        shift = 1./3/gevp_col.shape[0]
+        for op in range(gevp_col.shape[0]):
 
-        #TODO: title
-        # set plot title, labels etc.
-        plt.title(r'$%s%s$ - $%s%s$ Operators ' \
-                  r'subduced into $p = %i$, $[%i,%i] \ \to \ [%i,%i]$ ' \
-                  r'under $\Lambda = %s$' % \
-                    (gamma_5[-1][-1], gamma_5[-1][-1], gamma_5[-1][-1], \
-                     gamma_5[-1][-1], p, \
-                     k1k2[op][-5][0], k1k2[op][-5][1], k1k2[op][-4][0], \
-                     k1k2[op][-4][1], k1k2[op][-1]),\
-                  fontsize=12)
-        plt.xlabel(r'$t/a$', fontsize=12)
-        plt.ylabel(r'$%s(t/a)$' % diagram, fontsize=12)
+          #TODO: title
+          # set plot title, labels etc.
+          plt.title(r'$%s%s$ - $%s%s$ Operators ' \
+                    r'subduced into $p = %i$, $[%i,%i] \ \to \ [%i,%i]$ ' \
+                    r'under $\Lambda = %s$' % \
+                      (gamma_5[-1][-1], gamma_5[-1][-1], gamma_5[-1][-1], \
+                       gamma_5[-1][-1], p, \
+                       gevp_col[op][-5][0], gevp_col[op][-5][1], gevp_col[op][-4][0], \
+                       gevp_col[op][-4][1], gevp_col[op][-1]),\
+                    fontsize=12)
+          plt.xlabel(r'$t/a$', fontsize=12)
+          plt.ylabel(r'$%s(t/a)$' % diagram, fontsize=12)
 
  
-#        if abs(mean_sin[i,k,op,0]) >= abs(err_avg[i,k,0]):
-        label = r'$\mu = %i$' % (op+1)
-#        else:
-#          label = '_nolegend_'
-        
-        # prepare data for plotting
-        # TODO: put that in subduction
-        mean = mean_sin[i,k,op,:23]
-        err = err_sin[i,k,op,:23]
-              
+#          if abs(mean_sin[i,k,op,0]) >= abs(err_avg[i,k,0]):
+          label = r'$\mu = %i$' % (op+1)
+#          else:
+#            label = '_nolegend_'
+          
+          # prepare data for plotting
+          # TODO: put that in subduction
+          mean = mean_sin[i,k1,k2,op,:23]
+          err = err_sin[i,k1,k2,op,:23]
+                
+          plt.yscale('log')
+          plt.errorbar(np.asarray(range(0, 23))+op*shift, mean, err, \
+                       fmt=symbol[op%len(symbol)], color=cmap_brg[op], \
+                       label=label, markersize=3, capsize=3, capthick=0.5, \
+                       elinewidth=0.5, markeredgecolor=cmap_brg[op], \
+                                                                  linewidth='0.0')
+
+        mean = mean_avg[i,k1,k2,:23]
+        err = err_avg[i,k1,k2,:23]
         plt.yscale('log')
         plt.errorbar(np.asarray(range(0, 23))+op*shift, mean, err, \
-                     fmt=symbol[op%len(symbol)], color=cmap_brg[op], \
-                     label=label, markersize=3, capsize=3, capthick=0.5, \
-                     elinewidth=0.5, markeredgecolor=cmap_brg[op], \
+                     fmt='o', color='black', \
+                     label='average', markersize=3, capsize=3, capthick=0.5, \
+                     elinewidth=0.5, markeredgecolor='black', \
                                                                 linewidth='0.0')
-
-      mean = mean_avg[i,k,:23]
-      err = err_avg[i,k,:23]
-      plt.yscale('log')
-      plt.errorbar(np.asarray(range(0, 23))+op*shift, mean, err, \
-                   fmt='o', color='black', \
-                   label='average', markersize=3, capsize=3, capthick=0.5, \
-                   elinewidth=0.5, markeredgecolor='black', \
-                                                              linewidth='0.0')
     
-      plt.legend(numpoints=1, loc='best', fontsize=6)
-      pdfplot.savefig()
-      plt.clf()
+        plt.legend(numpoints=1, loc='best', fontsize=6)
+        pdfplot.savefig()
+        plt.clf()
   
   print ' '
   return
@@ -722,73 +725,74 @@ def plot_abs(mean_sin, err_sin, qn_sin, mean_avg, err_avg, pdfplot):
   # TODO: include loop over gamma structure and create additional 
   # array-dimension with just \gamma_5 as entry
   for i, irrep in enumerate(qn_sin):
-    for k, k1k2 in enumerate(irrep):
-      for r, row in enumerate(k1k2):
-        print 'plot row %i of irrep %s, [%i,%i] -> [%i,%i]' % (r, row[0,-1], \
-               row[0,-5][0], row[0,-5][1], row[0,-4][0], row[0,-4][1])
+    for k1, gevp_row in enumerate(irrep):
+      for k2, gevp_col in enumerate(gevp_row):
+        for r, row in enumerate(gevp_col):
+          print 'plot row %i of irrep %s, [%i,%i] -> [%i,%i]' % (r, row[0,-1], \
+                 row[0,-5][0], row[0,-5][1], row[0,-4][0], row[0,-4][1])
 
-        cmap_brg = plt.cm.brg(np.asarray(range(0, row.shape[0])) * \
-                                         256/(row.shape[0]-1))
-        if verbose:
-          print row.shape[0] 
-        shift = 1./3/row.shape[0]
-        for op in range(0, row.shape[0]):
+          cmap_brg = plt.cm.brg(np.asarray(range(0, row.shape[0])) * \
+                                           256/(row.shape[0]-1))
+          if verbose:
+            print row.shape[0] 
+          shift = 1./3/row.shape[0]
+          for op in range(0, row.shape[0]):
 
-        #TODO: title
-          # set plot title, labels etc.
-          plt.title(r'$%s%s$ - $%s%s$ Operators ' \
-                    r'subduced into $p = %i$, $[%i,%i] \ \to \ [%i,%i]$ ' \
-                    r'under $\Lambda = %s$ $\mu = %i$' % \
-                      (gamma_5[-1][-1], gamma_5[-1][-1], gamma_5[-1][-1], \
-                       gamma_5[-1][-1], p, row[op][-5][0], row[op][-5][1], \
-                       row[op][-4][0], row[op][-4][1], row[op][-1], r+1),\
-                    fontsize=12)
-          plt.xlabel(r'$t/a$', fontsize=12)
-          plt.ylabel(r'$%s(t/a)$' % diagram, fontsize=12)
+          #TODO: title
+            # set plot title, labels etc.
+            plt.title(r'$%s%s$ - $%s%s$ Operators ' \
+                      r'subduced into $p = %i$, $[%i,%i] \ \to \ [%i,%i]$ ' \
+                      r'under $\Lambda = %s$ $\mu = %i$' % \
+                        (gamma_5[-1][-1], gamma_5[-1][-1], gamma_5[-1][-1], \
+                         gamma_5[-1][-1], p, row[op][-5][0], row[op][-5][1], \
+                         row[op][-4][0], row[op][-4][1], row[op][-1], r+1),\
+                      fontsize=12)
+            plt.xlabel(r'$t/a$', fontsize=12)
+            plt.ylabel(r'$%s(t/a)$' % diagram, fontsize=12)
   
-#          if abs(mean_sin[i,k,r][op,0]) >= 0.05*abs(np.max(mean_sin[i,k,r][:,0])):
-          label = r'$[(%2i,%2i,%2i), (%2i,%2i,%2i)] \ \to \ ' \
-                  r'[(%2i,%2i,%2i), (%2i,%2i,%2i)]$' % \
-                    (row[op][0][0], row[op][0][1], row[op][0][2], \
-                     row[op][1][0], row[op][1][1], row[op][1][2], \
-                     row[op][2][0], row[op][2][1], row[op][2][2], \
-                     row[op][3][0], row[op][3][1], row[op][3][2])
-#          else:
-#            label = '_nolegend_'
-          
-          # prepare data for plotting
-          # TODO: takewhile breaks one iteration to early
-          mean = it.takewhile(lambda (x,y): x/y > 0, \
-                              it.izip(mean_sin[i,k,r][op,1:22], mean_sin[i,k,r][op,2:23]))
-          mean = np.asarray(list(abs(m[1]) for m in mean))
-          mean = np.insert(mean, 0, abs(mean_sin[i,k,r][op,1]))
-          err = err_sin[i,k,r][op,1:(mean.shape[0]+1)]
-                
-#            # Shrink current axis by 20%
-#            box = ax.get_position()
-#            ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+#            if abs(mean_sin[i,k,r][op,0]) >= 0.05*abs(np.max(mean_sin[i,k,r][:,0])):
+            label = r'$[(%2i,%2i,%2i), (%2i,%2i,%2i)] \ \to \ ' \
+                    r'[(%2i,%2i,%2i), (%2i,%2i,%2i)]$' % \
+                      (row[op][0][0], row[op][0][1], row[op][0][2], \
+                       row[op][1][0], row[op][1][1], row[op][1][2], \
+                       row[op][2][0], row[op][2][1], row[op][2][2], \
+                       row[op][3][0], row[op][3][1], row[op][3][2])
+#            else:
+#              label = '_nolegend_'
+            
+            # prepare data for plotting
+            # TODO: takewhile breaks one iteration to early
+            mean = it.takewhile(lambda (x,y): x/y > 0, \
+                                it.izip(mean_sin[i,k1,k2,r][op,1:22], mean_sin[i,k1,k2,r][op,2:23]))
+            mean = np.asarray(list(abs(m[1]) for m in mean))
+            mean = np.insert(mean, 0, abs(mean_sin[i,k1,k2,r][op,1]))
+            err = err_sin[i,k1,k2,r][op,1:(mean.shape[0]+1)]
+                  
+#              # Shrink current axis by 20%
+#              box = ax.get_position()
+#              ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
 #
-#            # Put a legend to the right of the current axis
-#            ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+#              # Put a legend to the right of the current axis
+#              ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 
-          plt.yscale('log')
-          plt.errorbar(np.asarray(range(1, mean.shape[0]+1))+op*shift, mean, err, \
-                       fmt=symbol[op%len(symbol)], color=cmap_brg[op], \
-                       label=label, markersize=3, capsize=3, capthick=0.5, \
-                       elinewidth=0.5, markeredgecolor=cmap_brg[op], \
-                                                                  linewidth='0.0')
+            plt.yscale('log')
+            plt.errorbar(np.asarray(range(1, mean.shape[0]+1))+op*shift, mean, err, \
+                         fmt=symbol[op%len(symbol)], color=cmap_brg[op], \
+                         label=label, markersize=3, capsize=3, capthick=0.5, \
+                         elinewidth=0.5, markeredgecolor=cmap_brg[op], \
+                                                                    linewidth='0.0')
 
-#        mean = mean_avg[i,k,r,:23]
-#        err = err_avg[i,k,r,:23]
-#        plt.errorbar(np.asarray(range(0, 23))+op*shift, mean, err, \
-#                     fmt='o', color='black', \
-#                     label='average', markersize=3, capsize=3, capthick=0.5, \
-#                     elinewidth=0.5, markeredgecolor='black', \
-#                                                                linewidth='0.0')
-    
-        plt.legend(numpoints=1, loc='best', fontsize=6).get_frame().set_alpha(0.5)
-        pdfplot.savefig()
-        plt.clf()
+#          mean = mean_avg[i,k1,k2,r,:23]
+#          err = err_avg[i,k1,k2,r,:23]
+#          plt.errorbar(np.asarray(range(0, 23))+op*shift, mean, err, \
+#                       fmt='o', color='black', \
+#                       label='average', markersize=3, capsize=3, capthick=0.5, \
+#                       elinewidth=0.5, markeredgecolor='black', \
+#                                                                  linewidth='0.0')
+      
+          plt.legend(numpoints=1, loc='best', fontsize=6).get_frame().set_alpha(0.5)
+          pdfplot.savefig()
+          plt.clf()
 
   print ' '
   return

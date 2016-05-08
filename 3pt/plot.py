@@ -64,11 +64,11 @@ def mean_error_print_foreach_row(boot, write = 0):
   mean = np.zeros_like(boot)
   err  = np.zeros_like(boot)
   for i,irrep in enumerate(boot):
-    for g, gamma in enumerate(irrep):
-      for k,k1k2 in enumerate(gamma):
-        for r,row in enumerate(k1k2):
-          mean[i,g,k,r] = np.mean(row, axis=-1)
-          err[i,g,k,r]  = np.std(row, axis=-1)
+    for k,k1k2 in enumerate(irrep):
+      for g, gamma in enumerate(k1k2):
+        for r,row in enumerate(gamma):
+          mean[i,k,g,r] = np.mean(row, axis=-1)
+          err[i,k,g,r]  = np.std(row, axis=-1)
   if write:
     for t, m, e in zip(range(0, len(mean)), mean, err):
       print t, m, e
@@ -107,6 +107,25 @@ def symmetrize(data, sinh):
 
   return sym
 
+def read_ensemble(p, name, foreach_row=False):
+
+  # subduced correlators
+  filename = './bootdata/p%1i/%s.npy' % (p, name)
+  data = np.load(filename)
+  if not foreach_row:
+    mean, err = mean_error_print(data)
+  else:
+    mean, err = mean_error_print_foreach_row(data)
+  
+  filename = './bootdata/p%1i/%s_qn.npy' % (p, name)
+  qn = np.load(filename)
+  if ( (qn.shape[0] != mean.shape[0]) ):
+    print 'Bootstrapped operators %s do not aggree with expected operators' % \
+                                                                            name
+    exit(0)
+  print qn.shape
+
+  return mean, err, qn
 
 ################################################################################
 # plotting functions ###########################################################
@@ -411,78 +430,76 @@ def plot_abs(mean_sin, err_sin, qn_sin, mean_avg, err_avg, gammas, pdfplot):
 ################################################################################
 # plot all combinations of momenta at source/ sink subducing into the same
 # \Lambda, [|\vec{k1}|, |\vec{k2}|], \mu, \vec{P}
-def plot_signal_to_noise(mean_sin, err_sin, qn_sin, mean_avg, err_avg, pdfplot):
+def plot_signal_to_noise(mean_sin, err_sin, qn_sin, mean_avg, err_avg, gammas, pdfplot):
 
 #  ax = plt.subplot(111)
 
-  # TODO: include loop over gamma structure and create additional 
-  # array-dimension with just \gamma_5 as entry
   for i, irrep in enumerate(qn_sin):
-    for k, k1k2 in enumerate(irrep):
-      for r, row in enumerate(k1k2):
-        print 'plot row %i of irrep %s, [%i,%i] -> [%i,%i]' % (r, row[0,-1], \
-               row[0,-5][0], row[0,-5][1], row[0,-4][0], row[0,-4][1])
-
-        cmap_brg = plt.cm.brg(np.asarray(range(0, row.shape[0])) * \
-                                         256/(row.shape[0]-1))
-        if verbose:
-          print row.shape[0] 
-        shift = 1./3/row.shape[0]
-        for op in range(0, row.shape[0]):
-
-        #TODO: title
-          # set plot title, labels etc.
-          plt.title(r'$%s%s$ - $%s%s$ Operators ' \
-                    r'subduced into $p = %i$, $[%i,%i] \ \to \ [%i,%i]$ ' \
-                    r'under $\Lambda = %s$ $\mu = %i$' % \
-                      (gamma_5[-1][-1], gamma_5[-1][-1], gamma_5[-1][-1], \
-                       gamma_5[-1][-1], p, row[op][-5][0], row[op][-5][1], \
-                       row[op][-4][0], row[op][-4][1], row[op][-1], r+1),\
-                    fontsize=12)
-          plt.xlabel(r'$t/a$', fontsize=12)
-          plt.ylabel(r'$%s(t/a)$' % diagram, fontsize=12)
+    for k, gevp_row in enumerate(irrep):
+      for g, gevp_col in enumerate(gevp_row):
+        for r, row in enumerate(gevp_col):
+          print 'plot row %i of irrep %s, [%i,%i] -> %i' % (r, row[0,-1], \
+                 row[0,-5][0], row[0,-5][1], p)
   
-#          if abs(mean_sin[i,k,r][op,0]) >= 0.05*abs(np.max(mean_sin[i,k,r][:,0])):
-          label = r'$[(%2i,%2i,%2i), (%2i,%2i,%2i)] \ \to \ ' \
-                  r'[(%2i,%2i,%2i), (%2i,%2i,%2i)]$' % \
-                    (row[op][0][0], row[op][0][1], row[op][0][2], \
-                     row[op][1][0], row[op][1][1], row[op][1][2], \
-                     row[op][2][0], row[op][2][1], row[op][2][2], \
-                     row[op][3][0], row[op][3][1], row[op][3][2])
-#          else:
-#            label = '_nolegend_'
-          
-          # prepare data for plotting
-          # TODO: put that in subduction
-          mean = mean_sin[i,k,r][op,:23]
-          err = err_sin[i,k,r][op,:23]
-                
-#            # Shrink current axis by 20%
-#            box = ax.get_position()
-#            ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
-#
-#            # Put a legend to the right of the current axis
-#            ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
-
-#          plt.yscale('log')
-          plt.errorbar(np.asarray(range(0, 23))+op*shift, mean, err, \
-                       fmt=symbol[op%len(symbol)], color=cmap_brg[op], \
-                       label=label, markersize=3, capsize=3, capthick=0.5, \
-                       elinewidth=0.5, markeredgecolor=cmap_brg[op], \
-                                                                  linewidth='0.0')
-
-        mean = mean_avg[i,k,r,:23]
-        err = err_avg[i,k,r,:23]
-        plt.errorbar(np.asarray(range(0, 23))+op*shift, mean, err, \
-                     fmt='o', color='black', \
-                     label='average', markersize=3, capsize=3, capthick=0.5, \
-                     elinewidth=0.5, markeredgecolor='black', \
-                                                                linewidth='0.0')
+          cmap_brg = plt.cm.brg(np.asarray(range(0, row.shape[0])) * \
+                                           256/(row.shape[0]-1))
+          if verbose:
+            print row.shape[0] 
+          shift = 1./3/row.shape[0]
+          for op in range(0, row.shape[0]):
+  
+          #TODO: title
+            # set plot title, labels etc.
+            plt.title(r'$%s%s$ - $%s$ Operators ' \
+                      r'subduced into $p = %i$, $[%i,%i] \ \to \ [%i$] ' \
+                      r'under $\Lambda = %s$ $\mu = %i$' % \
+                        (gamma_5[-1][-1], gamma_5[-1][-1], \
+                         gammas[g][-1][-1], p, row[op][-5][0], row[op][-5][1], \
+                         p, row[op][-1], r+1),\
+                      fontsize=12)
+            plt.xlabel(r'$t/a$', fontsize=12)
+            plt.ylabel(r'$%s(t/a)$' % diagram, fontsize=12)
+            plt.yscale('log')
+#            plt.ylim((-2,2))
     
-        plt.legend(numpoints=1, loc='best', fontsize=6).get_frame().set_alpha(0.5)
-        pdfplot.savefig()
-        plt.clf()
-
+  #          if abs(mean_sin[i,k,r][op,0]) >= 0.05*abs(np.max(mean_sin[i,k,r][:,0])):
+            label = r'$[(%2i,%2i,%2i), (%2i,%2i,%2i)] \ \to \ ' \
+                    r'[(%2i,%2i,%2i)]$' % \
+                      (row[op][0][0], row[op][0][1], row[op][0][2], \
+                       row[op][1][0], row[op][1][1], row[op][1][2], \
+                       row[op][2][0], row[op][2][1], row[op][2][2])
+  #          else:
+  #            label = '_nolegend_'
+            
+            # prepare data for plotting
+            # TODO: put that in subduction
+            mean = mean_sin[i,k,g,r][op,]
+            err = err_sin[i,k,g,r][op,]
+                  
+  #            # Shrink current axis by 20%
+  #            box = ax.get_position()
+  #            ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+  #
+  #            # Put a legend to the right of the current axis
+  #            ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+  
+            plt.plot(np.asarray(range(0, mean.shape[-1]))+op*shift, np.abs(err/mean), \
+                     marker=symbol[op%len(symbol)], color=cmap_brg[op], \
+                     label=label, markersize=3, markeredgecolor=cmap_brg[op], \
+                                                                linewidth='0.0')
+  
+          mean = mean_avg[i,k,g,r,]
+          err = err_avg[i,k,g,r,]
+          plt.plot(np.asarray(range(0, mean.shape[-1]))+op*shift, np.abs(err/mean), \
+                   marker='o', color='black', label='average', markersize=3, \
+                   markeredgecolor='black', linewidth='0.0')
+          plt.plot([0,mean.shape[-1]], [1,1], color='black', linestyle='--')
+#          plt.plot([0,mean.shape[-1]], [-1,-1], color='black', linestyle='--')
+      
+          plt.legend(numpoints=1, loc='best', fontsize=6).get_frame().set_alpha(0.5)
+          pdfplot.savefig()
+          plt.clf()
+  
   print ' '
   return
 
@@ -491,66 +508,96 @@ def plot_signal_to_noise(mean_sin, err_sin, qn_sin, mean_avg, err_avg, pdfplot):
 
 for p in [0]:
 
-  # bootstrapped correlators
+
   diagram = 'C3+'
-  filename = './bootdata/p%1i/%s_p%1i_real.npy' % (p, diagram, p)
-  data = np.load(filename)
-  mean_real, err_real = mean_error_print(data)
-  filename = './bootdata/p%1i/%s_p%1i_imag.npy' % (p, diagram, p)
-  data = np.load(filename)
-  mean_imag, err_imag = mean_error_print(data)
-  
-  print mean_real.shape
-  print mean_imag.shape
-  
-  filename = './bootdata/p%1i/%s_p%1i_quantum_numbers.npy' % (p, diagram,  p)
-  qn = np.load(filename)
-  
-  if ( (qn.shape[0] != mean_real.shape[0]) or \
-       (qn.shape[0] != mean_imag.shape[0]) ):
-    print 'Bootstrapped operators do not aggree with expected operators'
+
+  # bootstrapped correlators
+  print 'reading bootstrapped correlators'
+  name = '%s_p%1i_real' % (diagram, p)
+  mean_real, err_real, qn = read_ensemble(p, name)
+
+  name = '%s_p%1i_imag' % (diagram, p)
+  mean_imag, err_imag, qn = read_ensemble(p, name)
+
+  if (mean_real.shape[0] != mean_imag.shape[0]):
+    print 'Real and imaginary part of bootstrapped operators do not aggree'
     exit(0)
-  
-  print qn.shape
 
   # subduced correlators
-  filename = './bootdata/p%1i/%s_p%1i_subduced.npy' % (p, diagram, p)
-  data = np.load(filename)
-  mean_sub, err_sub = mean_error_print_foreach_row(data)
-  
-  filename = './bootdata/p%1i/%s_p%1i_subduced_quantum_numbers.npy' % \
-                                                                 (p, diagram, p)
-  qn_sub = np.load(filename)
-  if ( (qn_sub.shape[0] != mean_sub.shape[0]) ):
-    print 'Bootstrapped operators do not aggree with expected operators'
-    exit(0)
-  print qn_sub.shape
+  print 'reading subduced correlators'
+  name = '%s_p%1i_subduced' % (diagram, p)
+  mean_sub, err_sub, qn_sub = read_ensemble(p, name, True)
 
-   # subduced correlators + average over \vec{k1} and \vec{k2}
-  filename = './bootdata/p%1i/%s_p%1i_subduced_avg_vecks.npy' % (p, diagram, p)
-  data = np.load(filename)
-  mean_sub_vecks, err_sub_vecks = mean_error_print(data)
-  
-  filename = './bootdata/p%1i/%s_p%1i_subduced_avg_vecks_quantum_numbers.npy' % \
-                                                                 (p, diagram, p)
-  qn_sub_vecks = np.load(filename)
-  if ( (qn_sub_vecks.shape[0] != mean_sub_vecks.shape[0]) ):
-    print 'Bootstrapped operators do not aggree with expected operators'
-    exit(0)
-  print qn_sub_vecks.shape
+  # subduced correlators + average over \vec{k1} and \vec{k2}
+  print 'reading subduced correlators averaged over three-momenta'
+  name = '%s_p%1i_subduced_avg_vecks' % (diagram, p)
+  mean_sub_vecks, err_sub_vecks, qn_sub_vecks = read_ensemble(p, name)
 
   # subduced correlators + average over \vec{k1}, \vec{k2} and \mu
-  filename = './bootdata/p%1i/%s_p%1i_subduced_avg_rows.npy' % (p, diagram, p)
-  data = np.load(filename)
-  mean_sub_rows, err_sub_rows = mean_error_print(data)
-  
-  filename = './bootdata/p%1i/%s_p%1i_subduced_avg_rows_quantum_numbers.npy' % \
-                                                                 (p, diagram, p)
-  qn_sub_rows = np.load(filename)
-  if ( (qn_sub_rows.shape[0] != mean_sub_rows.shape[0]) ):
-    print 'Bootstrapped operators do not aggree with expected operators'
-    exit(0)
-  print qn_sub_rows.shape
+  print 'reading subduced correlators averaged over three-momenta and rows'
+  name = '%s_p%1i_subduced_avg_rows' % (diagram, p)
+  mean_sub_rows, err_sub_rows, qn_sub_rows = read_ensemble(p, name)
+
+#  # bootstrapped correlators
+#  diagram = 'C3+'
+#  filename = './bootdata/p%1i/%s_p%1i_real.npy' % (p, diagram, p)
+#  data = np.load(filename)
+#  mean_real, err_real = mean_error_print(data)
+#  filename = './bootdata/p%1i/%s_p%1i_imag.npy' % (p, diagram, p)
+#  data = np.load(filename)
+#  mean_imag, err_imag = mean_error_print(data)
+#  
+#  print mean_real.shape
+#  print mean_imag.shape
+#  
+#  filename = './bootdata/p%1i/%s_p%1i_real_qn.npy' % (p, diagram,  p)
+#  qn = np.load(filename)
+#  
+#  if ( (qn.shape[0] != mean_real.shape[0]) or \
+#       (qn.shape[0] != mean_imag.shape[0]) ):
+#    print 'Bootstrapped operators do not aggree with expected operators'
+#    exit(0)
+#  
+#  print qn.shape
+#
+#  # subduced correlators
+#  filename = './bootdata/p%1i/%s_p%1i_subduced.npy' % (p, diagram, p)
+#  data = np.load(filename)
+#  mean_sub, err_sub = mean_error_print_foreach_row(data)
+#  
+#  filename = './bootdata/p%1i/%s_p%1i_subduced_qn.npy' % \
+#                                                                 (p, diagram, p)
+#  qn_sub = np.load(filename)
+#  if ( (qn_sub.shape[0] != mean_sub.shape[0]) ):
+#    print 'Bootstrapped operators do not aggree with expected operators'
+#    exit(0)
+#  print qn_sub.shape
+#
+#   # subduced correlators + average over \vec{k1} and \vec{k2}
+#  filename = './bootdata/p%1i/%s_p%1i_subduced_avg_vecks.npy' % (p, diagram, p)
+#  data = np.load(filename)
+#  mean_sub_vecks, err_sub_vecks = mean_error_print(data)
+#  
+#  filename = './bootdata/p%1i/%s_p%1i_subduced_avg_vecks_qn.npy' % \
+#                                                                 (p, diagram, p)
+#  qn_sub_vecks = np.load(filename)
+#  if ( (qn_sub_vecks.shape[0] != mean_sub_vecks.shape[0]) ):
+#    print 'Bootstrapped operators do not aggree with expected operators'
+#    exit(0)
+#  print qn_sub_vecks.shape
+#
+#  # subduced correlators + average over \vec{k1}, \vec{k2} and \mu
+#  filename = './bootdata/p%1i/%s_p%1i_subduced_avg_rows.npy' % (p, diagram, p)
+#  data = np.load(filename)
+#  mean_sub_rows, err_sub_rows = mean_error_print(data)
+#  
+#  filename = './bootdata/p%1i/%s_p%1i_subduced_avg_rows_qn.npy' % \
+#                                                                 (p, diagram, p)
+#  qn_sub_rows = np.load(filename)
+#  if ( (qn_sub_rows.shape[0] != mean_sub_rows.shape[0]) ):
+#    print 'Bootstrapped operators do not aggree with expected operators'
+#    exit(0)
+#  print qn_sub_rows.shape
 
   ################################################################################
   # pick a cmap and get the colors. cool (blueish) for real, autumn (redish) for
@@ -573,19 +620,27 @@ for p in [0]:
   plot_single(mean_real, err_real, mean_imag, err_imag, qn, pdfplot)
   pdfplot.close()
 
-#  plot_path = './plots/%s_vecks_p%1i.pdf' % (diagram, p)
-#  pdfplot = PdfPages(plot_path)
-#  plot_vecks(mean_sub, err_sub, qn_sub, mean_sub_vecks, err_sub_vecks, gammas, pdfplot)
-#  pdfplot.close()
+  plot_path = './plots/%s_vecks_p%1i.pdf' % (diagram, p)
+  pdfplot = PdfPages(plot_path)
+  plot_vecks(mean_sub, err_sub, qn_sub, mean_sub_vecks, err_sub_vecks, \
+                                                                gammas, pdfplot)
+  pdfplot.close()
 
-#  plot_path = './plots/%s_rows_p%1i.pdf' % (diagram, p)
+  plot_path = './plots/%s_rows_p%1i.pdf' % (diagram, p)
+  pdfplot = PdfPages(plot_path)
+  plot_rows(mean_sub_vecks, err_sub_vecks, qn_sub_vecks, mean_sub_rows,  \
+                                           err_sub_rows, gammas, pdfplot, False)
+  pdfplot.close()
+
+  plot_path = './plots/%s_abs_p%1i.pdf' % (diagram, p)
+  pdfplot = PdfPages(plot_path)
+  plot_abs(mean_sub, err_sub, qn_sub, mean_sub_vecks, err_sub_vecks, gammas, \
+                                                                        pdfplot)
+  pdfplot.close()
+
+#  plot_path = './plots/%s_relerr_p%1i.pdf' % (diagram, p)
 #  pdfplot = PdfPages(plot_path)
-#  plot_rows(mean_sub_vecks, err_sub_vecks, qn_sub_vecks, mean_sub_rows, err_sub_rows, gammas, pdfplot, False)
-#  pdfplot.close()
-#
-#  plot_path = './plots/%s_abs_p%1i.pdf' % (diagram, p)
-#  pdfplot = PdfPages(plot_path)
-#  plot_abs(mean_sub, err_sub, qn_sub, mean_sub_vecks, err_sub_vecks, gammas, pdfplot)
+#  plot_signal_to_noise(mean_sub, err_sub, qn_sub, mean_sub_vecks, err_sub_vecks, gammas, pdfplot)
 #  pdfplot.close()
 
 #  plot_path = './plots/Correlators_grouped_p%1i.pdf' % p

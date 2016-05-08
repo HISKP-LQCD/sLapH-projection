@@ -85,10 +85,12 @@ for i, irrep in enumerate(irreps[:-1]):
   correlator_irrep = []
   qn_irrep = []
   # loop over absolute values of momenta at source and sink [k1, k2]
-  for so_mom in lookup_p:
-    for si_mom in lookup_p:
-      correlator_mom = []
-      qn_mom = []
+  for gevp_row in lookup_p:
+    correlator_gevp_row = []
+    qn_gevp_row = []
+    for gevp_col in lookup_p:
+      correlator_gevp_col = []
+      qn_gevp_col = []
       # loop over rows of irrep 
       for row in irrep:
         correlator_row = np.zeros((0, ) + data[0].shape, dtype=np.double)
@@ -100,9 +102,9 @@ for i, irrep in enumerate(irreps[:-1]):
           for si_3mom in row:
             # enforce chosen momenta to belong to [k1, k2]
             if not (((np.dot(so_3mom[0], so_3mom[0]), \
-                                    np.dot(so_3mom[1], so_3mom[1])) == so_mom) \
+                                    np.dot(so_3mom[1], so_3mom[1])) == gevp_row) \
                    and ((np.dot(si_3mom[0], si_3mom[0]), 
-                                    np.dot(si_3mom[1], si_3mom[1])) == si_mom)):
+                                    np.dot(si_3mom[1], si_3mom[1])) == gevp_col)):
               continue
   
             subduced = np.zeros((1,) + data[0].shape)
@@ -125,16 +127,19 @@ for i, irrep in enumerate(irreps[:-1]):
             if(subduced.any() != 0):
               correlator_row = np.vstack((correlator_row, subduced))
               qn_row.append([ so_3mom[0], so_3mom[1], si_3mom[0], si_3mom[1], \
-                                          so_mom, si_mom, 5, 5, irreps[-1][i] ])
-                
+                                          gevp_row, gevp_col, 5, 5, irreps[-1][i] ])
         # end loop over entries in CG-coefficient
-        correlator_mom.append(correlator_row)
-        qn_mom.append(np.asarray(qn_row))
+        correlator_gevp_col.append(np.asarray(correlator_row))
+        qn_gevp_col.append(np.asarray(qn_row))
       # end loop over rows of irrep 
-      correlator_mom = np.asarray(correlator_mom)
-      if(np.any(correlator_mom != 0)):
-        correlator_irrep.append(correlator_mom)
-        qn_irrep.append(np.asarray(qn_mom))
+      correlator_gevp_col = np.asarray(correlator_gevp_col)
+      if(np.any(correlator_gevp_col != 0) and correlator_gevp_col.size != 0):
+        correlator_gevp_row.append(correlator_gevp_col)
+        qn_gevp_row.append(np.asarray(qn_gevp_col))
+    correlator_gevp_row = np.asarray(correlator_gevp_row)
+    if(np.any(correlator_gevp_row != 0) and correlator_gevp_row.size != 0):
+      correlator_irrep.append(correlator_gevp_row)
+      qn_irrep.append(np.asarray(qn_gevp_row))
   # end loop over [k1, k2]
   correlator.append(np.asarray(correlator_irrep))
   qn_subduced.append(np.asarray(qn_irrep))

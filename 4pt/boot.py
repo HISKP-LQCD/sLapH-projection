@@ -15,6 +15,7 @@ bootstrap_original_data = False
 
 p = 0         # momentum
 
+nb_bins = 1
 nb_boot = 500
 
 verbose = 0
@@ -72,7 +73,7 @@ def bootstrap(X, boot_size):
 ################################################################################
 # Bootstrap routine ############################################################
 
-def bootstrap_ensembles(p, nb_boot, bootstrap_original_data):
+def bootstrap_ensembles(p, nb_bins, nb_boot, bootstrap_original_data):
   ################################################################################
   # read original data and call bootrap procedure
   diagram = 'C4'
@@ -86,11 +87,11 @@ def bootstrap_ensembles(p, nb_boot, bootstrap_original_data):
       print '\tBootstrapped operators do not aggree with expected operators'
       exit(0)
 
-    binned_data = prebinning(data.real, 5)
+    binned_data = prebinning(data.real, nb_bins)
     print 'Bootstrapping original data for p = %1i. Real part:' % p
     boot_real = bootstrap(binned_data, nb_boot)
     print 'Bootstrapping original data. Imaginary part:'
-    binned_data = prebinning(data.imag, 1)
+    binned_data = prebinning(data.imag, nb_bins)
     boot_imag = bootstrap(binned_data, nb_boot)
     print boot_real.shape
     
@@ -112,10 +113,11 @@ def bootstrap_ensembles(p, nb_boot, bootstrap_original_data):
   print 'Bootstrapping subduced data:'
   boot = []
   for irrep in data:
-    for mom in irrep:
-      for row in mom:
-        binned_data = prebinning(row, 1)
-        boot.append(bootstrap(binned_data, nb_boot))
+    for gevp_row in irrep:
+      for gevp_col in gevp_row:
+        for row in gevp_col:
+          binned_data = prebinning(row, nb_bins)
+          boot.append(bootstrap(binned_data, nb_boot))
   boot = np.asarray(boot).reshape(data.shape)
   print boot.shape
   print '\tfinished bootstrapping subduced operators'
@@ -174,11 +176,13 @@ def bootstrap_ensembles(p, nb_boot, bootstrap_original_data):
   # recursive if shape[-2] != T: for i in np.ndindex(): boot else: boot
   # recursive if not double but np.array: for i in np.ndindex(): boot else: boot
   for i in range(boot.shape[0]):
-    for k in range(boot.shape[1]):
-      for r in range(boot.shape[2]):
-        avg[i,k,r] = np.sum(boot[i,k,r], axis=0) 
-        qn_avg[i,k,r] = qn_subduced[i,k,r][0,4:]
+    for k1 in range(boot.shape[1]):
+      for k2 in range(boot.shape[2]):
+        for r in range(boot.shape[3]):
+          avg[i,k1,k2,r] = np.sum(boot[i,k1,k2,r], axis=0) 
+          qn_avg[i,k1,k2,r] = qn_subduced[i,k1,k2,r][0,4:]
   avg = np.asarray(avg.tolist())
+  print avg.shape
   qn_avg = np.asarray(qn_avg.tolist())
   path = './bootdata/p%1i/%s_p%1i_subduced_avg_vecks' % (p, diagram, p)
   np.save(path, avg)
@@ -186,9 +190,9 @@ def bootstrap_ensembles(p, nb_boot, bootstrap_original_data):
   np.save(path, qn_avg)
 
   avg = np.mean(avg, axis=-3)
+  print avg.shape
   path = './bootdata/p%1i/%s_p%1i_subduced_avg_rows' % (p, diagram, p)
   np.save(path, avg)
-
   qn_avg = qn_avg[...,0,:]
   path = './bootdata/p%1i/%s_p%1i_subduced_avg_rows_quantum_numbers' % (p, diagram, p)
   np.save(path, qn_avg)
@@ -241,4 +245,4 @@ def bootstrap_ensembles(p, nb_boot, bootstrap_original_data):
 #  
 #  print '\tfinished writing'
 
-bootstrap_ensembles(0, 500, False)
+bootstrap_ensembles(p, nb_bins, nb_boot, bootstrap_original_data)
