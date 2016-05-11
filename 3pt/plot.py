@@ -31,7 +31,7 @@ gamma_i =   [1, 2, 3, \
 gamma_0i =  [10, 11, 12, \
              ['\gamma_0\gamma_1', '\gamma_0\gamma_2', '\gamma_0\gamma_3', \
               '\gamma_0\gamma_i']]
-gamma_50i = [15, 14, 13, \
+gamma_50i = [13, 14, 15, \
              ['\gamma_5\gamma_0\gamma_1', '\gamma_5\gamma_0\gamma_2', \
               '\gamma_5\gamma_0\gamma_3', '\gamma_5\gamma_0\gamma_i']]
 gamma_5 = [5, ['\gamma_5']]
@@ -40,6 +40,7 @@ gamma_for_filenames = {'\gamma_i' : 'gi', \
                        '\gamma_5\gamma_0\gamma_i' : 'g5g0gi'}
 
 gammas = [gamma_i, gamma_0i, gamma_50i]
+#gammas = [gamma_i, gamma_50i]
 
 # list of all filled symbols in matplotlib except 'o'
 symbol = ['v', '^', '<', '>', 's', 'p', '*', 'h', 'H', 'D', 'd', '8']
@@ -195,6 +196,8 @@ def plot_single(mean_real, err_real, mean_imag, err_imag, qn, pdfplot):
     pdfplot.savefig()
     plt.clf()
 
+  print ' '
+  return
 
 ################################################################################
 # plot all combinations of momenta at source/ sink subducing into the same
@@ -317,12 +320,7 @@ def plot_rows(mean_sin, err_sin, qn_sin, mean_avg, err_avg, gammas, pdfplot, plo
           mean = mean_sin[i,k,g,op]
           err = err_sin[i,k,g,op]
 
-          print i, k, g, op
-          if g == 0:
-            mean = (-1) * mean
-          if (op+1) == 2:
-            mean = (-1) * mean
-                
+               
           plt.yscale('log')
           plt.errorbar(np.asarray(range(0, mean.shape[-1]))+op*shift, mean, err, \
                        fmt=symbol[op%len(symbol)], color=cmap_brg[op], \
@@ -538,87 +536,16 @@ for p in [0]:
   name = '%s_p%1i_subduced_avg_rows' % (diagram, p)
   mean_sub_rows, err_sub_rows, qn_sub_rows = read_ensemble(p, name)
 
-#  # bootstrapped correlators
-#  diagram = 'C3+'
-#  filename = './bootdata/p%1i/%s_p%1i_real.npy' % (p, diagram, p)
-#  data = np.load(filename)
-#  mean_real, err_real = mean_error_print(data)
-#  filename = './bootdata/p%1i/%s_p%1i_imag.npy' % (p, diagram, p)
-#  data = np.load(filename)
-#  mean_imag, err_imag = mean_error_print(data)
-#  
-#  print mean_real.shape
-#  print mean_imag.shape
-#  
-#  filename = './bootdata/p%1i/%s_p%1i_real_qn.npy' % (p, diagram,  p)
-#  qn = np.load(filename)
-#  
-#  if ( (qn.shape[0] != mean_real.shape[0]) or \
-#       (qn.shape[0] != mean_imag.shape[0]) ):
-#    print 'Bootstrapped operators do not aggree with expected operators'
-#    exit(0)
-#  
-#  print qn.shape
-#
-#  # subduced correlators
-#  filename = './bootdata/p%1i/%s_p%1i_subduced.npy' % (p, diagram, p)
-#  data = np.load(filename)
-#  mean_sub, err_sub = mean_error_print_foreach_row(data)
-#  
-#  filename = './bootdata/p%1i/%s_p%1i_subduced_qn.npy' % \
-#                                                                 (p, diagram, p)
-#  qn_sub = np.load(filename)
-#  if ( (qn_sub.shape[0] != mean_sub.shape[0]) ):
-#    print 'Bootstrapped operators do not aggree with expected operators'
-#    exit(0)
-#  print qn_sub.shape
-#
-#   # subduced correlators + average over \vec{k1} and \vec{k2}
-#  filename = './bootdata/p%1i/%s_p%1i_subduced_avg_vecks.npy' % (p, diagram, p)
-#  data = np.load(filename)
-#  mean_sub_vecks, err_sub_vecks = mean_error_print(data)
-#  
-#  filename = './bootdata/p%1i/%s_p%1i_subduced_avg_vecks_qn.npy' % \
-#                                                                 (p, diagram, p)
-#  qn_sub_vecks = np.load(filename)
-#  if ( (qn_sub_vecks.shape[0] != mean_sub_vecks.shape[0]) ):
-#    print 'Bootstrapped operators do not aggree with expected operators'
-#    exit(0)
-#  print qn_sub_vecks.shape
-#
-#  # subduced correlators + average over \vec{k1}, \vec{k2} and \mu
-#  filename = './bootdata/p%1i/%s_p%1i_subduced_avg_rows.npy' % (p, diagram, p)
-#  data = np.load(filename)
-#  mean_sub_rows, err_sub_rows = mean_error_print(data)
-#  
-#  filename = './bootdata/p%1i/%s_p%1i_subduced_avg_rows_qn.npy' % \
-#                                                                 (p, diagram, p)
-#  qn_sub_rows = np.load(filename)
-#  if ( (qn_sub_rows.shape[0] != mean_sub_rows.shape[0]) ):
-#    print 'Bootstrapped operators do not aggree with expected operators'
-#    exit(0)
-#  print qn_sub_rows.shape
-
-  ################################################################################
-  # pick a cmap and get the colors. cool (blueish) for real, autumn (redish) for
-  # imaginary correlators
-  
-  #TODO: put that into function calls
-#  cmap_real = plt.cm.cool(np.asarray(range(0,qn.shape[0]))*256/(qn.shape[0]-1))
-#  cmap_imag= plt.cm.autumn(np.asarray(range(0,qn.shape[0]))*256/(qn.shape[0]-1))
-  
-
-
 ################################################################################
 # plotting #####################################################################
 ################################################################################
 
   utils.ensure_dir('./plots')
 
-  plot_path = './plots/%s_single_p%1i.pdf' % (diagram, p)
-  pdfplot = PdfPages(plot_path)
-  plot_single(mean_real, err_real, mean_imag, err_imag, qn, pdfplot)
-  pdfplot.close()
+#  plot_path = './plots/%s_single_p%1i.pdf' % (diagram, p)
+#  pdfplot = PdfPages(plot_path)
+#  plot_single(mean_real, err_real, mean_imag, err_imag, qn, pdfplot)
+#  pdfplot.close()
 
   plot_path = './plots/%s_vecks_p%1i.pdf' % (diagram, p)
   pdfplot = PdfPages(plot_path)

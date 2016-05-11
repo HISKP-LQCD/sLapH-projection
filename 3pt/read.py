@@ -13,7 +13,7 @@ import utils
 # parameters ###################################################################
 
 sta_cnfg = 714
-end_cnfg = 1214
+end_cnfg = 974
 del_cnfg = 2
 
 T = 48
@@ -30,7 +30,7 @@ gamma_i =   [1, 2, 3, \
 gamma_0i =  [10, 11, 12, \
              ['\gamma_0\gamma_1', '\gamma_0\gamma_2', '\gamma_0\gamma_3', \
               '\gamma_0\gamma_i']]
-gamma_50i = [15, 14, 13, \
+gamma_50i = [13, 14, 15, \
              ['\gamma_5\gamma_0\gamma_1', '\gamma_5\gamma_0\gamma_2', \
               '\gamma_5\gamma_0\gamma_3', '\gamma_5\gamma_0\gamma_i']]
 gamma_5 = [5, ['\gamma_5']]
@@ -39,7 +39,7 @@ gammas = [gamma_i, gamma_0i, gamma_50i]
 
 diagrams = ['C3+']
 
-directory = ['/hiskp2/knippsch/Rho_Apr2016/']
+directory = ['/hiskp2/werner/Rho_May2016/']
 
 missing_configs = [1282]
 

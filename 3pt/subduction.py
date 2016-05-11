@@ -28,7 +28,10 @@ diagram = 'C3+'
 # compatible notation for plot labels
 gamma_i =   [1, 2, 3, '\gamma_i']
 gamma_0i =  [10, 11, 12, '\gamma_0\gamma_i']
-gamma_50i = [15, 14, 13, '\gamma_5\gamma_0\gamma_i']
+gamma_50i = [13, 14, 15, '\gamma_5\gamma_0\gamma_i']
+
+#gammas = [gamma_i, gamma_50i]
+#gamma_for_filenames = ['gi', 'g5g0gi']
 
 gammas = [gamma_i, gamma_0i, gamma_50i]
 gamma_for_filenames = ['gi', 'g0gi', 'g5g0gi']
@@ -145,25 +148,67 @@ for i, (irrep_so, irrep_si) in enumerate(zip(irreps_4pt[:-1], irreps_2pt[:-1])):
                 # calculating the Correlators yields imaginary parts for all of
                 # them. Switching real and imaginary part in the subduction 
                 # factor accounts for this.
-                if (gevp_col[g_si] in gamma_50i):
-                  factor = factor.imag + factor.real * 1j
-                if (gevp_col[g_si] == 14): 
-                  factor = factor * (-1)
+
+                data_for_subduction = factor * data[op]
+                if ((gevp_col[g_si] in gamma_50i) or (gevp_col[g_si] in gamma_0i)):
+                  data_for_subduction = 2 * data_for_subduction.real
+                elif ((gevp_col[g_si] in gamma_i)) :
+                  # factor 1j?
+                  data_for_subduction = 2 * data_for_subduction.imag
+                else:
+                  print 'continue'
+                  continue
+
+                # HARDCODED: factors I don't understand
+                if ((gevp_col[g_si] in gamma_i) or (gevp_col[g_si] in gamma_0i)):
+                  data_for_subduction = (-1) * data_for_subduction
+                if (g_si == 2):
+                  data_for_subduction = (-1) * data_for_subduction
+ 
+#                data_for_subduction = factor * data[op]
+#                if (gevp_col[g_si] in gamma_i):
+#                  data_for_subduction = 2 * data_for_subduction.real
+#                elif ((gevp_col[g_si] in gamma_0i) or (gevp_col[g_si] in gamma_50i)):
+#                  # factor 1j?
+#                  data_for_subduction = 2 * (1j*data_for_subduction).imag
+#                else:
+#                  print 'continue'
+#                  continue
+
+#                if (gevp_col[g_si] == 14): 
+#                  data_for_subduction = (-1) * data_for_subduction
 
                 if (gevp_col[g_si] == qn[5]):
-                  subduced[0] = subduced[0] + factor.real * data[op].real + \
-                                                     factor.imag * data[op].imag
+                  subduced[0] = subduced[0] + data_for_subduction
                   if verbose:
                     print '\tsubduced g_so = %i' % (gevp_col[g_si])
                     print '\t\tsubduction coefficient = % .2f + % .2fi' % \
                                                       (factor.real, factor.imag)
 
+                # calculating the Correlators yields imaginary parts for all of
+                # them. Switching real and imaginary part in the subduction 
+                # factor accounts for this.
+#                if (gevp_col[g_si] in gamma_50i):
+#                  factor = factor.imag + factor.real * 1j
+#                if (gevp_col[g_si] == 14): 
+#                  factor = factor * (-1)
+#
+#                if (gevp_col[g_si] == qn[5]):
+#                  subduced[0] = subduced[0] + factor.real * data[op].real + \
+#                                                     factor.imag * data[op].imag
+#                  if verbose:
+#                    print '\tsubduced g_so = %i' % (gevp_col[g_si])
+#                    print '\t\tsubduction coefficient = % .2f + % .2fi' % \
+#                                                      (factor.real, factor.imag)
+#
             if(subduced.any() != 0):
               if verbose:
                 print '\tinto momenta [(%i,%i,%i), (%i,%i,%i)]' % \
                        (so_3mom[0][0], so_3mom[0][1], so_3mom[0][2], \
                                     so_3mom[0][0], so_3mom[0][1], so_3mom[0][2])
                 print ' '
+#                for a in subduced[0,:,85]:
+#                  print a.real
               correlator_row = np.vstack((correlator_row, subduced))
               qn_row.append([ so_3mom[0], so_3mom[1], si_3mom[0], \
                             gevp_row, p, 5, gevp_col[g_si], irreps_4pt[-1][i] ])

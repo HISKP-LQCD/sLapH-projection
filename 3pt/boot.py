@@ -16,7 +16,7 @@ bootstrap_original_data = False
 p = 0         # momentum
 
 nb_bins = 1
-nb_boot = 500
+nb_boot = 100
 
 verbose = 0
 
