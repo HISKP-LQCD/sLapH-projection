@@ -13,7 +13,7 @@ import utils
 ################################################################################
 bootstrap_original_data = False
 
-p = 2         # momentum
+p = 0         # momentum
 
 nb_bins = 1
 nb_boot = 500
@@ -156,6 +156,7 @@ def bootstrap_ensembles(p, nb_bins, nb_boot, bootstrap_original_data):
   avg = np.mean(avg, axis=3)
   print avg.shape
   np.save(path, avg)
+  qn_avg = qn_avg[...,0,:]
   path = './bootdata/p%1i/C20_p%1i_subduced_avg_rows_quantum_numbers' % (p, p)
   np.save(path, qn_avg)
 
