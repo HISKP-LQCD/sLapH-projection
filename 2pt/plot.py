@@ -190,11 +190,13 @@ def plot_vecks(mean_sin, err_sin, qn_sin, mean_avg, err_avg, qn_avg, pdfplot, \
     
             # prepare data for plotting
             # TODO: put that in subduction
-            mean = -2*mean_sin[i,g1,g2,r,op]
-            if (g1 == 0 and g2 == 1) or (g1 == 2 and g2 == 0):
-#            if g == 1 or g == 6:
-              mean = 2*mean_sin[i,g1,g2,r,op]
+            mean = mean_sin[i,g1,g2,r,op]
             err = err_sin[i,g1,g2,r,op]
+#            mean = -2*mean_sin[i,g1,g2,r,op]
+#            if (g1 == 0 and g2 == 1) or (g1 == 2 and g2 == 0):
+##            if g == 1 or g == 6:
+#              mean = 2*mean_sin[i,g1,g2,r,op]
+#            err = err_sin[i,g1,g2,r,op]
            
             plt.yscale('log')
             # plotting single correlators subduced into irrep
@@ -208,10 +210,12 @@ def plot_vecks(mean_sin, err_sin, qn_sin, mean_avg, err_avg, qn_avg, pdfplot, \
           # plotting average for irrep
           if plot_mean == True:
             # prepare data for plotting
-            mean = -2*mean_avg[i,g1,g2,r]
-            if (g1 == 0 and g2 == 1) or (g1 == 2 and g2 == 0):
-              mean = 2*mean_avg[i,g1,g2,r]
+            mean = mean_avg[i,g1,g2,r]
             err = err_avg[i,g1,g2,r]
+#            mean = -2*mean_avg[i,g1,g2,r]
+#            if (g1 == 0 and g2 == 1) or (g1 == 2 and g2 == 0):
+#              mean = 2*mean_avg[i,g1,g2,r]
+#            err = err_avg[i,g1,g2,r]
       
             plt.yscale('log')
             plt.errorbar(range(0, mean.shape[0]), mean, err, \
@@ -245,10 +249,12 @@ def plot_vecks(mean_sin, err_sin, qn_sin, mean_avg, err_avg, qn_avg, pdfplot, \
           continue
         
         # prepare data for plotting
-        mean = -2*mean_avg[(i,)+j]
-        if (j[0] == 0 and j[1] == 1) or (j[0] == 2 and j[1] == 0):
-          mean = 2*mean_avg[(i,)+j]
+        mean = mean_avg[(i,)+j]
         err = err_avg[(i,)+j]
+#        mean = -2*mean_avg[(i,)+j]
+#        if (j[0] == 0 and j[1] == 1) or (j[0] == 2 and j[1] == 0):
+#          mean = 2*mean_avg[(i,)+j]
+#        err = err_avg[(i,)+j]
         
         plt.yscale('log')
         plt.errorbar(range(0, mean.shape[-1]), mean/mean[6], \
@@ -324,10 +330,12 @@ def plot_rows(mean_sin, err_sin, qn_sin, mean_avg, err_avg, qn_avg, pdfplot, \
     
           # prepare data for plotting
           # TODO: put that in subduction
-          mean = -2*mean_sin[i,g1,g2,op]
-          if (g1 == 0 and g2 == 1) or (g1 == 2 and g2 == 0):
-            mean = 2*mean_sin[i,g1,g2,op]
+          mean = mean_sin[i,g1,g2,op]
           err = err_sin[i,g1,g2,op]
+#          mean = -2*mean_sin[i,g1,g2,op]
+#          if (g1 == 0 and g2 == 1) or (g1 == 2 and g2 == 0):
+#            mean = 2*mean_sin[i,g1,g2,op]
+#          err = err_sin[i,g1,g2,op]
          
           plt.yscale('log')
           # plotting single correlators subduced into irrep
@@ -341,10 +349,12 @@ def plot_rows(mean_sin, err_sin, qn_sin, mean_avg, err_avg, qn_avg, pdfplot, \
         # plotting average for irrep
         if plot_mean == True:
           # prepare data for plotting
-          mean = -2*mean_avg[i,g1,g2]
-          if (g1 == 0 and g2 == 1) or (g1 == 2 and g2 == 0):
-            mean = 2*mean_avg[i,g1,g2]
+          mean = mean_avg[i,g1,g2]
           err = err_avg[i,g1,g2]
+#          mean = -2*mean_avg[i,g1,g2]
+#          if (g1 == 0 and g2 == 1) or (g1 == 2 and g2 == 0):
+#            mean = 2*mean_avg[i,g1,g2]
+#          err = err_avg[i,g1,g2]
       
           plt.yscale('log')
           plt.errorbar(range(0, mean.shape[-1]), mean, err, \
@@ -383,10 +393,12 @@ def plot_rows(mean_sin, err_sin, qn_sin, mean_avg, err_avg, qn_avg, pdfplot, \
             continue
       
           # prepare data for plotting
-          mean = -2*mean_avg[i,g1,g2]
-          if g == 1 or g == 6:
-            mean = 2*mean_avg[i,g1,g2]
+          mean = mean_avg[i,g1,g2]
           err = err_avg[i,g1,g2]
+#          mean = -2*mean_avg[i,g1,g2]
+#          if g == 1 or g == 6:
+#            mean = 2*mean_avg[i,g1,g2]
+#          err = err_avg[i,g1,g2]
       
           plt.yscale('log')
           plt.errorbar(range(0, mean.shape[-1]), mean/mean[6], \

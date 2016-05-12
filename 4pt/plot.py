@@ -689,20 +689,20 @@ def plot_rows(mean_sin, err_sin, qn_sin, mean_avg, err_avg, pdfplot):
           
           # prepare data for plotting
           # TODO: put that in subduction
-          mean = mean_sin[i,k1,k2,op,:23]
-          err = err_sin[i,k1,k2,op,:23]
+          mean = mean_sin[i,k1,k2,op]
+          err = err_sin[i,k1,k2,op]
                 
           plt.yscale('log')
-          plt.errorbar(np.asarray(range(0, 23))+op*shift, mean, err, \
+          plt.errorbar(np.asarray(range(0, mean.shape[-1]))+op*shift, mean, err, \
                        fmt=symbol[op%len(symbol)], color=cmap_brg[op], \
                        label=label, markersize=3, capsize=3, capthick=0.5, \
                        elinewidth=0.5, markeredgecolor=cmap_brg[op], \
                                                                   linewidth='0.0')
 
-        mean = mean_avg[i,k1,k2,:23]
-        err = err_avg[i,k1,k2,:23]
+        mean = mean_avg[i,k1,k2]
+        err = err_avg[i,k1,k2]
         plt.yscale('log')
-        plt.errorbar(np.asarray(range(0, 23))+op*shift, mean, err, \
+        plt.errorbar(np.asarray(range(0, mean.shape[-1]))+op*shift, mean, err, \
                      fmt='o', color='black', \
                      label='average', markersize=3, capsize=3, capthick=0.5, \
                      elinewidth=0.5, markeredgecolor='black', \
@@ -962,20 +962,20 @@ for p in [0]:
 #  plot_single(mean_real, err_real, mean_imag, err_imag, qn, pdfplot)
 #  pdfplot.close()
 
-  plot_path = './plots/%s_vecks_p%1i.pdf' % (diagram, p)
-  pdfplot = PdfPages(plot_path)
-  plot_vecks(mean_sub, err_sub, qn_sub, mean_sub_vecks, err_sub_vecks, pdfplot)
-  pdfplot.close()
+#  plot_path = './plots/%s_vecks_p%1i.pdf' % (diagram, p)
+#  pdfplot = PdfPages(plot_path)
+#  plot_vecks(mean_sub, err_sub, qn_sub, mean_sub_vecks, err_sub_vecks, pdfplot)
+#  pdfplot.close()
 
   plot_path = './plots/%s_rows_p%1i.pdf' % (diagram, p)
   pdfplot = PdfPages(plot_path)
   plot_rows(mean_sub_vecks, err_sub_vecks, qn_sub_vecks, mean_sub_rows, err_sub_rows, pdfplot)
   pdfplot.close()
 
-  plot_path = './plots/%s_abs_p%1i.pdf' % (diagram, p)
-  pdfplot = PdfPages(plot_path)
-  plot_abs(mean_sub, err_sub, qn_sub, mean_sub_vecks, err_sub_vecks, pdfplot)
-  pdfplot.close()
+#  plot_path = './plots/%s_abs_p%1i.pdf' % (diagram, p)
+#  pdfplot = PdfPages(plot_path)
+#  plot_abs(mean_sub, err_sub, qn_sub, mean_sub_vecks, err_sub_vecks, pdfplot)
+#  pdfplot.close()
 
 #  plot_path = './plots/Correlators_grouped_p%1i.pdf' % p
 #  pdfplot = PdfPages(plot_path)

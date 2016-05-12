@@ -13,7 +13,7 @@ import utils as utils
 # parameters ###################################################################
 
 ################################################################################
-p = 2         # momentum
+p = 0         # momentum
 
 verbose = 0
 
@@ -109,7 +109,22 @@ def subduce_ensembles(p, gamma, gamma_for_filenames, verbose=0):
                     if (gevp_row[g_so] in gamma_i) != \
                                                     (gevp_col[g_si] in gamma_i):
                       factor = factor.imag + factor.real * 1j
-  
+
+                    # HARDCODED: factors I'm not certain about
+#                     if(((gevp_row[g_so] in gamma_i) and \
+#                                                   (gevp_col[g_si] in gamma_0i)) \
+#                        or ((gevp_row[g_so] in gamma_i) and 
+#                                                    (gevp_col[g_si] in gamma_0i))):
+#                       factor = (-1) * factor
+                  
+                    if(((gevp_row[g_so] in gamma_i) and \
+                                                 (gevp_col[g_si] in gamma_0i)) \
+                       or ((gevp_row[g_so] in gamma_50i) and 
+                                                 (gevp_col[g_si] in gamma_i))):
+                      factor = 2 * factor
+                    else:
+                      factor = (-2) * factor
+
                     if (gevp_row[g_so] == qn[2]) and (gevp_col[g_si] == qn[5]):
                       subduced[0] = subduced[0] + factor.real * data[op].real \
                                                    + factor.imag * data[op].imag
