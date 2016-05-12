@@ -13,7 +13,7 @@ import utils
 # parameters ###################################################################
 
 sta_cnfg = 714
-end_cnfg = 974
+end_cnfg = 1214
 del_cnfg = 2
 
 T = 48

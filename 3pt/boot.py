@@ -11,7 +11,7 @@ import utils
 # Parameters ###################################################################
 
 ################################################################################
-bootstrap_original_data = False
+bootstrap_original_data = True
 
 p = 0         # momentum
 

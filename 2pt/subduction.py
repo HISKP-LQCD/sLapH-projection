@@ -140,7 +140,7 @@ def subduce_ensembles(p, gamma, gamma_for_filenames, verbose=0):
                                                   (el[0][0], el[0][1], el[0][2])
                 print ' '
               correlator_row = np.vstack((correlator_row, subduced))
-              qn_row.append([ el[0], gevp_row[-1], gevp_col[-1], irreps[-1][i] ])
+              qn_row.append([ el[0], (-1)*el[0], gevp_row[-1], gevp_col[-1], irreps[-1][i] ])
 
           correlator_gevp_col.append(correlator_row)
           qn_gevp_col.append(qn_row)

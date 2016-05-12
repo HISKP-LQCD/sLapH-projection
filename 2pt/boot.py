@@ -141,12 +141,21 @@ def bootstrap_ensembles(p, nb_bins, nb_boot, bootstrap_original_data):
   path = './bootdata/p%1i/C20_p%1i_single_subduced_quantum_numbers' % (p, p)
   np.save(path, qn_subduced)
 
-  # write means over all operators subducing into same irrep
+  # write means over all operators subducing into same irrep row
   path = './bootdata/p%1i/C20_p%1i_subduced_avg_vecks' % (p, p)
   # TODO: mp.mean or np.sum?
   avg = np.mean(boot, axis=4)
   print avg.shape
-  qn_avg = qn_subduced[...,0,-3:]
+
+  qn_avg = np.empty_like(qn_subduced[...,0,:])
+  for i in np.ndindex(qn_subduced[...,0,0].shape):
+    qn_avg[i] = np.insert( np.insert( \
+                  qn_subduced[i][0,-3:], 
+                    np.dot(qn_subduced[i+(0,1)], qn_subduced[i+(0,1)]), 0, \
+                                                                       axis=-1), 
+                      np.dot(qn_subduced[i+(0,0)], qn_subduced[i+(0,0)]), 0, \
+                                                                        axis=-1)
+  print qn_avg.shape
   np.save(path, avg)
   path = './bootdata/p%1i/C20_p%1i_subduced_avg_vecks_quantum_numbers' % (p, p)
   np.save(path, qn_avg)
@@ -164,10 +173,10 @@ def bootstrap_ensembles(p, nb_bins, nb_boot, bootstrap_original_data):
   for i in np.ndindex(qn_subduced[...,0].shape):
     path = './bootdata/p%1i/single_subduced/C20_uu_%s_%1i_p%1i%1i%1i.d000.%s_' \
                                                    'p%1i%1i%1i.d000.%s' % \
-            (p, qn_subduced[i][-1], i[-2], qn_subduced[i][0][0], qn_subduced[i][0][1], \
-             qn_subduced[i][0][2], gamma_for_filenames[qn_subduced[i][1]], \
-             -qn_subduced[i][0][0], -qn_subduced[i][0][1], \
-             -qn_subduced[i][0][2], gamma_for_filenames[qn_subduced[i][2]])
+            (p, qn_subduced[i][-1], i[-2], qn_subduced[i][0][0], qn_subduced[i][0][2], \
+             qn_subduced[i][0][2], gamma_for_filenames[qn_subduced[i][2]], \
+             qn_subduced[i][1][0], qn_subduced[i][1][1], \
+             qn_subduced[i][1][2], gamma_for_filenames[qn_subduced[i][3]])
     np.save(path, boot[i])
  
 #  # write means over all operators subducing into same irrep

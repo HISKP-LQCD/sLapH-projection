@@ -542,10 +542,10 @@ for p in [0]:
 
   utils.ensure_dir('./plots')
 
-#  plot_path = './plots/%s_single_p%1i.pdf' % (diagram, p)
-#  pdfplot = PdfPages(plot_path)
-#  plot_single(mean_real, err_real, mean_imag, err_imag, qn, pdfplot)
-#  pdfplot.close()
+  plot_path = './plots/%s_single_p%1i.pdf' % (diagram, p)
+  pdfplot = PdfPages(plot_path)
+  plot_single(mean_real, err_real, mean_imag, err_imag, qn, pdfplot)
+  pdfplot.close()
 
   plot_path = './plots/%s_vecks_p%1i.pdf' % (diagram, p)
   pdfplot = PdfPages(plot_path)

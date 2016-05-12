@@ -186,7 +186,7 @@ def plot_vecks(mean_sin, err_sin, qn_sin, mean_avg, err_avg, qn_avg, pdfplot, \
           for op in range(0, row.shape[0]):
       
             label = r'$p_{so} = (%2i,%2i,%2i)$' % \
-                      (np.int(row[op,0][0]), np.int(row[op,0][1]), np.int(row[op,0][2]))
+                      (np.int(row[op,0][-3]), np.int(row[op,0][-2]), np.int(row[op,0][-1]))
     
             # prepare data for plotting
             # TODO: put that in subduction
@@ -242,7 +242,7 @@ def plot_vecks(mean_sin, err_sin, qn_sin, mean_avg, err_avg, qn_avg, pdfplot, \
         c = np.ravel_multi_index(j, qn_avg.shape[1:4])
         print c
         label = r'$%s \ %s - %s$' % \
-                 (qn_avg[(i,)+j+(2,)], qn_avg[(i,)+j+(0,)], qn_avg[(i,)+j+(1,)])
+                 (qn_avg[(i,)+j+(-1,)], qn_avg[(i,)+j+(-3,)], qn_avg[(i,)+j+(-2,)])
         
         # in overview plot only plot diagonal elements
         if j[0] != j[1]:
