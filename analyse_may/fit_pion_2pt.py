@@ -16,7 +16,7 @@ import IOcontraction
 import plot
 
 import sys
-sys.stdout = open('./fit_pion_2pt.out', 'w')
+#sys.stdout = open('./fit_pion_2pt.out', 'w')
 
 T = 48 # temporal extend of the lattice
 
@@ -26,21 +26,24 @@ T = 48 # temporal extend of the lattice
 # array for timeslices
 tt = []
 for t in range(0, T):
-	tt.append(float(t))
+  tt.append(float(t))
 tt = np.asarray(tt)
 
 # fitting the correlation function directly ####################################
 print '\n**********************************************************'
 print ' Fitting the mass directly from the correlation function.'
 print '**********************************************************'
+
 plot_path = './plots/C2_pi.pdf'
 IOcontraction.ensure_dir(plot_path)
 pdfplot = PdfPages(plot_path)
 
-for p in range(0,4):
-  filename = 'bootdata/C2_pi_p%d.npy' % p
+#for p in range(0,5):
+for p in range(0,1):
+  filename = './bootdata/p%d/Mpi_p%d_sym.npy' % (p, p)
   print 'reading file:', filename
   C2 = np.load(filename)
+  print C2.shape
   C2_mean, C2_error = boot.mean_error_print(C2)
   m, m_mean, m_error = boot.compute_mass(C2) 
   print 'The correlation function:\n'
@@ -49,14 +52,22 @@ for p in range(0,4):
     print i, a, '+/-', b
     i += 1
 
+  print '\n'
+
+  print 'The effective mass:\n'
+  i = 0
+  for a, b in zip(m_mean, m_error):
+    print i, a, '+/-', b
+    i += 1
+
 #  min_t_of_p = [14, 12, 10, 8]
 #  max_t_of_p = [C2.shape[1], C2.shape[1], 24, 19]
   counter = 0
-  lo_lo =   [7,  7,  6,  5,  5]
-  lo_up =   [14, 16, 14, 13, 10]
-  up_lo =   [18, 20, 16, 14, 13]
-  up_up =   [10, 10, 9,  8,  7]
-  min_dof = [3,  3,  3,  3,  3]
+  lo_lo =   [11,  7,  6,  5,  5]
+  lo_up =   [18, 16, 14, 13, 10]
+  up_lo =   [23, 20, 16, 14, 13]
+  up_up =   [15, 10, 9,  8,  7]
+  min_dof = [5,  3,  3,  3,  3]
 
   fitfunc1 = lambda p,t,tt: p[0]*(np.exp(-t*p[1]) + np.exp(-(T-t)*p[1]))
   fitfunc2 = lambda p,t: p[0]
