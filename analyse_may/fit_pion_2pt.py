@@ -34,12 +34,11 @@ print '\n**********************************************************'
 print ' Fitting the mass directly from the correlation function.'
 print '**********************************************************'
 
-plot_path = './plots/C2_pi.pdf'
+plot_path = './plots/Mpi_fit.pdf'
 IOcontraction.ensure_dir(plot_path)
 pdfplot = PdfPages(plot_path)
 
-#for p in range(0,5):
-for p in range(0,1):
+for p in range(0,5):
   filename = './bootdata/p%d/Mpi_p%d_sym.npy' % (p, p)
   print 'reading file:', filename
   C2 = np.load(filename)
@@ -99,12 +98,13 @@ for p in range(0,1):
         fitdata = np.vstack((fitdata, np.array([chi2, pvalue, lo, up-1])))
         counter += 1
       sys.stdout.flush()
+
   # save fitted masses on disk
-  path = 'bootdata/C2_massfit_p%d' % p
+  path = 'bootdata/p%d/Mpi_p%d_fit' % (p, p)
   IOcontraction.ensure_dir(path)
   np.save(path, fitresult)
   # save fitted masses on disk
-  path = 'bootdata/C2_massfit_params_p%d' % p
+  path = 'bootdata/p%d/Mpi_p%d_fit_params' % (p, p)
   IOcontraction.ensure_dir(path)
   np.save(path, fitdata)
 

@@ -93,9 +93,9 @@ def weighted_quantile(data, weights, quantile):
 for p in momenta:
 
   # (2pt) reading data extracted from direct fit
-  filename = 'bootdata/C2_massfit_p%d.npy' % p
+  filename = 'bootdata/p%d/Mpi_p%d_fit.npy' % (p, p)
   C2_read = np.load(filename)
-  filename = 'bootdata/C2_massfit_params_p%d.npy' % p
+  filename = 'bootdata/p%d/Mpi_p%d_fit_params.npy' % (p, p)
   C2_params = np.load(filename)
  
   ##############################################################################
@@ -114,7 +114,7 @@ for p in momenta:
 
   ##############################################################################
   # writing the 2pt pion mass out and creating a histogram with all data
-  plot_path = './plots/Pion_dispersion.pdf'
+  plot_path = './plots/Mpi_dispersion.pdf'
   IOcontraction.ensure_dir(plot_path)
   pdfplot = PdfPages(plot_path)
 
