@@ -35,8 +35,9 @@ def fitting(fitfunc, X, Y, start_parm,  correlated = 1, tcut = 0., \
   chisquare = np.zeros(Y.shape[0])
   for b in range(0, Y.shape[0]):
     p,cov1,infodict,mesg,ier = leastsq(errfunc, start_parm, \
-                             args=(X, Y[b,:], cov, deltaE[b]), full_output=1, \
+                             args=(X, Y[b,:], cov, deltaE), full_output=1, \
                                factor=0.1)
+#                             args=(X, Y[b,:], cov, deltaE[b]), full_output=1, \
     chisquare[b] = float(sum(infodict['fvec']**2.))
     res[b] = np.array(p)
   res_mean, res_std = res[0], np.std(res, axis=0)
@@ -62,7 +63,7 @@ def fitting(fitfunc, X, Y, start_parm,  correlated = 1, tcut = 0., \
       print '\t%.6e' % pp
     print '\tChi^2/dof: %.6e' % float(sum(infodict['fvec']**2.)/dof)
 
-  return res, chi2, pvalue
+  return res, chi2, dof, pvalue
 
 
 

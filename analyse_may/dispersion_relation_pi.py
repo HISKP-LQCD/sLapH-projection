@@ -90,6 +90,11 @@ def weighted_quantile(data, weights, quantile):
 ################################################################################
 ################################################################################
 
+##############################################################################
+plot_path = './plots/Mpi_dispersion.pdf'
+IOcontraction.ensure_dir(plot_path)
+pdfplot = PdfPages(plot_path)
+
 for p in momenta:
 
   # (2pt) reading data extracted from direct fit
@@ -111,29 +116,25 @@ for p in momenta:
   if p == momenta[0]:
     C2_mass_median = np.empty((len(momenta), C2_mass.shape[1]), dtype=float)
     C2_mass_std = np.empty((len(momenta),1))
-
-  ##############################################################################
-  # writing the 2pt pion mass out and creating a histogram with all data
-  plot_path = './plots/Mpi_dispersion.pdf'
-  IOcontraction.ensure_dir(plot_path)
-  pdfplot = PdfPages(plot_path)
+    C2_mass_sys_lo = np.empty((len(momenta),1))
+    C2_mass_sys_hi = np.empty((len(momenta),1))
 
   # Creating the histogram
   for i in range(0, C2_mass.shape[1]):
-    C2_mass_median[p,i] = weighted_quantile(C2_mass[0:-1,i], \
+    C2_mass_median[p,i] = weighted_quantile(C2_mass[0:-1,i]**2, \
                                                       C2_mass_weight[0:-1], 0.5)
   C2_mass_std[p] = np.std(C2_mass_median[p])
-  C2_mass_16quant = weighted_quantile(C2_mass[0:-1,0], \
+  C2_mass_16quant = weighted_quantile(C2_mass[0:-1,0]**2, \
                                                      C2_mass_weight[0:-1], 0.16)
-  C2_mass_84quant = weighted_quantile(C2_mass[0:-1,0], \
+  C2_mass_84quant = weighted_quantile(C2_mass[0:-1,0]**2, \
                                                      C2_mass_weight[0:-1], 0.84)
   
-  C2_mass_sys_lo = C2_mass_median[p,0] - C2_mass_16quant
-  C2_mass_sys_hi = C2_mass_84quant   - C2_mass_median[p,0]
+  C2_mass_sys_lo[p] = C2_mass_median[p,0] - C2_mass_16quant
+  C2_mass_sys_hi[p] = C2_mass_84quant     - C2_mass_median[p,0]
   print 'pion mass for p=%d:' % p
   print '\tmedian +/- stat + sys - sys'
-  print '\t(%.5e %.1e + %.1e - %.1e)\n' % \
-           (C2_mass_median[p,0], C2_mass_std[p], C2_mass_sys_hi, C2_mass_sys_lo)
+  print '\t(%.5e %.1e + %.1e - %.1e)\n' % (C2_mass_median[p,0], \
+                           C2_mass_std[p], C2_mass_sys_hi[p], C2_mass_sys_lo[p])
   hist, bins = np.histogram(C2_mass[0:-1,0], 20, \
                                      weights=C2_mass_weight[0:-1], density=True)
   width = 0.7 * (bins[1] - bins[0])
@@ -148,8 +149,8 @@ for p in momenta:
            scale=C2_mass_std[p]), 'r-', lw=3, alpha=1, \
                                                    label='median + stat. error')
   plt.plot(x, scipy.stats.norm.pdf(x, loc=C2_mass_median[p,0], \
-           scale=0.5*(C2_mass_sys_lo+C2_mass_sys_hi)), 'y-', lw=3, alpha=1, \
-                                                    label='median + sys. error')
+           scale=0.5*(C2_mass_sys_lo[p]+C2_mass_sys_hi[p])), 'y-', lw=3, \
+                                           alpha=1, label='median + sys. error')
   plt.legend()
   plt.bar(center, hist, align='center', width=width, alpha=0.7)
   pdfplot.savefig()
@@ -161,20 +162,114 @@ l = -0.05
 u = 0.30
 plt.xlim([l, u])
 plt.xlabel(r'$p^2$')
-plt.ylabel(r'$E_{eff}$')
+plt.ylabel(r'$E_{eff}^2$')
 for p in momenta:
+  C2_mass_std_sys_lo = np.sqrt(np.square(C2_mass_std[p]) + np.square(C2_mass_sys_lo[p]))
+  C2_mass_std_sys_hi = np.sqrt(np.square(C2_mass_std[p]) + np.square(C2_mass_sys_hi[p]))
+  plt.errorbar(p*(2.*np.pi/24)**2, C2_mass_median[p,0], \
+                        yerr=[C2_mass_std_sys_lo, C2_mass_std_sys_hi],  fmt='b')
   plt.errorbar(p*(2.*np.pi/24)**2, C2_mass_median[p,0], C2_mass_std[p], \
                                                                   fmt='x' + 'b')
 x1 = np.linspace(0, u, 1000)
 y1 = []
 for i in x1:
-  y1.append(np.sqrt(C2_mass_median[0,0]**2 + i))
+  y1.append(C2_mass_median[0,0] + i)
 y1 = np.asarray(y1)
 plt.plot(x1, y1, 'r')
+
+# lattice dispersion relation Gattringer Lang
+for i in range(4):
+  plt.plot(i*np.square(2.*np.pi/24), np.square(np.arccosh(np.cosh(np.sqrt(C2_mass_median[0,0])) + \
+                                              i*(1.-np.cos(2.*np.pi/24)))), \
+                                              'gx', label = 'lattice dispersion relation')
+plt.plot(4*np.square(2.*np.pi/24), np.square(np.arccosh(np.cosh(np.sqrt(C2_mass_median[0,0])) + \
+                                             (1.-np.cos(2.*2.*np.pi/24)))), 'gx')
 pdfplot.savefig()
 plt.clf()
 
-
 pdfplot.close()
 
+## Plotting the dispersion relation
+#l = -0.05
+#u = 0.55
+#plt.xlim([l, u])
+#plt.xlabel(r'$p$')
+#plt.ylabel(r'$E_{eff}(p)$')
+#for p in momenta:
+#  C2_mass_std_sys_lo = np.sqrt(np.square(C2_mass_std[p]) + \
+#                                                   np.square(C2_mass_sys_lo[p]))
+#  C2_mass_std_sys_hi = np.sqrt(np.square(C2_mass_std[p]) + \
+#                                                   np.square(C2_mass_sys_hi[p]))
+#  plt.errorbar(np.sqrt(p*(2.*np.pi/24)**2), C2_mass_median[p,0], \
+#                        yerr=[C2_mass_std_sys_lo, C2_mass_std_sys_hi],  fmt='b')
+#  plt.errorbar(np.sqrt(p*(2.*np.pi/24)**2), C2_mass_median[p,0], \
+#                          C2_mass_std[p], label = 'lattice data', fmt='x' + 'b')
+#x1 = np.linspace(0, u, 1000)
+## continuum dispersion relation
+#y1 = []
+#for i in x1:
+#  y1.append(np.sqrt(C2_mass_median[0,0]**2 + np.square(i)))
+#y1 = np.asarray(y1)
+#plt.plot(x1, y1, 'r')
+#
+## lattice dispersion relation Gattringer Lang
+#for i in range(4):
+#  plt.plot(np.sqrt(i)*2.*np.pi/24, np.arccosh(np.cosh(C2_mass_median[0,0]) + \
+#                                              i*(1.-np.cos(2.*np.pi/24))), \
+#                                              'gx', label = 'lattice dispersion relation')
+#plt.plot(2*2.*np.pi/24, np.arccosh(np.cosh(C2_mass_median[0,0]) + \
+#                                             (1.-np.cos(2.*2.*np.pi/24))), 'gx')
+## approximation
+#y2 = []
+#for i in x1:
+#  y2.append(np.arccosh(np.cosh(C2_mass_median[0,0]) + \
+#                           np.square(24/(2.*np.pi)*i)*(1.-np.cos(2.*np.pi/24))))
+#y2 = np.asarray(y2)
+#plt.plot(x1, y2, 'g--')
+#
+#pdfplot.savefig()
+#plt.clf()
+#
+#pdfplot.close()
+
+## Plotting the dispersion relation E^2 vs. p^2, errors are broken (gaussian 
+## error propagation)
+#l = -0.05
+#u = 0.55
+#plt.xlim([l, u])
+#plt.xlabel(r'$p^2$')
+#plt.ylabel(r'$E_{eff}^2(p)$')
+#for p in momenta:
+#  C2_mass_std_sys_lo = np.square(C2_mass_std[p]) + np.square(C2_mass_sys_lo[p])
+#  C2_mass_std_sys_hi = np.square(C2_mass_std[p]) + np.square(C2_mass_sys_hi[p])
+#  plt.errorbar(p*(2.*np.pi/24)**2, np.square(C2_mass_median[p,0]), \
+#                        yerr=[2*C2_mass_median[p,0]*C2_mass_std_sys_lo, 2*C2_mass_median[p,0]*C2_mass_std_sys_hi],  fmt='b')
+#  plt.errorbar(p*(2.*np.pi/24)**2, np.square(C2_mass_median[p,0]), 2*C2_mass_median[p,0]*C2_mass_std[p], \
+#                                                                  fmt='x' + 'b')
+#x1 = np.linspace(0, u, 1000)
+## continuum dispersion relation
+#y1 = []
+#for i in x1:
+#  y1.append(C2_mass_median[0,0]**2 + i)
+#y1 = np.asarray(y1)
+#plt.plot(x1, y1, 'r')
+#
+## lattice dispersion relation Gattringer Lang
+#for i in range(4):
+#  plt.plot(i*np.square(2.*np.pi/24), np.square(np.arccosh(np.cosh(C2_mass_median[0,0]) + \
+#                                              i*(1.-np.cos(2.*np.pi/24)))), 'gx')
+#plt.plot(4*np.square(2.*np.pi/24), np.square(np.arccosh(np.cosh(C2_mass_median[0,0]) + \
+#                                             (1.-np.cos(2.*2.*np.pi/24)))), 'gx')
+## approximation
+#y2 = []
+#for i in x1:
+#  y2.append(np.square(np.arccosh(np.cosh(C2_mass_median[0,0]) + \
+#                           np.square(24/(2.*np.pi))*i*(1.-np.cos(2.*np.pi/24)))))
+#y2 = np.asarray(y2)
+#plt.plot(x1, y2, 'g--')
+#
+#pdfplot.savefig()
+#plt.clf()
+#
+#pdfplot.close()
 

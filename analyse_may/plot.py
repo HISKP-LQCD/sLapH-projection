@@ -15,19 +15,20 @@ def corr_fct_with_fit(X, Y, dY, fitfunc, args, plotrange, label, pdfplot, logsca
   # plotting the data
   l = int(plotrange[0])
   u = int(plotrange[1])
-  p1 = plt.errorbar(X[l:u], Y[l:u], dY[l:u], fmt='x' + 'b', label = label[3])
+  p1 = plt.errorbar(X[l:u], Y[l:u], dY[l:u], fmt='x' + 'b', label = label[4])
   # plotting the fit function
   x1 = np.linspace(l, u, 1000)
   y1 = []
   for i in x1:
     y1.append(fitfunc(args,i))
   y1 = np.asarray(y1)
-  p2, = plt.plot(x1, y1, 'r', label = label[2])
+  p2, = plt.plot(x1, y1, 'r', label = label[3])
   # adjusting the plot style
   plt.grid(True)
   plt.xlabel(label[0])
   plt.ylabel(label[1])
-  plt.legend([p1, p2], [label[2], label[3]], numpoints=1, fancybox=True, prop={'size':10})
+  plt.title(label[2])
+  plt.legend([p1, p2], [label[3], label[4]], numpoints=1, fancybox=True, prop={'size':10})
   if logscale:
     plt.yscale('log')
   # save pdf

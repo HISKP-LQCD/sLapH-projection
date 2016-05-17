@@ -38,7 +38,8 @@ plot_path = './plots/Mpi_fit.pdf'
 IOcontraction.ensure_dir(plot_path)
 pdfplot = PdfPages(plot_path)
 
-for p in range(0,5):
+#for p in range(0,5):
+for p in range(0,1):
   filename = './bootdata/p%d/Mpi_p%d_sym.npy' % (p, p)
   print 'reading file:', filename
   C2 = np.load(filename)
@@ -82,10 +83,13 @@ for p in range(0,5):
       t = np.asarray(tt[lo:up+1])
       print "\nResult from bootstrapsample fit in interval (2pt):", lo, up
       start_parm = [C2_mean[lo], m_mean[lo]]
-      res_C2, chi2, pvalue = fit.fitting(fitfunc1, t, C2[:,lo:up+1], start_parm)
+      res_C2, chi2, dof, pvalue = fit.fitting(fitfunc1, t, C2[:,lo:up+1], \
+                                                                     start_parm)
       res_C2_mean = np.mean(res_C2, axis=0)
-      label = ['t', 'm_eff(t)', 'data', \
-               'fit, tmin = %d, tmax = %d, p=%d' % (lo, up, p)]
+      label = ['t', r'$m_{\pi}^{eff}(t)$', 'Pion mass fits for $p_{cm} = %d$,' \
+               '$ t \in [%d, %d]$' % (p, lo, up), 'data', \
+               '$m_{\pi}^{eff} = %f$\n$\chi^2/d.o.f. = %f$\n' \
+                                'p-value: $%f$' % (res_C2_mean[1], chi2/dof, pvalue)]
       plot.corr_fct_with_fit(tt, m_mean, m_error, fitfunc2, [res_C2_mean[1]], \
                              [7., m.shape[1]], label, pdfplot, 0)
       # collecting fitresults
