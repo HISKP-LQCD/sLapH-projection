@@ -19,14 +19,11 @@ verbose = 0
 
 # Operators entering the Gevp. Last entry must contain the name in LaTeX 
 # compatible notation for plot labels
-gamma_i =   [1, 2, 3, '\gamma_i']
-gamma_0i =  [10, 11, 12, '\gamma_0\gamma_i']
-gamma_50i = [15, 14, 13, '\gamma_5\gamma_0\gamma_i']
+gamma_i =   [1, 2, 3, 'gi']
+gamma_0i =  [10, 11, 12, 'g0gi']
+gamma_50i = [15, 14, 13, 'g5g0gi']
 
 gamma = [gamma_i, gamma_0i, gamma_50i]
-gamma_for_filenames = {'\gamma_i' : 'gi', \
-                       '\gamma_0\gamma_i' : 'g0gi', \
-                       '\gamma_5\gamma_0\gamma_i' : 'g5g0gi'}
 
 ################################################################################
 # Subduction Routine ###########################################################
@@ -35,7 +32,7 @@ gamma_for_filenames = {'\gamma_i' : 'gi', \
 # read original data and quantum numbers
 # data must have shape [operators x ...]
 
-def subduce_ensembles(p, gamma, gamma_for_filenames, verbose=0):
+def subduce_ensembles(p, gamma, verbose=0):
   filename = './readdata/p%1i/C20_p%1i.npy' % (p, p)
   data = np.load(filename)
   if verbose:
@@ -166,9 +163,9 @@ def subduce_ensembles(p, gamma, gamma_for_filenames, verbose=0):
   utils.ensure_dir('./binarydata/p%1i/' % p)
   
   # write all subduced correlators
-  path = './readdata/p%1i/C20_p%1i_single_subduced' % (p, p)
+  path = './readdata/p%1i/C20_p%1i_subduced' % (p, p)
   np.save(path, correlator)
-  path = './readdata/p%1i/C20_p%1i_single_subduced_quantum_numbers' % (p, p)
+  path = './readdata/p%1i/C20_p%1i_subduced_qn' % (p, p)
   np.save(path, qn_subduced)
   
 #  # write all subduced and averaged correlators
@@ -256,6 +253,6 @@ def subduce_ensembles(p, gamma, gamma_for_filenames, verbose=0):
   #                                               qn_subduced[i,j,0,-1])
   #   np.save(path, qn_subduced[i])
 
-subduce_ensembles(p, gamma, gamma_for_filenames, verbose=0)
+subduce_ensembles(p, gamma, verbose=0)
 
 

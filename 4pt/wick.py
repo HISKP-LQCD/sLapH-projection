@@ -62,8 +62,6 @@ print qn_wickd.shape
 
 utils.ensure_dir('./readdata')
 utils.ensure_dir('./readdata/p%1i' % p)
-utils.ensure_dir('./readdata/p%1i/single' % p)
-utils.ensure_dir('./readdata/p%1i/single/%s' % (p, 'C4'))
 # write every operator seperately
 #for i in range(0, qn_wickd.shape[0]):
 #  path = './readdata/p%1i/single/%s/%s' % \
@@ -75,7 +73,7 @@ path = './readdata/p%1i/%s_p%1i' % (p, 'C4', p)
 np.save(path, wickd)
 
 # write all quantum numbers
-path = './readdata/p%1i/%s_p%1i_quantum_numbers' % (p, 'C4', p)
+path = './readdata/p%1i/%s_p%1i_qn' % (p, 'C4', p)
 np.save(path, qn_wickd)
 
 print '\tfinished writing\n'

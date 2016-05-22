@@ -142,7 +142,7 @@ def solve_gevp_gen(data, t0):
             return
 
 #def calculate_gevp(data, t0=1):
-def calculate_gevp(data00, data01, data11, t0=1):
+def calculate_gevp(data, t0=1):
     """Solves the generalized eigenvalue problem of a correlation
     function matrix.
 
@@ -168,31 +168,52 @@ def calculate_gevp(data00, data01, data11, t0=1):
     """
 
     #Interface to original data format
-    if (data00.shape != data01.shape) or (data00.shape != data11.shape):
-        print("ERROR in calculate_gevp()")
-        print("\tnumber of bootstrap samples or time extent is wrong")
-        os.sysexit(-1)
+#    dim = np.int(np.sqrt(data.shape[0]))
+#    data = data.T
+#    #reshapes matrix elements to actual matrix shape
+#    data = np.reshape(data, (data[...,0].shape + (dim, dim)) )
+#    data = np.swapaxes(data.T, 2, 3)
+#    print data.shape
 
-    # Initialize the eigenvalue array
-    E0 = np.zeros(data00.shape)
-    E1 = np.zeros(data00.shape)
-    for _b in range(0, data00.shape[0]):
-        data = np.empty([data00.shape[1], 2, 2])
-        for _t in range(0, data00.shape[1]):
-            data[_t, 0, 0] = data00[_b, _t]
-            data[_t, 0, 1] = data01[_b, _t]
-            data[_t, 1, 0] = data01[_b, _t]
-            data[_t, 1, 1] = data11[_b, _t]
-
+    values_array = np.zeros(data.shape[:-1])
+    if data.ndim == 4:
         # iterate over the bootstrap samples
-        for eigenvalues, _eigenvectors, _t in solve_gevp_gen(data, t0):
-            # save the eigenvalues to the array
-            E0[_b, _t] = eigenvalues[0]
-            E1[_b, _t] = eigenvalues[1]
+        for _samples in range(data.shape[0]):
+            # iterate over the eigensystems
+            for eigenvalues, _eigenvectors, _t in solve_gevp_gen(data[_samples], t0):
+                # save the eigenvalues to the array
+                values_array[_samples, _t] = eigenvalues
         # set the eigenvalues for t=t0 to 1.0
-        #values_array[:,t0] = 1.0
-  #    return values_array
-    return E0, E1
+        values_array[:,t0] = 1.0
+
+    return values_array
+
+#    #Interface to original data format
+#    if (data00.shape != data01.shape) or (data00.shape != data11.shape):
+#        print("ERROR in calculate_gevp()")
+#        print("\tnumber of bootstrap samples or time extent is wrong")
+#        os.sysexit(-1)
+#
+#    # Initialize the eigenvalue array
+#    E0 = np.zeros(data00.shape)
+#    E1 = np.zeros(data00.shape)
+#    for _b in range(0, data00.shape[0]):
+#        data = np.empty([data00.shape[1], 2, 2])
+#        for _t in range(0, data00.shape[1]):
+#            data[_t, 0, 0] = data00[_b, _t]
+#            data[_t, 0, 1] = data01[_b, _t]
+#            data[_t, 1, 0] = data01[_b, _t]
+#            data[_t, 1, 1] = data11[_b, _t]
+#
+#        # iterate over the bootstrap samples
+#        for eigenvalues, _eigenvectors, _t in solve_gevp_gen(data, t0):
+#            # save the eigenvalues to the array
+#            E0[_b, _t] = eigenvalues[0]
+#            E1[_b, _t] = eigenvalues[1]
+#        # set the eigenvalues for t=t0 to 1.0
+#        #values_array[:,t0] = 1.0
+#  #    return values_array
+#    return E0, E1
 
 
 

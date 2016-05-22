@@ -1,4 +1,5 @@
-#!/usr/bin/python
+#!~/Enthought/Canopy_64bit/User/bin/python
+#/usr/bin/python
 
 import numpy as np
 
@@ -26,19 +27,27 @@ negative = [2,6]
 
 # gamma structure wich shall be averaged. Last entry of gamma must contain all
 # names in LaTeX compatible notation for plot labels
-gamma_i =   [1, 2, 3, \
-             ['\gamma_1', '\gamma_2', '\gamma_3', '\gamma_i']]
-gamma_0i =  [10, 11, 12, \
-             ['\gamma_0\gamma_1', '\gamma_0\gamma_2', '\gamma_0\gamma_3', \
-              '\gamma_0\gamma_i']]
-gamma_50i = [15, 14, 13, \
-             ['\gamma_5\gamma_0\gamma_1', '\gamma_5\gamma_0\gamma_2', \
-              '\gamma_5\gamma_0\gamma_3', '\gamma_5\gamma_0\gamma_i']]
+#gamma_i =   [1, 2, 3, \
+#             ['\gamma_1', '\gamma_2', '\gamma_3', '\gamma_i']]
+#gamma_0i =  [10, 11, 12, \
+#             ['\gamma_0\gamma_1', '\gamma_0\gamma_2', '\gamma_0\gamma_3', \
+#              '\gamma_0\gamma_i']]
+#gamma_50i = [15, 14, 13, \
+#             ['\gamma_5\gamma_0\gamma_1', '\gamma_5\gamma_0\gamma_2', \
+#              '\gamma_5\gamma_0\gamma_3', '\gamma_5\gamma_0\gamma_i']]
+
+gamma_i =   [1, 2, 3, 'gi']
+gamma_0i =  [10, 11, 12, 'g0gi']
+gamma_50i = [15, 14, 13, 'g5g0gi']
 
 gamma = [gamma_i, gamma_0i, gamma_50i]
-gamma_for_filenames = {'\gamma_i' : 'gi', \
-                       '\gamma_0\gamma_i' : 'g0gi', \
-                       '\gamma_5\gamma_0\gamma_i' : 'g5g0gi'}
+#gamma_for_filenames = {'\gamma_i' : 'gi', \
+#                       '\gamma_0\gamma_i' : 'g0gi', \
+#                       '\gamma_5\gamma_0\gamma_i' : 'g5g0gi'}
+
+latex = {'gi' : '\gamma_i', \
+         'g0gi' : '\gamma_0\gamma_i', \
+         'g5g0gi' : '\gamma_5\gamma_0\gamma_i'}
 
 # list of all filled symbols in matplotlib except 'o'
 symbol = ['v', '^', '<', '>', 's', 'p', '*', 'h', 'H', 'D', 'd', '8']
@@ -168,17 +177,17 @@ def plot_vecks(mean_sin, err_sin, qn_sin, mean_avg, err_avg, qn_avg, pdfplot, \
       for g2, gevp_col in enumerate(gevp_row):
         for r, row in enumerate(gevp_col):
   
-          print 'plot row %i of irrep %s, %s - %s' % (r+1, row[0,-1], \
-                 gamma_for_filenames[row[0,-3]], gamma_for_filenames[row[0,-2]])
+          print 'plot row %i of irrep %s, %s - %s' % \
+                                          (r+1, row[0,-1], row[0,-3], row[0,-2])
   
           cmap_brg = plt.cm.brg(np.asarray(range(0, row.shape[0])) * \
-                                                             256/(row.shape[0]-1))
+                                                           256/(row.shape[0]-1))
           shift = 1./3/row.shape[0]
   
           # set plot title, labels etc.
           plt.title(r'$%s$ - $%s$ Operators subduced into $p = %i$ under '
                      '$\Lambda = %s$, $\mu = %i$' % \
-                                      (row[0,-3], row[0,-2], p, row[0,-1], r+1), \
+                      (latex[row[0,-3]], latex[row[0,-2]], p, row[0,-1], r+1), \
                     fontsize=12)
           plt.xlabel(r'$t/a$', fontsize=12)
           plt.ylabel(r'$C_2^0(t/a)$', fontsize=12)
@@ -242,7 +251,7 @@ def plot_vecks(mean_sin, err_sin, qn_sin, mean_avg, err_avg, qn_avg, pdfplot, \
         c = np.ravel_multi_index(j, qn_avg.shape[1:4])
         print c
         label = r'$%s \ %s - %s$' % \
-                 (qn_avg[(i,)+j+(-1,)], qn_avg[(i,)+j+(-3,)], qn_avg[(i,)+j+(-2,)])
+                 (qn_avg[(i,)+j+(-1,)], latex[qn_avg[(i,)+j+(-3,)]], latex[qn_avg[(i,)+j+(-2,)]])
         
         # in overview plot only plot diagonal elements
         if j[0] != j[1]:
@@ -310,17 +319,17 @@ def plot_rows(mean_sin, err_sin, qn_sin, mean_avg, err_avg, qn_avg, pdfplot, \
       for g2, gevp_col in enumerate(gevp_row):
 
           
-        print 'plot irrep %s, %s - %s' % (gevp_col[0,-1], \
-               gamma_for_filenames[gevp_col[0,-3]], gamma_for_filenames[gevp_col[0,-2]])
+        print 'plot irrep %s, %s - %s' % \
+                                (gevp_col[0,-1], gevp_col[0,-3], gevp_col[0,-2])
   
         cmap_brg = plt.cm.brg(np.asarray(range(0, gevp_col.shape[0])) * \
-                                                           256/(gevp_col.shape[0]-1))
+                                                      256/(gevp_col.shape[0]-1))
         shift = 1./3/gevp_col.shape[0]
   
         # set plot title, labels etc.
         plt.title(r'$%s$ - $%s$ Operators subduced into $p = %i$ under '
-                   '$\Lambda = %s$ ' % (gevp_col[0,-1], gevp_col[0,-3], p, gevp_col[0,-2]), \
-                  fontsize=12)
+                   '$\Lambda = %s$ ' % (latex[gevp_col[0,-3]], \
+                  latex[gevp_col[0,-2]], p, gevp_col[0,-1]), fontsize=12)
         plt.xlabel(r'$t/a$', fontsize=12)
         plt.ylabel(r'$C_2^0(t/a)$', fontsize=12)
       
@@ -345,7 +354,6 @@ def plot_rows(mean_sin, err_sin, qn_sin, mean_avg, err_avg, qn_avg, pdfplot, \
                        label=label, markersize=3, capsize=3, capthick=0.5, \
                        elinewidth=0.5, markeredgecolor=cmap_brg[op], \
                                                                   linewidth='0.0')
-    
         # plotting average for irrep
         if plot_mean == True:
           # prepare data for plotting
@@ -361,7 +369,7 @@ def plot_rows(mean_sin, err_sin, qn_sin, mean_avg, err_avg, qn_avg, pdfplot, \
                        fmt='o', color='black', label=r'$avg$', \
                        markersize=3, capsize=3, capthick=0.75, elinewidth=0.75, \
                                         markeredgecolor='black', linewidth='0.0')
-         
+
         plt.legend(numpoints=1, loc=1, fontsize=6)
         pdfplot.savefig()
         plt.clf()
@@ -385,8 +393,8 @@ def plot_rows(mean_sin, err_sin, qn_sin, mean_avg, err_avg, qn_avg, pdfplot, \
 
           # index for cmap
           c = i*qn_avg.shape[1]+g
-          label = r'$%s \ %s - %s$' % \
-                                    (qn_avg[i,g1,g2,-1], qn_avg[i,g1,g2,-3], qn_avg[i,g1,g2,-2])
+          label = r'$%s \ %s - %s$' % (qn_avg[i,g1,g2,-1], \
+                           latex[qn_avg[i,g1,g2,-3]], latex[qn_avg[i,g1,g2,-2]])
       
           # in overview plot only plot diagonal elements
           if g1 != g2:
@@ -405,165 +413,12 @@ def plot_rows(mean_sin, err_sin, qn_sin, mean_avg, err_avg, qn_avg, pdfplot, \
                        err/mean[6], fmt='o', color=cmap_brg[c], \
                        label=label, markersize=3, capsize=3, capthick=0.75, \
                        elinewidth=0.75, markeredgecolor=cmap_brg[c], \
-                                                                    linewidth='0.0')
-      plt.legend(numpoints=1, loc=5, fontsize=6)
-      pdfplot.savefig()
-      plt.clf()
- 
-  return
-
-################################################################################
-# what is that?
-def plot_avg_2(mean_avg, err_avg, qn_avg, pdfplot):
-
-  cmap_brg = plt.cm.brg(np.asarray(range(0, 9)) * 256/8)
-  print mean_avg.shape
- 
-  # plot averages from all irreps into one plot
-  cmap_brg = plt.cm.brg(np.asarray(range(0, 9)) * 256/8)
-#  cmap_brg = plt.cm.brg(np.asarray(range(0, qn_avg.shape[0]*qn_avg.shape[1])) *\
-#                                   224/(qn_avg.shape[0]*qn_avg.shape[1]-1))
-
-#  plt.title(r'Averages of $\gamma_i$ - $\gamma_5\gamma_0\gamma_i$ cross correlators' \
-#             ' subduced into $p = %i$' % p, fontsize=12)
-  plt.title(r'Averages of $\gamma_i$ - $\gamma_i$ and $\gamma_5\gamma_0\gamma_i-\gamma_5\gamma_0\gamma_i$ correlators' \
-             ' subduced into $p = %i$' % p, fontsize=12)
-
-  plt.xlabel(r'$t/a$', fontsize=12)
-  plt.ylabel(r'$C_2^0(t/a)$', fontsize=12)
-
-  T = mean_avg.shape[-1]
-  shift = 1./3/8
-  oc = 0
-  ic = 0
-  # TODO: Softcode the if conditions
-#  for t in range(0,2):
-  for j in range(0, qn_avg.shape[1]):
-    # only interested in gi, g5g0gi cross correlator
-    if j not in [0,4,8]:
-      continue
-    for i in range(0, qn_avg.shape[0]):
-#      # do not want B1 irrep
-#      if i == 1:
-#        continue
-      # 0 is for forward, 1 for backward part
-      # index for cmap
-      label = r'$%s \ %s - %s$' % \
-                                (qn_avg[i,j,-1], qn_avg[i,j,-3], qn_avg[i,j,-2])
-#                                (qn_avg[i,j,-1], qn_avg[i,j,-3], qn_avg[i,j,-2], t*T/2, (t+1)*T/2)
-
-      # prepare data for plotting
-      # (-1)**t is for antisymmetrization
-#      if t == 0:
-      mean = (-2)*mean_avg[i,j,4:T/2-6]
-      err  = (-2)* err_avg[i,j,4:T/2-6]
-#      else:
-#        mean = (-2)*mean_avg[i,j,-1:T/2:-1] 
-#        err  = (-2)* err_avg[i,j,-1:T/2:-1]
-#        mean = np.insert(mean,0,1)
-#        err = np.insert(err,0,0)
-
-#       if t == 0:
-#         mean = (-2)*mean_avg[i,j,0:T/2]
-#         err  = (-2)* err_avg[i,j,0:T/2]
-#         if j == 1 or j == 6:
-#           mean = (-1)*mean
-#           err  = (-1)*err
-#       else:
-#         mean = (-1)*(-2)*mean_avg[i,j,-1:T/2:-1] 
-#         err  = (-1)*(-2)* err_avg[i,j,-1:T/2:-1]
-#         mean = np.insert(mean,0,1)
-#         err = np.insert(err,0,0)
-#         if j == 1 or j == 6:
-#           mean = (-1)*mean
-#           err  = (-1)*err
-
-      plt.yscale('log')
-      plt.errorbar(np.asarray(range(4, mean_avg.shape[-1]/2-6))+oc*shift, mean, \
-                   err, fmt=symbol[oc%len(symbol)], color=cmap_brg[oc], \
-                   label=label, markersize=3, capsize=3, capthick=0.75, \
-                   elinewidth=0.75, markeredgecolor=cmap_brg[oc], \
                                                                 linewidth='0.0')
-      oc = oc+1
-  ic = ic+1
-  plt.legend(numpoints=1, loc=1, fontsize=6)
-  pdfplot.savefig()
-  plt.clf()
-   
-  return
-
-################################################################################
-# plot all gamma combinations for a given momentum
-def plot_grouped_3(mean_real, err_real, mean_imag, err_imag, quantum_numbers, gamma, \
-                                                             pdfplot, log=True):
-
-  #TODO: thats not solved well
-  momenta = []
-  for qn in quantum_numbers:
-    flag = False
-    for m in momenta:
-      if (np.dot(qn[0], qn[0]) == p) and (np.array_equal(qn[0], np.asarray(m)) == True): 
-        flag = True
-    if flag == False:
-     momenta.append(qn[0])
-  print momenta
-
-  nb_mom = len(momenta)
-  nb_gam = len(gamma) * len(gamma)
-  shift = 1./3/nb_gam
-
-  # loop over all irreps and momenta to find the subduction coefficient. Plot
-  # all correlator subducing into a given irrep and gamma structure
-  mean = np.zeros(mean_real[0].shape)
-  err = np.zeros(err_real[0].shape)
-  cmap_brg = plt.cm.brg( np.asarray( range(0,nb_gam)) * 256/(nb_gam-1) )
-  # operator counter counts how many operators for a given gamma structure
-  # are plotted already. Input for cmap
-
-  for mom in momenta:
-    for g1 in gamma:
-      g2 = g1
-      # set plot title, labels etc.
-      plt.title(r'$p_{so} = (%i,%i,%i) \quad %s - %s$' % \
-               (mom[0], mom[1], mom[2], g1[-1][-1], g2[-1][-1]), fontsize=12)
-      gc = 0 
-      for so in range(0,3):
-        for si in range(0,3):
-          for op, qn in enumerate(quantum_numbers):
-
-            # if operator from quantum_numbers loop has the correct gamma
-            # structure
-            if ( (np.array_equal(mom, qn[0]) == True) and (g1[so] == qn[2]) and (g2[si] == qn[5]) ):
-    
-              if (g1[so] in gamma_i) != (g2[si] in gamma_i):
-                mean = mean_imag[op]
-                err =  err_imag[op]
-              else:
-                mean = mean_real[op]
-                err =  err_real[op]
-    
-              # set labels
-              plt.xlabel(r'$t/a$', fontsize=12)
-              plt.ylabel(r'$C_2^0(t/a)$', fontsize=12)
-    
-              label = r'$%s - %s$ ' % \
-                         (g1[-1][so], g2[-1][si])
-              if log:
-                plt.yscale('log')
-        
-#              plt.errorbar(np.asarray(range(0,mean.shape[-1]))+gc*shift, 
-              plt.errorbar(np.asarray(range(3,19))+gc*shift, 
-                  mean[3:19], err[3:19], fmt=symbol[gc%len(symbol)], \
-                           color=cmap_brg[gc], label=label, markersize=1,\
-                           capsize=1, capthick=0.4, elinewidth=0.4, \
-                            markeredgecolor=cmap_brg[gc], linewidth='0.0')
-              gc = gc + 1
-    
-      plt.legend(numpoints=1, loc=1, fontsize=6) #bbox_to_anchor=(1.05,1.05))
+      plt.legend(numpoints=1, loc=5, prop={fontsize: 6})
       pdfplot.savefig()
       plt.clf()
-
-  return 
+ 
+  return
 
 ################################################################################
 # plot all momenta for a given gamma combination
@@ -891,11 +746,11 @@ for p in range(0,1):
   print qn.shape
   
   # subduced correlators
-  filename = './bootdata/p%1i/C20_p%1i_single_subduced.npy' % (p, p)
+  filename = './bootdata/p%1i/C20_p%1i_subduced.npy' % (p, p)
   data = np.load(filename)
   mean_sub, err_sub = mean_error_print(data)
   
-  filename = './bootdata/p%1i/C20_p%1i_single_subduced_quantum_numbers.npy' % \
+  filename = './bootdata/p%1i/C20_p%1i_subduced_qn.npy' % \
                                                                             (p, p)
   qn_sub = np.load(filename)
   if ( (qn_sub.shape[0] != mean_sub.shape[0]) ):
@@ -907,7 +762,7 @@ for p in range(0,1):
   data = np.load(filename)
   mean_sub_vecks, err_sub_vecks = mean_error_print(data)
   
-  filename = './bootdata/p%1i/%s_p%1i_subduced_avg_vecks_quantum_numbers.npy' % \
+  filename = './bootdata/p%1i/%s_p%1i_subduced_avg_vecks_qn.npy' % \
                                                                  (p, diagram, p)
   qn_sub_vecks = np.load(filename)
   if ( (qn_sub_vecks.shape[0] != mean_sub_vecks.shape[0]) ):
@@ -920,7 +775,7 @@ for p in range(0,1):
   data = np.load(filename)
   mean_sub_rows, err_sub_rows = mean_error_print(data)
   
-  filename = './bootdata/p%1i/%s_p%1i_subduced_avg_rows_quantum_numbers.npy' % \
+  filename = './bootdata/p%1i/%s_p%1i_subduced_avg_rows_qn.npy' % \
                                                                  (p, diagram, p)
   qn_sub_rows = np.load(filename)
   if ( (qn_sub_rows.shape[0] != mean_sub_rows.shape[0]) ):
@@ -959,7 +814,7 @@ for p in range(0,1):
 
   utils.ensure_dir('./plots')
 
-#  plot_path = './plots/C20_single_p%1i.pdf' % p
+#  plot_path = './plots/C20_raw_%1i.pdf' % p
 #  pdfplot = PdfPages(plot_path)
 #  plot_single(mean_real, err_real, mean_imag, err_imag, qn, pdfplot)
 #  pdfplot.close()
@@ -998,17 +853,6 @@ for p in range(0,1):
     avg = plot_vecks(mean_sub, err_sub, qn_sub, mean_sub_vecks, \
                                  err_sub_vecks, qn_sub_vecks, pdfplot,plot_mean=True)
     pdfplot.close()
-
-#  plot_path = './plots/Subduced_avg_2_p%1i.pdf' % p
-#  pdfplot = PdfPages(plot_path)
-#  avg = plot_avg_2(mean_sub_avg, err_sub_avg, qn_sub_avg, pdfplot)
-#  pdfplot.close()
-
-
-#  plot_path = './plots/Subduced_avg_2_diag_p%1i.pdf' % p
-#  pdfplot = PdfPages(plot_path)
-#  avg = plot_avg_2(mean_sub_avg, err_sub_avg, qn_sub_avg, pdfplot)
-#  pdfplot.close()
 
 #plot_path = './plots/Subduced_mass_avg_p%1i.pdf' % p
 #pdfplot = PdfPages(plot_path)

@@ -26,15 +26,11 @@ diagram = 'C3+'
 
 # Operators entering the Gevp. Last entry must contain the name in LaTeX 
 # compatible notation for plot labels
-gamma_i =   [1, 2, 3, '\gamma_i']
-gamma_0i =  [10, 11, 12, '\gamma_0\gamma_i']
-gamma_50i = [13, 14, 15, '\gamma_5\gamma_0\gamma_i']
-
-#gammas = [gamma_i, gamma_50i]
-#gamma_for_filenames = ['gi', 'g5g0gi']
+gamma_i =   [1, 2, 3, 'gi']
+gamma_0i =  [10, 11, 12, 'g0gi']
+gamma_50i = [13, 14, 15, 'g5g0gi']
 
 gammas = [gamma_i, gamma_0i, gamma_50i]
-gamma_for_filenames = ['gi', 'g0gi', 'g5g0gi']
 
 ################################################################################
 # read original data and call bootrap procedure
@@ -211,7 +207,7 @@ for i, (irrep_so, irrep_si) in enumerate(zip(irreps_4pt[:-1], irreps_2pt[:-1])):
 #                  print a.real
               correlator_row = np.vstack((correlator_row, subduced))
               qn_row.append([ so_3mom[0], so_3mom[1], si_3mom[0], \
-                            gevp_row, p, 5, gevp_col[g_si], irreps_4pt[-1][i] ])
+                            gevp_row, p, 'g5', gevp_col[-1], irreps_4pt[-1][i] ])
                 
         correlator_gevp_col.append(np.asarray(correlator_row))
         qn_gevp_col.append(np.asarray(qn_row))
@@ -237,9 +233,9 @@ utils.ensure_dir('./readdata/p%1i/' % p)
 # write data to disc
 
 # write all subduced correlators
-path = './readdata/p%1i/%s_p%1i_single_subduced' % (p, diagram, p)
+path = './readdata/p%1i/%s_p%1i_subduced' % (p, diagram, p)
 np.save(path, correlator)
-path = './readdata/p%1i/%s_p%1i_single_subduced_quantum_numbers' % (p, diagram, p)
+path = './readdata/p%1i/%s_p%1i_subduced_qn' % (p, diagram, p)
 np.save(path, qn_subduced)
  
 

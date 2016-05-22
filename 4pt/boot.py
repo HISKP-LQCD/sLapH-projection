@@ -102,9 +102,9 @@ def bootstrap_ensembles(p, nb_bins, nb_boot, bootstrap_original_data):
   
   ################################################################################
   # read subduced data and call bootrap procedure
-  path = './readdata/p%1i/%s_p%1i_single_subduced.npy' % (p, diagram, p)
+  path = './readdata/p%1i/%s_p%1i_subduced.npy' % (p, diagram, p)
   data = np.load(path)
-  path = './readdata/p%1i/%s_p%1i_single_subduced_quantum_numbers.npy' % (p, diagram, p)
+  path = './readdata/p%1i/%s_p%1i_subduced_qn.npy' % (p, diagram, p)
   qn_subduced = np.load(path)
   if ( (qn_subduced.shape[0] != data.shape[0])):
     print 'Bootstrapped operators do not aggree with expected operators'
@@ -167,7 +167,7 @@ def bootstrap_ensembles(p, nb_bins, nb_boot, bootstrap_original_data):
   
   path = './bootdata/p%1i/%s_p%1i_subduced' % (p, diagram, p)
   np.save(path, boot)
-  path = './bootdata/p%1i/%s_p%1i_subduced_quantum_numbers' % (p, diagram, p)
+  path = './bootdata/p%1i/%s_p%1i_subduced_qn' % (p, diagram, p)
   np.save(path, qn_subduced)
 
   # write means over all operators subducing into same irrep
@@ -186,7 +186,7 @@ def bootstrap_ensembles(p, nb_bins, nb_boot, bootstrap_original_data):
   qn_avg = np.asarray(qn_avg.tolist())
   path = './bootdata/p%1i/%s_p%1i_subduced_avg_vecks' % (p, diagram, p)
   np.save(path, avg)
-  path = './bootdata/p%1i/%s_p%1i_subduced_avg_vecks_quantum_numbers' % (p, diagram, p)
+  path = './bootdata/p%1i/%s_p%1i_subduced_avg_vecks_qn' % (p, diagram, p)
   np.save(path, qn_avg)
 
   avg = np.mean(avg, axis=-3)
@@ -194,7 +194,7 @@ def bootstrap_ensembles(p, nb_bins, nb_boot, bootstrap_original_data):
   path = './bootdata/p%1i/%s_p%1i_subduced_avg_rows' % (p, diagram, p)
   np.save(path, avg)
   qn_avg = qn_avg[...,0,:]
-  path = './bootdata/p%1i/%s_p%1i_subduced_avg_rows_quantum_numbers' % (p, diagram, p)
+  path = './bootdata/p%1i/%s_p%1i_subduced_avg_rows_qn' % (p, diagram, p)
   np.save(path, qn_avg)
 
   

@@ -35,9 +35,14 @@ gamma_50i = [13, 14, 15, \
              ['\gamma_5\gamma_0\gamma_1', '\gamma_5\gamma_0\gamma_2', \
               '\gamma_5\gamma_0\gamma_3', '\gamma_5\gamma_0\gamma_i']]
 gamma_5 = [5, ['\gamma_5']]
+
 gamma_for_filenames = {'\gamma_i' : 'gi', \
                        '\gamma_0\gamma_i' : 'g0gi', \
                        '\gamma_5\gamma_0\gamma_i' : 'g5g0gi'}
+latex = {'gi' : '\gamma_i', \
+         'g0gi' : '\gamma_0\gamma_i', \
+         'g5g0gi' : '\gamma_5\gamma_0\gamma_i', \
+         'g5' : '\gamma_5'}
 
 gammas = [gamma_i, gamma_0i, gamma_50i]
 #gammas = [gamma_i, gamma_50i]
@@ -212,8 +217,8 @@ def plot_vecks(mean_sin, err_sin, qn_sin, mean_avg, err_avg, gammas, pdfplot):
     for k, gevp_row in enumerate(irrep):
       for g, gevp_col in enumerate(gevp_row):
         for r, row in enumerate(gevp_col):
-          print 'plot row %i of irrep %s, [%i,%i] -> %i' % (r, row[0,-1], \
-                 row[0,-5][0], row[0,-5][1], p)
+          print 'plot row %i of irrep %s, [%i,%i] -> %s' % (r, row[0,-1], \
+                 row[0,-5][0], row[0,-5][1], row[0,-2])
   
           cmap_brg = plt.cm.brg(np.asarray(range(0, row.shape[0])) * \
                                            256/(row.shape[0]-1))
@@ -222,13 +227,12 @@ def plot_vecks(mean_sin, err_sin, qn_sin, mean_avg, err_avg, gammas, pdfplot):
           shift = 1./3/row.shape[0]
           for op in range(0, row.shape[0]):
   
-          #TODO: title
             # set plot title, labels etc.
             plt.title(r'$%s%s$ - $%s$ Operators ' \
-                      r'subduced into $p = %i$, $[%i,%i] \ \to \ [%i$] ' \
+                      r'subduced into $p = %i$, $[%i,%i] \ \to \ [%i]$ ' \
                       r'under $\Lambda = %s$ $\mu = %i$' % \
-                        (gamma_5[-1][-1], gamma_5[-1][-1], \
-                         gammas[g][-1][-1], p, row[op][-5][0], row[op][-5][1], \
+                        (latex[row[op,-3]], latex[row[op,-3]], \
+                         latex[row[op,-2]], p, row[op][-5][0], row[op][-5][1], \
                          p, row[op][-1], r+1),\
                       fontsize=12)
             plt.xlabel(r'$t/a$', fontsize=12)
@@ -287,8 +291,8 @@ def plot_rows(mean_sin, err_sin, qn_sin, mean_avg, err_avg, gammas, pdfplot, plo
   for i, irrep in enumerate(qn_sin):
     for k, gevp_row in enumerate(irrep):
       for g, gevp_col in enumerate(gevp_row):
-        print 'plot irrep %s, [%i,%i] -> %i' % (gevp_col[0,-1], \
-               gevp_col[0,-5][0], gevp_col[0,-5][1], p)
+        print 'plot irrep %s, [%i,%i] -> %s' % (gevp_col[0,-1], \
+               gevp_col[0,-5][0], gevp_col[0,-5][1], gevp_col[0,-2])
   
         cmap_brg = plt.cm.brg(np.asarray(range(0, gevp_col.shape[0])) * \
                                          256/(gevp_col.shape[0]-1))
@@ -302,9 +306,9 @@ def plot_rows(mean_sin, err_sin, qn_sin, mean_avg, err_avg, gammas, pdfplot, plo
           plt.title(r'$%s%s$ - $%s$ Operators ' \
                     r'subduced into $p = %i$, $[%i,%i] \ \to \ [%i]$ ' \
                     r'under $\Lambda = %s$' % \
-                      (gamma_5[-1][-1], gamma_5[-1][-1], gammas[g][-1][-1], p, \
-                       gevp_col[op][-5][0], gevp_col[op][-5][1], \
-                       p, gevp_col[op][-1]),\
+                      (latex[gevp_col[op,-3]], latex[gevp_col[op,-3]], \
+                       latex[gevp_col[op,-2]], p, gevp_col[op][-5][0], \
+                       gevp_col[op][-5][1], p, gevp_col[op][-1]), \
                     fontsize=12)
           plt.xlabel(r'$t/a$', fontsize=12)
           plt.ylabel(r'$%s(t/a)$' % diagram, fontsize=12)
@@ -370,10 +374,10 @@ def plot_abs(mean_sin, err_sin, qn_sin, mean_avg, err_avg, gammas, pdfplot):
 
              # set plot title, labels etc.
             plt.title(r'$%s%s$ - $%s$ Operators ' \
-                      r'subduced into $p = %i$, $[%i,%i] \ \to \ [%i$] ' \
+                      r'subduced into $p = %i$, $[%i,%i] \ \to \ [%i]$ ' \
                       r'under $\Lambda = %s$ $\mu = %i$' % \
-                        (gamma_5[-1][-1], gamma_5[-1][-1], \
-                         gammas[g][-1][-1], p, row[op][-5][0], row[op][-5][1], \
+                        (latex[row[op,-3]], latex[row[op,-3]], \
+                         latex[row[op,-2]], p, row[op][-5][0], row[op][-5][1], \
                          p, row[op][-1], r+1),\
                       fontsize=12)
             plt.xlabel(r'$t/a$', fontsize=12)
@@ -449,10 +453,10 @@ def plot_signal_to_noise(mean_sin, err_sin, qn_sin, mean_avg, err_avg, gammas, p
           #TODO: title
             # set plot title, labels etc.
             plt.title(r'$%s%s$ - $%s$ Operators ' \
-                      r'subduced into $p = %i$, $[%i,%i] \ \to \ [%i$] ' \
+                      r'subduced into $p = %i$, $[%i,%i] \ \to \ [%i]$ ' \
                       r'under $\Lambda = %s$ $\mu = %i$' % \
-                        (gamma_5[-1][-1], gamma_5[-1][-1], \
-                         gammas[g][-1][-1], p, row[op][-5][0], row[op][-5][1], \
+                        (latex[row[op,-3]], latex[row[op,-3]], \
+                         latex[row[op,-2]], p, row[op][-5][0], row[op][-5][1], \
                          p, row[op][-1], r+1),\
                       fontsize=12)
             plt.xlabel(r'$t/a$', fontsize=12)
@@ -542,10 +546,10 @@ for p in [0]:
 
   utils.ensure_dir('./plots')
 
-  plot_path = './plots/%s_single_p%1i.pdf' % (diagram, p)
-  pdfplot = PdfPages(plot_path)
-  plot_single(mean_real, err_real, mean_imag, err_imag, qn, pdfplot)
-  pdfplot.close()
+#  plot_path = './plots/%s_single_p%1i.pdf' % (diagram, p)
+#  pdfplot = PdfPages(plot_path)
+#  plot_single(mean_real, err_real, mean_imag, err_imag, qn, pdfplot)
+#  pdfplot.close()
 
   plot_path = './plots/%s_vecks_p%1i.pdf' % (diagram, p)
   pdfplot = PdfPages(plot_path)

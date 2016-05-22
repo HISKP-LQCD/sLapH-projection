@@ -50,12 +50,13 @@ def compute_ratio(C4, C2):
 # derivative
 def compute_derivative(boot):
 #  print '\ncompute derivative:\n-------------------\n' 
-  derv = np.empty([boot.shape[0], boot.shape[1]-1], dtype=float)
+  derv = np.empty((boot.shape[0], (boot.shape[1]-1)) + boot.shape[2:], dtype=float)
   # computing the derivative
   for b in range(0, boot.shape[0]):
     row = boot[b,:]
     for t in range(0, len(row)-1):
       derv[b, t] = -row[t+1] + row[t]
+#      derv[b, t] = -row[-1] + row[t]
   mean, err = mean_error_print(derv)
   return derv, mean, err
 
@@ -78,7 +79,7 @@ def return_mean_corr(boot):
 def compute_mass(boot):
   print '\ncompute mass:\n-------------\n' 
   # creating mass array from boot array
-  mass = np.empty([boot.shape[0], boot.shape[1]-2], dtype=float)
+  mass = np.empty((boot.shape[0], boot.shape[1]-2) + boot.shape[2:], dtype=float)
   # computing the mass via formula
   for b in range(0, boot.shape[0]):
     row = boot[b,:]

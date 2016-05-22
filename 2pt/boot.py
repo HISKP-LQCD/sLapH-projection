@@ -18,10 +18,6 @@ p = 0         # momentum
 nb_bins = 1
 nb_boot = 500
 
-gamma_for_filenames = {'\gamma_i' : 'gi', \
-                       '\gamma_0\gamma_i' : 'g0gi', \
-                       '\gamma_5\gamma_0\gamma_i' : 'g5g0gi'}
-
 ################################################################################
 # Functions ####################################################################
 
@@ -85,10 +81,10 @@ def bootstrap_ensembles(p, nb_bins, nb_boot, bootstrap_original_data):
   
   ################################################################################
   # read subduced data and call bootrap procedure
-  path = './readdata/p%1i/C20_p%1i_single_subduced.npy' % (p, p)
+  path = './readdata/p%1i/C20_p%1i_subduced.npy' % (p, p)
   data = np.load(path)
   data = data[...,:251]
-  path = './readdata/p%1i/C20_p%1i_single_subduced_quantum_numbers.npy' % (p, p)
+  path = './readdata/p%1i/C20_p%1i_subduced_qn.npy' % (p, p)
   qn_subduced = np.load(path)
   qn_subduced = qn_subduced[...,:251]
   if ( (qn_subduced.shape[0] != data.shape[0])):
@@ -106,8 +102,8 @@ def bootstrap_ensembles(p, nb_bins, nb_boot, bootstrap_original_data):
   ################################################################################
   utils.ensure_dir('./bootdata')
   utils.ensure_dir('./bootdata/p%1i' % p)
-  utils.ensure_dir('./bootdata/p%1i/single' % p)
-  utils.ensure_dir('./bootdata/p%1i/single_subduced' % p)
+  utils.ensure_dir('./bootdata/p%1i/raw' % p)
+  utils.ensure_dir('./bootdata/p%1i/subduced' % p)
   utils.ensure_dir('./bootdata/p%1i/avg' % p)
   
   ################################################################################
@@ -124,10 +120,10 @@ def bootstrap_ensembles(p, nb_bins, nb_boot, bootstrap_original_data):
   
     # write every operator seperately
     for i in range(0, qn_data.shape[0]):
-      path = './bootdata/p%1i/single/%s_real' % \
+      path = './bootdata/p%1i/raw/%s_real' % \
               (p, qn_data[i][-1])
       np.save(path, boot_real[i])
-      path = './bootdata/p%1i/single/%s_imag' % \
+      path = './bootdata/p%1i/raw/%s_imag' % \
               (p, qn_data[i][-1])
       np.save(path, boot_imag[i])
    
@@ -135,10 +131,10 @@ def bootstrap_ensembles(p, nb_bins, nb_boot, bootstrap_original_data):
   # write subduced correlators
 
   # write all subduced correlators
-  path = './bootdata/p%1i/C20_p%1i_single_subduced' % (p, p)
+  path = './bootdata/p%1i/C20_p%1i_subduced' % (p, p)
   print boot.shape
   np.save(path, boot)
-  path = './bootdata/p%1i/C20_p%1i_single_subduced_quantum_numbers' % (p, p)
+  path = './bootdata/p%1i/C20_p%1i_subduced_qn' % (p, p)
   np.save(path, qn_subduced)
 
   # write means over all operators subducing into same irrep row
@@ -157,7 +153,7 @@ def bootstrap_ensembles(p, nb_bins, nb_boot, bootstrap_original_data):
                                                                         axis=-1)
   print qn_avg.shape
   np.save(path, avg)
-  path = './bootdata/p%1i/C20_p%1i_subduced_avg_vecks_quantum_numbers' % (p, p)
+  path = './bootdata/p%1i/C20_p%1i_subduced_avg_vecks_qn' % (p, p)
   np.save(path, qn_avg)
 
    # write means over all operators subducing into same irrep
@@ -166,17 +162,17 @@ def bootstrap_ensembles(p, nb_bins, nb_boot, bootstrap_original_data):
   print avg.shape
   np.save(path, avg)
   qn_avg = qn_avg[...,0,:]
-  path = './bootdata/p%1i/C20_p%1i_subduced_avg_rows_quantum_numbers' % (p, p)
+  path = './bootdata/p%1i/C20_p%1i_subduced_avg_rows_qn' % (p, p)
   np.save(path, qn_avg)
 
    # write the subduced correlators for each irrep, row and gamma seperately
   for i in np.ndindex(qn_subduced[...,0].shape):
-    path = './bootdata/p%1i/single_subduced/C20_uu_%s_%1i_p%1i%1i%1i.d000.%s_' \
+    path = './bootdata/p%1i/subduced/C20_uu_%s_%1i_p%1i%1i%1i.d000.%s_' \
                                                    'p%1i%1i%1i.d000.%s' % \
             (p, qn_subduced[i][-1], i[-2], qn_subduced[i][0][0], qn_subduced[i][0][2], \
-             qn_subduced[i][0][2], gamma_for_filenames[qn_subduced[i][2]], \
+             qn_subduced[i][0][2], qn_subduced[i][2], \
              qn_subduced[i][1][0], qn_subduced[i][1][1], \
-             qn_subduced[i][1][2], gamma_for_filenames[qn_subduced[i][3]])
+             qn_subduced[i][1][2], qn_subduced[i][3])
     np.save(path, boot[i])
  
 #  # write means over all operators subducing into same irrep

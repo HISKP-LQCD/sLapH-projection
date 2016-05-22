@@ -34,9 +34,15 @@ gamma_0i =  [10, 11, 12, \
 gamma_50i = [15, 14, 13, \
              ['\gamma_5\gamma_0\gamma_1', '\gamma_5\gamma_0\gamma_2', \
               '\gamma_5\gamma_0\gamma_3', '\gamma_5\gamma_0\gamma_i']]
-gamma_5 = [5, ['\gamma_5']]
 
 gamma = [gamma_i, gamma_0i, gamma_50i]
+
+latex = {'gi' : '\gamma_i', \
+         'g0gi' : '\gamma_0\gamma_i', \
+         'g5g0gi' : '\gamma_5\gamma_0\gamma_i', \
+         'g5' : '\gamma_5'}
+
+
 
 # list of all filled symbols in matplotlib except 'o'
 symbol = ['v', '^', '<', '>', 's', 'p', '*', 'h', 'H', 'D', 'd', '8']
@@ -597,8 +603,8 @@ def plot_vecks(mean_sin, err_sin, qn_sin, mean_avg, err_avg, pdfplot):
           plt.title(r'$%s%s$ - $%s%s$ Operators ' \
                     r'subduced into $p = %i$, $[%i,%i] \ \to \ [%i,%i]$ ' \
                     r'under $\Lambda = %s$ $\mu = %i$' % \
-                      (gamma_5[-1][-1], gamma_5[-1][-1], gamma_5[-1][-1], \
-                       gamma_5[-1][-1], p, row[0][-5][0], row[0][-5][1], \
+                      (latex[row[0,-3]], latex[row[0,-3]], latex[row[0,-2]], \
+                       latex[row[0,-2]], p, row[0][-5][0], row[0][-5][1], \
                        row[0][-4][0], row[0][-4][1], row[0][-1], r+1),\
                     fontsize=12)
           plt.xlabel(r'$t/a$', fontsize=12)
@@ -673,9 +679,9 @@ def plot_rows(mean_sin, err_sin, qn_sin, mean_avg, err_avg, pdfplot):
           plt.title(r'$%s%s$ - $%s%s$ Operators ' \
                     r'subduced into $p = %i$, $[%i,%i] \ \to \ [%i,%i]$ ' \
                     r'under $\Lambda = %s$' % \
-                      (gamma_5[-1][-1], gamma_5[-1][-1], gamma_5[-1][-1], \
-                       gamma_5[-1][-1], p, \
-                       gevp_col[op][-5][0], gevp_col[op][-5][1], gevp_col[op][-4][0], \
+                      (latex[row[0,-3]], latex[row[0,-3]], latex[row[0,-2]], \
+                       latex[row[0,-2]], p, gevp_col[op][-5][0], \
+                       gevp_col[op][-5][1], gevp_col[op][-4][0], \
                        gevp_col[op][-4][1], gevp_col[op][-1]),\
                     fontsize=12)
           plt.xlabel(r'$t/a$', fontsize=12)
@@ -743,8 +749,8 @@ def plot_abs(mean_sin, err_sin, qn_sin, mean_avg, err_avg, pdfplot):
             plt.title(r'$%s%s$ - $%s%s$ Operators ' \
                       r'subduced into $p = %i$, $[%i,%i] \ \to \ [%i,%i]$ ' \
                       r'under $\Lambda = %s$ $\mu = %i$' % \
-                        (gamma_5[-1][-1], gamma_5[-1][-1], gamma_5[-1][-1], \
-                         gamma_5[-1][-1], p, row[op][-5][0], row[op][-5][1], \
+                        (latex[row[0,-3]], latex[row[0,-3]], latex[row[0,-2]], \
+                         latex[row[0,-2]], p, row[op][-5][0], row[op][-5][1], \
                          row[op][-4][0], row[op][-4][1], row[op][-1], r+1),\
                       fontsize=12)
             plt.xlabel(r'$t/a$', fontsize=12)
@@ -824,8 +830,8 @@ def plot_signal_to_noise(mean_sin, err_sin, qn_sin, mean_avg, err_avg, pdfplot):
           plt.title(r'$%s%s$ - $%s%s$ Operators ' \
                     r'subduced into $p = %i$, $[%i,%i] \ \to \ [%i,%i]$ ' \
                     r'under $\Lambda = %s$ $\mu = %i$' % \
-                      (gamma_5[-1][-1], gamma_5[-1][-1], gamma_5[-1][-1], \
-                       gamma_5[-1][-1], p, row[op][-5][0], row[op][-5][1], \
+                      (latex[row[0,-3]], latex[row[0,-3]], latex[row[0,-2]], \
+                       latex[row[0,-2]], p, row[op][-5][0], row[op][-5][1], \
                        row[op][-4][0], row[op][-4][1], row[op][-1], r+1),\
                     fontsize=12)
           plt.xlabel(r'$t/a$', fontsize=12)
@@ -907,7 +913,7 @@ for p in [0]:
   data = np.load(filename)
   mean_sub, err_sub = mean_error_print_foreach_row(data)
   
-  filename = './bootdata/p%1i/%s_p%1i_subduced_quantum_numbers.npy' % \
+  filename = './bootdata/p%1i/%s_p%1i_subduced_qn.npy' % \
                                                                  (p, diagram, p)
   qn_sub = np.load(filename)
   if ( (qn_sub.shape[0] != mean_sub.shape[0]) ):
@@ -920,7 +926,7 @@ for p in [0]:
   data = np.load(filename)
   mean_sub_vecks, err_sub_vecks = mean_error_print(data)
   
-  filename = './bootdata/p%1i/%s_p%1i_subduced_avg_vecks_quantum_numbers.npy' % \
+  filename = './bootdata/p%1i/%s_p%1i_subduced_avg_vecks_qn.npy' % \
                                                                  (p, diagram, p)
   qn_sub_vecks = np.load(filename)
   if ( (qn_sub_vecks.shape[0] != mean_sub_vecks.shape[0]) ):
@@ -933,7 +939,7 @@ for p in [0]:
   data = np.load(filename)
   mean_sub_rows, err_sub_rows = mean_error_print(data)
   
-  filename = './bootdata/p%1i/%s_p%1i_subduced_avg_rows_quantum_numbers.npy' % \
+  filename = './bootdata/p%1i/%s_p%1i_subduced_avg_rows_qn.npy' % \
                                                                  (p, diagram, p)
   qn_sub_rows = np.load(filename)
   if ( (qn_sub_rows.shape[0] != mean_sub_rows.shape[0]) ):
@@ -962,20 +968,20 @@ for p in [0]:
 #  plot_single(mean_real, err_real, mean_imag, err_imag, qn, pdfplot)
 #  pdfplot.close()
 
-#  plot_path = './plots/%s_vecks_p%1i.pdf' % (diagram, p)
-#  pdfplot = PdfPages(plot_path)
-#  plot_vecks(mean_sub, err_sub, qn_sub, mean_sub_vecks, err_sub_vecks, pdfplot)
-#  pdfplot.close()
+  plot_path = './plots/%s_vecks_p%1i.pdf' % (diagram, p)
+  pdfplot = PdfPages(plot_path)
+  plot_vecks(mean_sub, err_sub, qn_sub, mean_sub_vecks, err_sub_vecks, pdfplot)
+  pdfplot.close()
 
   plot_path = './plots/%s_rows_p%1i.pdf' % (diagram, p)
   pdfplot = PdfPages(plot_path)
   plot_rows(mean_sub_vecks, err_sub_vecks, qn_sub_vecks, mean_sub_rows, err_sub_rows, pdfplot)
   pdfplot.close()
 
-#  plot_path = './plots/%s_abs_p%1i.pdf' % (diagram, p)
-#  pdfplot = PdfPages(plot_path)
-#  plot_abs(mean_sub, err_sub, qn_sub, mean_sub_vecks, err_sub_vecks, pdfplot)
-#  pdfplot.close()
+  plot_path = './plots/%s_abs_p%1i.pdf' % (diagram, p)
+  pdfplot = PdfPages(plot_path)
+  plot_abs(mean_sub, err_sub, qn_sub, mean_sub_vecks, err_sub_vecks, pdfplot)
+  pdfplot.close()
 
 #  plot_path = './plots/Correlators_grouped_p%1i.pdf' % p
 #  pdfplot = PdfPages(plot_path)

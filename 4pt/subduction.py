@@ -20,7 +20,7 @@ diagram = 'C4'
 
 path = './readdata/p%1i/%s_p%1i.npy' % (p, diagram, p)
 data = np.load(path)
-path = './readdata/p%1i/%s_p%1i_quantum_numbers.npy' % (p, diagram, p)
+path = './readdata/p%1i/%s_p%1i_qn.npy' % (p, diagram, p)
 qn_data = np.load(path)
 if ( (qn_data.shape[0] != data.shape[0])):
   print '\tBootstrapped operators do not aggree with expected operators'
@@ -127,7 +127,7 @@ for i, irrep in enumerate(irreps[:-1]):
             if(subduced.any() != 0):
               correlator_row = np.vstack((correlator_row, subduced))
               qn_row.append([ so_3mom[0], so_3mom[1], si_3mom[0], si_3mom[1], \
-                                          gevp_row, gevp_col, 5, 5, irreps[-1][i] ])
+                                          gevp_row, gevp_col, 'g5', 'g5', irreps[-1][i] ])
         # end loop over entries in CG-coefficient
         correlator_gevp_col.append(np.asarray(correlator_row))
         qn_gevp_col.append(np.asarray(qn_row))
@@ -163,10 +163,9 @@ utils.ensure_dir('./readdata/p%1i/' % p)
 # write data to disc
 
 # write all subduced correlators
-path = './readdata/p%1i/%s_p%1i_single_subduced' % (p, diagram, p)
+path = './readdata/p%1i/%s_p%1i_subduced' % (p, diagram, p)
 np.save(path, correlator)
-path = './readdata/p%1i/%s_p%1i_single_subduced_quantum_numbers' % \
-                                                                 (p, diagram, p)
+path = './readdata/p%1i/%s_p%1i_subduced_qn' % (p, diagram, p)
 np.save(path, qn_subduced)
  
 

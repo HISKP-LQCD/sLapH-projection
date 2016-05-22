@@ -11,7 +11,7 @@ import utils
 # Parameters ###################################################################
 
 ################################################################################
-bootstrap_original_data = True
+bootstrap_original_data = False
 
 p = 0         # momentum
 
@@ -138,9 +138,9 @@ def bootstrap_ensemble(p, nb_bins, nb_boot, bootstrap_original_data):
   
   ################################################################################
   # read subduced data and call bootrap procedure
-  path = './readdata/p%1i/%s_p%1i_single_subduced.npy' % (p, diagram, p)
+  path = './readdata/p%1i/%s_p%1i_subduced.npy' % (p, diagram, p)
   data = np.load(path)
-  path = './readdata/p%1i/%s_p%1i_single_subduced_quantum_numbers.npy' % (p, diagram, p)
+  path = './readdata/p%1i/%s_p%1i_subduced_qn.npy' % (p, diagram, p)
   qn_subduced = np.load(path)
   if ( (qn_subduced.shape[0] != data.shape[0])):
     print 'Bootstrapped operators do not aggree with expected operators'
