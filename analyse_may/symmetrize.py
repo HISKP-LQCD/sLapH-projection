@@ -17,7 +17,7 @@ import utils
 ################################################################################
 p = 0 # momenta to analyse
 
-gevp = ['gi', 'g0gi', 'g5g0gi', (1,1), (2,2)]
+gevp = ['g0gi', (1,1), (2,2)]
 ################################################################################
 # Functions ####################################################################
 
@@ -122,11 +122,18 @@ for i in np.ndindex(mask.shape):
   # only supported in numpy 1.9.1 or higher
   #  values, counts = np.unique(qn, return_counts=True)
 
-sinh_for_gevp = np.asarray([sinh[i] for i in np.ndindex(mask.shape[1:]) if not mask[(0,) + i]]).reshape((len(gevp), len(gevp)))
-data_for_gevp = np.asarray([data[i] for i in np.ndindex(mask.shape) if not mask[i]]).reshape((data.shape[0], len(gevp), len(gevp)) + data.shape[3:])
+sinh_for_gevp = np.asarray([sinh[i] for i in np.ndindex(mask.shape[1:]) \
+                         if not mask[(0,) + i]]).reshape((len(gevp), len(gevp)))
+data_for_gevp = np.asarray([data[i] for i in np.ndindex(mask.shape) \
+                         if not mask[i]]).reshape( \
+                         (data.shape[0], len(gevp), len(gevp)) + data.shape[3:])
+qn_for_gevp = np.asarray([qn[i] for i in np.ndindex(mask.shape) \
+                         if not mask[i]]).reshape( \
+                           (qn.shape[0], len(gevp), len(gevp)) + qn.shape[3:])
 
 print sinh_for_gevp.shape
 print data_for_gevp.shape
+print qn_for_gevp.shape
 
 for irrep in data_for_gevp:
 
@@ -141,22 +148,11 @@ sym = sym.T
 sym = np.swapaxes(sym, -2, -1)
 print sym.shape
 
-#slicing to only get g_i and [1,1]
-#for i, irrep in enumerate(data[:,0:5:4,0:5:4]):
-#for i, irrep in enumerate(data):
-#
-#  sym = symmetrize(irrep, sinh)
-#  print sym.shape
-#
-#sym = symmetrize(data[:], sinh)
-#
-#    data = np.swapaxes(data.T, 2, 3)
-#    print data.shape
-
-#pc = np.asarray(pc)
-#print pc.shape
-#print pc
-#
+# TODO: maybe there is a more elegant solution featuring np.unique (without the
+# sorting)
+qn_for_gevp = np.swapaxes(qn_for_gevp.diagonal(axis1=-3, axis2=-2), -2, -1)
+qn_for_gevp = np.delete(qn_for_gevp, [0,2], -1)
+print qn_for_gevp.shape
 
 ################################################################################
 # Write data to disc ###########################################################
@@ -167,7 +163,8 @@ utils.ensure_dir('./bootdata/p%1i' % p)
 ## write all (anti-)symmetrized gevp eigenvalues
 path = './bootdata/p%1i/Crho_p%1i_sym' % (p, p)
 np.save(path, sym)
-#path = './bootdata/p%1i/p%1i_sym_quantum_numbers' % (p, p)
+path = './bootdata/p%1i/Crho_p%1i_sym_qn' % (p, p)
+np.save(path, qn_for_gevp)
 ## TODO: save t0 in qn
 
 #################################################################################

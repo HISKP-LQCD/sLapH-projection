@@ -112,12 +112,19 @@ def extract_corr_fct(name='', cnfg_min=0, cnfg_del=0, nb_cfg=0, T=0, gamma=5,\
     t += 1
   return corr
 
+#################################################################################
+## checks if the directory where the file will be written does exist
+#def ensure_dir(f):
+#  d = os.path.dirname(f)
+#  if not os.path.exists(d):
+#    os.makedirs(d)
+
 ################################################################################
 # checks if the directory where the file will be written does exist
 def ensure_dir(f):
-  d = os.path.dirname(f)
-  if not os.path.exists(d):
-    os.makedirs(d)
+#  d = os.path.dirname(f)
+  if not os.path.exists(f):
+    os.makedirs(f)
 
 ################################################################################
 # writing the correlation function in new order
