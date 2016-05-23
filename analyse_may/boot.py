@@ -54,16 +54,16 @@ def compute_derivative(boot):
   # computing the derivative
   for b in range(0, boot.shape[0]):
     row = boot[b,:]
-    for t in range(0, len(row)-1):
-      derv[b, t] = -row[t+1] + row[t]
+    for t in range(0, len(row)-3):
+      derv[b, t] = -row[t+3] + row[t]
 #      derv[b, t] = -row[-1] + row[t]
   mean, err = mean_error_print(derv)
   return derv, mean, err
 
 # computes the mean and the error, and writes both out
 def mean_error_print(boot, write = 0):
-  mean = np.mean(boot, axis=0)
-  err  = np.std(boot, axis=0)
+  mean = np.nanmean(boot, axis=0)
+  err  = np.nanstd(boot, axis=0)
   if write:
     for t, m, e in zip(range(0, len(mean)), mean, err):
       print t, m, e
@@ -77,16 +77,18 @@ def return_mean_corr(boot):
 
 # mass computation
 def compute_mass(boot):
-  print '\ncompute mass:\n-------------\n' 
+#  print '\ncompute mass:\n-------------\n' 
   # creating mass array from boot array
   mass = np.empty((boot.shape[0], boot.shape[1]-2) + boot.shape[2:], dtype=float)
   # computing the mass via formula
-  for b in range(0, boot.shape[0]):
-    row = boot[b,:]
+  for b, row in enumerate(boot): #range(0, boot.shape[0]):
+#    row = boot[b,:]
     for t in range(1, len(row)-1):
       mass[b, t-1] = (row[t-1] + row[t+1])/(2.0*row[t])
-  mass = np.arccosh(mass)
-  mean, err = mean_error_print(mass)
-  return mass, mean, err
+  mass2 = np.arccosh(mass)
+#  for m1, m2 in zip(mass, mass2):
+#    print m1, m2
+  mean, err = mean_error_print(mass2)
+  return mass2, mean, err
 
 

@@ -5,4 +5,5 @@
 # data files
 *.dat
 *.npy
+*.out
 
