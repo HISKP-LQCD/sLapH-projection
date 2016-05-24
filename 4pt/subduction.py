@@ -16,14 +16,14 @@ p_max = 4
 diagram = 'C4'
 
 ################################################################################
-# read original data and call bootrap procedure
+# read original data 
 
 path = './readdata/p%1i/%s_p%1i.npy' % (p, diagram, p)
 data = np.load(path)
 path = './readdata/p%1i/%s_p%1i_qn.npy' % (p, diagram, p)
 qn_data = np.load(path)
 if ( (qn_data.shape[0] != data.shape[0])):
-  print '\tBootstrapped operators do not aggree with expected operators'
+  print '\tRead operators do not aggree with expected operators'
   exit(0)
 
 ################################################################################
@@ -168,6 +168,31 @@ np.save(path, correlator)
 path = './readdata/p%1i/%s_p%1i_subduced_qn' % (p, diagram, p)
 np.save(path, qn_subduced)
  
+# write means over all operators subducing into same irrep row
+avg = np.zeros_like(correlator)
+qn_avg = np.zeros_like(qn_subduced)
+for i in range(correlator.shape[0]):
+  for k1 in range(correlator.shape[1]):
+    for k2 in range(correlator.shape[2]):
+      for r in range(correlator.shape[3]):
+        avg[i,k1,k2,r] = np.sum(correlator[i,k1,k2,r], axis=0) 
+        qn_avg[i,k1,k2,r] = qn_subduced[i,k1,k2,r][0,4:]
+avg = np.asarray(avg.tolist())
+print avg.shape
+qn_avg = np.asarray(qn_avg.tolist())
+path = './readdata/p%1i/%s_p%1i_subduced_avg_vecks' % (p, diagram, p)
+np.save(path, avg)
+path = './readdata/p%1i/%s_p%1i_subduced_avg_vecks_qn' % (p, diagram, p)
+np.save(path, qn_avg)
+
+#write means over all operators subducing into same irrep
+avg = np.mean(avg, axis=-3)
+print avg.shape
+path = './readdata/p%1i/%s_p%1i_subduced_avg_rows' % (p, diagram, p)
+np.save(path, avg)
+qn_avg = qn_avg[...,0,:]
+path = './readdata/p%1i/%s_p%1i_subduced_avg_rows_qn' % (p, diagram, p)
+np.save(path, qn_avg)
 
 
 

@@ -189,6 +189,7 @@ def bootstrap_ensembles(p, nb_bins, nb_boot, bootstrap_original_data):
   path = './bootdata/p%1i/%s_p%1i_subduced_avg_vecks_qn' % (p, diagram, p)
   np.save(path, qn_avg)
 
+  #write means over all operators subducing into same irrep
   avg = np.mean(avg, axis=-3)
   print avg.shape
   path = './bootdata/p%1i/%s_p%1i_subduced_avg_rows' % (p, diagram, p)

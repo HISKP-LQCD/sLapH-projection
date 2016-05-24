@@ -167,7 +167,35 @@ def subduce_ensembles(p, gamma, verbose=0):
   np.save(path, correlator)
   path = './readdata/p%1i/C20_p%1i_subduced_qn' % (p, p)
   np.save(path, qn_subduced)
-  
+
+  # write means over all operators subducing into same irrep row
+  path = './readdata/p%1i/C20_p%1i_subduced_avg_vecks' % (p, p)
+  # TODO: mp.mean or np.sum?
+  avg = np.mean(correlator, axis=4)
+  print avg.shape
+
+  qn_avg = np.empty_like(qn_subduced[...,0,:])
+  for i in np.ndindex(qn_subduced[...,0,0].shape):
+    qn_avg[i] = np.insert( np.insert( \
+                  qn_subduced[i][0,-3:], 
+                    np.dot(qn_subduced[i+(0,1)], qn_subduced[i+(0,1)]), 0, \
+                                                                       axis=-1), 
+                      np.dot(qn_subduced[i+(0,0)], qn_subduced[i+(0,0)]), 0, \
+                                                                        axis=-1)
+  print qn_avg.shape
+  np.save(path, avg)
+  path = './readdata/p%1i/C20_p%1i_subduced_avg_vecks_qn' % (p, p)
+  np.save(path, qn_avg)
+
+   # write means over all operators subducing into same irrep
+  path = './readdata/p%1i/C20_p%1i_subduced_avg_rows' % (p, p)
+  avg = np.mean(avg, axis=3)
+  print avg.shape
+  np.save(path, avg)
+  qn_avg = qn_avg[...,0,:]
+  path = './readdata/p%1i/C20_p%1i_subduced_avg_rows_qn' % (p, p)
+  np.save(path, qn_avg)
+ 
 #  # write all subduced and averaged correlators
 #  # average is always over subduced operators contributing to same irrep
 #  # TODO: change that to 'E2_1' in irreps[-1]

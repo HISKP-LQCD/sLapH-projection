@@ -33,14 +33,14 @@ gamma_50i = [13, 14, 15, 'g5g0gi']
 gammas = [gamma_i, gamma_0i, gamma_50i]
 
 ################################################################################
-# read original data and call bootrap procedure
+# read original data 
 
 path = './readdata/p%1i/%s_p%1i.npy' % (p, diagram, p)
 data = np.load(path)
 path = './readdata/p%1i/%s_p%1i_quantum_numbers.npy' % (p, diagram, p)
 qn_data = np.load(path)
 if ( (qn_data.shape[0] != data.shape[0])):
-  print '\tBootstrapped operators do not aggree with expected operators'
+  print '\tRead operators do not aggree with expected operators'
   exit(0)
 
 ################################################################################
@@ -238,7 +238,32 @@ np.save(path, correlator)
 path = './readdata/p%1i/%s_p%1i_subduced_qn' % (p, diagram, p)
 np.save(path, qn_subduced)
  
+# write all subduced correlators
 
+# write means over all three-vectors of operators subducing into same irrep, 
+# [k1,k2]-Gamma, mu
+avg = np.zeros_like(correlator)
+qn_avg = np.zeros_like(qn_subduced)
+for i in range(correlator.shape[0]):
+  for k in range(correlator.shape[1]):
+    for g in range(correlator.shape[2]):
+      for r in range(correlator.shape[3]):
+        avg[i,k,g,r] = np.sum(correlator[i,k,g,r], axis=0) 
+        qn_avg[i,k,g,r] = qn_subduced[i,k,g,r][0,3:]
+avg = np.asarray(avg.tolist())
+qn_avg = np.asarray(qn_avg.tolist())
+path = './readdata/p%1i/%s_p%1i_subduced_avg_vecks' % (p, diagram, p)
+np.save(path, avg)
+path = './readdata/p%1i/%s_p%1i_subduced_avg_vecks_qn' % (p, diagram, p)
+np.save(path, qn_avg)
+
+# write means over all rows of operators subducing into same irrep, [k1,k2]
+avg = np.mean(avg, axis=-3)
+path = './readdata/p%1i/%s_p%1i_subduced_avg_rows' % (p, diagram, p)
+np.save(path, avg)
+qn_avg = qn_avg[...,0,:]
+path = './readdata/p%1i/%s_p%1i_subduced_avg_rows_qn' % (p, diagram, p)
+np.save(path, qn_avg)
 
 
 
