@@ -17,7 +17,7 @@ import utils
 ################################################################################
 p = 0 # momenta to analyse
 
-gevp = ['g0gi', (1,1), (2,2)]
+gevp = ['gi', (1,1), (2,2)]
 ################################################################################
 # Functions ####################################################################
 
@@ -33,12 +33,13 @@ def symmetrize(data, sinh):
   if data.ndim != 4:
     print 'in symmetrize: data must have 4 dimensions'
     exit(0)
-  sym = np.zeros((data.shape[:2]) + (T/2, data.shape[-1]))
+  sym = np.zeros((data.shape[:2]) + (T/2+1, data.shape[-1]))
   # loop over gevp matrix elements
   for mat_el in np.ndindex(data.shape[:2]):
     for t in range(1,T/2):
       sym[mat_el+(t,)] = data[mat_el+(t,)] + sinh[mat_el] * data[mat_el+((T-t),)]
     sym[mat_el+(0,)] = data[mat_el+(0,)]
+    sym[mat_el+(T/2,)] = data[mat_el+(T/2,)]
 
   return sym
 

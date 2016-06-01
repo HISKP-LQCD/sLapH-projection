@@ -156,7 +156,7 @@ for p in momenta:
     IOcontraction.ensure_dir('./bootdata/p%d' % p)
     IOcontraction.ensure_dir('./bootdata/p%d/without_shift_weight' % p)
 
-    filename = './bootdata/p%d/without_shift_weight/Crho_p%d_sym_gevp' % (p, p)
+    filename = './bootdata/p%d/Crho_p%d_sym_gevp' % (p, p)
     np.save(filename, E)
 
     filename = './bootdata/p%d/Crho_p%d_sym_sw_gevp' % (p, p)

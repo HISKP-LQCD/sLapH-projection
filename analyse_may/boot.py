@@ -55,7 +55,7 @@ def compute_derivative(boot):
   for b in range(0, boot.shape[0]):
     row = boot[b,:]
     for t in range(0, len(row)-3):
-      derv[b, t] = -row[t+3] + row[t]
+      derv[b, t] = -row[t+1] + row[t]
 #      derv[b, t] = -row[-1] + row[t]
   mean, err = mean_error_print(derv)
   return derv, mean, err

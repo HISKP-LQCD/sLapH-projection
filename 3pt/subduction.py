@@ -156,9 +156,12 @@ for i, (irrep_so, irrep_si) in enumerate(zip(irreps_4pt[:-1], irreps_2pt[:-1])):
                   continue
 
                 # HARDCODED: factors I don't understand
-                if ((gevp_col[g_si] in gamma_i) or (gevp_col[g_si] in gamma_0i)):
-                  data_for_subduction = (-1) * data_for_subduction
-                if (g_si == 2):
+#                if ((gevp_col[g_si] in gamma_i) or (gevp_col[g_si] in gamma_0i)):
+#                  data_for_subduction = (-1) * data_for_subduction
+#                if (g_si == 2):
+#                  data_for_subduction = (-1) * data_for_subduction
+
+                if (row == 0 or row == 2):
                   data_for_subduction = (-1) * data_for_subduction
  
 #                data_for_subduction = factor * data[op]

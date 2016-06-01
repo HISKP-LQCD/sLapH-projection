@@ -390,14 +390,14 @@ def plot_avg(mean_sin, err_sin, qn_sin, pdfplot):
         
                 # prepare data for plotting
                 # TODO: put that in subduction
-                plot = (-1)*mean_sin[i,r,op,:23]
+                plot = (-1)*mean_sin[i,r,op]
         #        if j == 1 or j == 6:
         #          plot = 2*mean_sin[i,j,op,:23]
                
                 plt.yscale('log')
                 # plotting single correlators subduced into irrep
         #        plt.errorbar(np.asarray(range(0, mean_sin.shape[-1]))+op*shift, plot, err_sin[i,j,op], \
-                plt.errorbar(np.asarray(range(0, 23))+op*shift, plot, err_sin[i,r,op,:23], \
+                plt.errorbar(np.asarray(range(0, plot.shape[-1]))+op*shift, plot, err_sin[i,r,op], \
                              fmt=symbol[op%len(symbol)], color=cmap_brg[op], \
                              label=label, markersize=3, capsize=3, capthick=0.5, \
                              elinewidth=0.5, markeredgecolor=cmap_brg[op], \
@@ -622,8 +622,8 @@ def plot_vecks(mean_sin, err_sin, qn_sin, mean_avg, err_avg, pdfplot):
             
             # prepare data for plotting
             # TODO: put that in subduction
-            mean = mean_sin[i,k1,k2,r][op,:23]
-            err = err_sin[i,k1,k2,r][op,:23]
+            mean = mean_sin[i,k1,k2,r][op]
+            err = err_sin[i,k1,k2,r][op]
                   
 #              # Shrink current axis by 20%
 #              box = ax.get_position()
@@ -633,15 +633,15 @@ def plot_vecks(mean_sin, err_sin, qn_sin, mean_avg, err_avg, pdfplot):
 #              ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 
 #            plt.yscale('log')
-            plt.errorbar(np.asarray(range(0, 23))+op*shift, mean, err, \
+            plt.errorbar(np.asarray(range(0, mean.shape[-1]))+op*shift, mean, err, \
                          fmt=symbol[op%len(symbol)], color=cmap_brg[op], \
                          label=label, markersize=3, capsize=3, capthick=0.5, \
                          elinewidth=0.5, markeredgecolor=cmap_brg[op], \
                                                                     linewidth='0.0')
 
-          mean = mean_avg[i,k1,k2,r,:23]
-          err = err_avg[i,k1,k2,r,:23]
-          plt.errorbar(np.asarray(range(0, 23))+op*shift, mean, err, \
+          mean = mean_avg[i,k1,k2,r]
+          err = err_avg[i,k1,k2,r]
+          plt.errorbar(np.asarray(range(0, mean.shape[-1]))+op*shift, mean, err, \
                        fmt='o', color='black', \
                        label='average', markersize=3, capsize=3, capthick=0.5, \
                        elinewidth=0.5, markeredgecolor='black', \
@@ -973,15 +973,15 @@ for p in [0]:
   plot_vecks(mean_sub, err_sub, qn_sub, mean_sub_vecks, err_sub_vecks, pdfplot)
   pdfplot.close()
 
-  plot_path = './plots/%s_rows_p%1i.pdf' % (diagram, p)
-  pdfplot = PdfPages(plot_path)
-  plot_rows(mean_sub_vecks, err_sub_vecks, qn_sub_vecks, mean_sub_rows, err_sub_rows, pdfplot)
-  pdfplot.close()
-
-  plot_path = './plots/%s_abs_p%1i.pdf' % (diagram, p)
-  pdfplot = PdfPages(plot_path)
-  plot_abs(mean_sub, err_sub, qn_sub, mean_sub_vecks, err_sub_vecks, pdfplot)
-  pdfplot.close()
+#  plot_path = './plots/%s_rows_p%1i.pdf' % (diagram, p)
+#  pdfplot = PdfPages(plot_path)
+#  plot_rows(mean_sub_vecks, err_sub_vecks, qn_sub_vecks, mean_sub_rows, err_sub_rows, pdfplot)
+#  pdfplot.close()
+#
+#  plot_path = './plots/%s_abs_p%1i.pdf' % (diagram, p)
+#  pdfplot = PdfPages(plot_path)
+#  plot_abs(mean_sub, err_sub, qn_sub, mean_sub_vecks, err_sub_vecks, pdfplot)
+#  pdfplot.close()
 
 #  plot_path = './plots/Correlators_grouped_p%1i.pdf' % p
 #  pdfplot = PdfPages(plot_path)
