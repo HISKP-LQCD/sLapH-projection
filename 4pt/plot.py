@@ -679,8 +679,8 @@ def plot_rows(mean_sin, err_sin, qn_sin, mean_avg, err_avg, pdfplot):
           plt.title(r'$%s%s$ - $%s%s$ Operators ' \
                     r'subduced into $p = %i$, $[%i,%i] \ \to \ [%i,%i]$ ' \
                     r'under $\Lambda = %s$' % \
-                      (latex[row[0,-3]], latex[row[0,-3]], latex[row[0,-2]], \
-                       latex[row[0,-2]], p, gevp_col[op][-5][0], \
+                      (latex[gevp_col[0,-3]], latex[gevp_col[0,-3]], latex[gevp_col[0,-2]], \
+                       latex[gevp_col[0,-2]], p, gevp_col[op][-5][0], \
                        gevp_col[op][-5][1], gevp_col[op][-4][0], \
                        gevp_col[op][-4][1], gevp_col[op][-1]),\
                     fontsize=12)
@@ -806,74 +806,73 @@ def plot_abs(mean_sin, err_sin, qn_sin, mean_avg, err_avg, pdfplot):
 ################################################################################
 # plot all combinations of momenta at source/ sink subducing into the same
 # \Lambda, [|\vec{k1}|, |\vec{k2}|], \mu, \vec{P}
-def plot_signal_to_noise(mean_sin, err_sin, qn_sin, mean_avg, err_avg, pdfplot):
+def plot_signal_to_noise_rows(qn_sin, mean_avg, err_avg, pdfplot):
 
 #  ax = plt.subplot(111)
 
   # TODO: include loop over gamma structure and create additional 
   # array-dimension with just \gamma_5 as entry
   for i, irrep in enumerate(qn_sin):
-    for k, k1k2 in enumerate(irrep):
-      for r, row in enumerate(k1k2):
-        print 'plot row %i of irrep %s, [%i,%i] -> [%i,%i]' % (r, row[0,-1], \
-               row[0,-5][0], row[0,-5][1], row[0,-4][0], row[0,-4][1])
-
-        cmap_brg = plt.cm.brg(np.asarray(range(0, row.shape[0])) * \
-                                         256/(row.shape[0]-1))
-        if verbose:
-          print row.shape[0] 
-        shift = 1./3/row.shape[0]
-        for op in range(0, row.shape[0]):
-
-        #TODO: title
-          # set plot title, labels etc.
-          plt.title(r'$%s%s$ - $%s%s$ Operators ' \
-                    r'subduced into $p = %i$, $[%i,%i] \ \to \ [%i,%i]$ ' \
-                    r'under $\Lambda = %s$ $\mu = %i$' % \
-                      (latex[row[0,-3]], latex[row[0,-3]], latex[row[0,-2]], \
-                       latex[row[0,-2]], p, row[op][-5][0], row[op][-5][1], \
-                       row[op][-4][0], row[op][-4][1], row[op][-1], r+1),\
-                    fontsize=12)
-          plt.xlabel(r'$t/a$', fontsize=12)
-          plt.ylabel(r'$%s(t/a)$' % diagram, fontsize=12)
-  
-#          if abs(mean_sin[i,k,r][op,0]) >= 0.05*abs(np.max(mean_sin[i,k,r][:,0])):
-          label = r'$[(%2i,%2i,%2i), (%2i,%2i,%2i)] \ \to \ ' \
-                  r'[(%2i,%2i,%2i), (%2i,%2i,%2i)]$' % \
-                    (row[op][0][0], row[op][0][1], row[op][0][2], \
-                     row[op][1][0], row[op][1][1], row[op][1][2], \
-                     row[op][2][0], row[op][2][1], row[op][2][2], \
-                     row[op][3][0], row[op][3][1], row[op][3][2])
+    for k1, gevp_row in enumerate(irrep):
+      for k2, gevp_col in enumerate(gevp_row):
+#        print 'plot row %i of irrep %s, [%i,%i] -> [%i,%i]' % (r, row[0,-1], \
+#               row[0,-5][0], row[0,-5][1], row[0,-4][0], row[0,-4][1])
+#
+#        cmap_brg = plt.cm.brg(np.asarray(range(0, row.shape[0])) * \
+#                                         256/(row.shape[0]-1))
+#        if verbose:
+#          print row.shape[0] 
+#        shift = 1./3/row.shape[0]
+#        for op in range(0, row.shape[0]):
+#
+#        #TODO: title
+#          # set plot title, labels etc.
+#          plt.title(r'$%s%s$ - $%s%s$ Operators ' \
+#                    r'subduced into $p = %i$, $[%i,%i] \ \to \ [%i,%i]$ ' \
+#                    r'under $\Lambda = %s$ $\mu = %i$' % \
+#                      (latex[row[0,-3]], latex[row[0,-3]], latex[row[0,-2]], \
+#                       latex[row[0,-2]], p, row[op][-5][0], row[op][-5][1], \
+#                       row[op][-4][0], row[op][-4][1], row[op][-1], r+1),\
+#                    fontsize=12)
+#          plt.xlabel(r'$t/a$', fontsize=12)
+#          plt.ylabel(r'$%s(t/a)$' % diagram, fontsize=12)
+#  
+##          if abs(mean_sin[i,k,r][op,0]) >= 0.05*abs(np.max(mean_sin[i,k,r][:,0])):
+#          label = r'$[(%2i,%2i,%2i), (%2i,%2i,%2i)] \ \to \ ' \
+#                  r'[(%2i,%2i,%2i), (%2i,%2i,%2i)]$' % \
+#                    (row[op][0][0], row[op][0][1], row[op][0][2], \
+#                     row[op][1][0], row[op][1][1], row[op][1][2], \
+#                     row[op][2][0], row[op][2][1], row[op][2][2], \
+#                     row[op][3][0], row[op][3][1], row[op][3][2])
 #          else:
 #            label = '_nolegend_'
           
           # prepare data for plotting
           # TODO: put that in subduction
-          mean = mean_sin[i,k,r][op,:23]
-          err = err_sin[i,k,r][op,:23]
-                
-#            # Shrink current axis by 20%
-#            box = ax.get_position()
-#            ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+#          mean = mean_sin[i,k,r][op]
+#          err = err_sin[i,k,r][op]
+#                
+##            # Shrink current axis by 20%
+##            box = ax.get_position()
+##            ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+##
+##            # Put a legend to the right of the current axis
+##            ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 #
-#            # Put a legend to the right of the current axis
-#            ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+##          plt.yscale('log')
+#          plt.errorbar(np.asarray(range(0, mean.shape[-1]))+op*shift, mean, err, \
+#                       fmt=symbol[op%len(symbol)], color=cmap_brg[op], \
+#                       label=label, markersize=3, capsize=3, capthick=0.5, \
+#                       elinewidth=0.5, markeredgecolor=cmap_brg[op], \
+#                                                                  linewidth='0.0')
 
-#          plt.yscale('log')
-          plt.errorbar(np.asarray(range(0, 23))+op*shift, mean, err, \
-                       fmt=symbol[op%len(symbol)], color=cmap_brg[op], \
-                       label=label, markersize=3, capsize=3, capthick=0.5, \
-                       elinewidth=0.5, markeredgecolor=cmap_brg[op], \
-                                                                  linewidth='0.0')
-
-        mean = mean_avg[i,k,r,:23]
-        err = err_avg[i,k,r,:23]
-        plt.errorbar(np.asarray(range(0, 23))+op*shift, mean, err, \
-                     fmt='o', color='black', \
-                     label='average', markersize=3, capsize=3, capthick=0.5, \
-                     elinewidth=0.5, markeredgecolor='black', \
-                                                                linewidth='0.0')
-    
+        mean = mean_avg[i,k1,k2]
+        err = err_avg[i,k1,k2]
+        plt.plot(np.asarray(range(0, mean.shape[-1])), np.abs(err/mean), \
+                 marker='o', color='black', label='average', markersize=3, \
+                 markeredgecolor='black', linewidth='0.0')
+        plt.plot([0,mean.shape[-1]], [1,1], color='black', linestyle='--')
+   
         plt.legend(numpoints=1, loc='best', fontsize=6).get_frame().set_alpha(0.5)
         pdfplot.savefig()
         plt.clf()
@@ -968,20 +967,25 @@ for p in [0]:
 #  plot_single(mean_real, err_real, mean_imag, err_imag, qn, pdfplot)
 #  pdfplot.close()
 
-  plot_path = './plots/%s_vecks_p%1i.pdf' % (diagram, p)
-  pdfplot = PdfPages(plot_path)
-  plot_vecks(mean_sub, err_sub, qn_sub, mean_sub_vecks, err_sub_vecks, pdfplot)
-  pdfplot.close()
-
+#  plot_path = './plots/%s_vecks_p%1i.pdf' % (diagram, p)
+#  pdfplot = PdfPages(plot_path)
+#  plot_vecks(mean_sub, err_sub, qn_sub, mean_sub_vecks, err_sub_vecks, pdfplot)
+#  pdfplot.close()
+#
 #  plot_path = './plots/%s_rows_p%1i.pdf' % (diagram, p)
 #  pdfplot = PdfPages(plot_path)
 #  plot_rows(mean_sub_vecks, err_sub_vecks, qn_sub_vecks, mean_sub_rows, err_sub_rows, pdfplot)
 #  pdfplot.close()
-#
+
 #  plot_path = './plots/%s_abs_p%1i.pdf' % (diagram, p)
 #  pdfplot = PdfPages(plot_path)
 #  plot_abs(mean_sub, err_sub, qn_sub, mean_sub_vecks, err_sub_vecks, pdfplot)
 #  pdfplot.close()
+
+  plot_path = './plots/%s_relerr_p%1i.pdf' % (diagram, p)
+  pdfplot = PdfPages(plot_path)
+  plot_signal_to_noise_rows(qn_sub_vecks, mean_sub_rows, err_sub_rows, pdfplot)
+  pdfplot.close()
 
 #  plot_path = './plots/Correlators_grouped_p%1i.pdf' % p
 #  pdfplot = PdfPages(plot_path)

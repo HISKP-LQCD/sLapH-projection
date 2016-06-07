@@ -90,10 +90,27 @@ def bootstrap_ensembles(p, nb_bins, nb_boot, bootstrap_original_data):
   if ( (qn_subduced.shape[0] != data.shape[0])):
     print 'Bootstrapped operators do not aggree with expected operators'
     exit(0)
-  
-  binned_data = prebinning(data, nb_bins)
+
   print 'Bootstrapping subduced data:'
-  boot = bootstrap(binned_data, nb_boot)
+  boot = []
+  for irrep in data:
+    boot_irrep = []
+    for gevp_row in irrep:
+      boot_gevp_row = []
+      for gevp_col in gevp_row:
+        boot_gevp_col = []
+        for row in gevp_col:
+          binned_data = prebinning(row, nb_bins)
+          boot_gevp_col.append(bootstrap(binned_data, nb_boot))
+        boot_gevp_row.append(boot_gevp_col)
+      boot_irrep.append(boot_gevp_row)
+    boot.append(boot_irrep)
+  boot = np.asarray(boot)
+  print boot.shape
+ 
+#  binned_data = prebinning(data, nb_bins)
+#  print 'Bootstrapping subduced data:'
+#  boot = bootstrap(binned_data, nb_boot)
   print '\tfinished bootstrapping subduced operators'
   
   ################################################################################
@@ -140,40 +157,99 @@ def bootstrap_ensembles(p, nb_bins, nb_boot, bootstrap_original_data):
   # write means over all operators subducing into same irrep row
   path = './bootdata/p%1i/C20_p%1i_subduced_avg_vecks' % (p, p)
   # TODO: mp.mean or np.sum?
-  avg = np.mean(boot, axis=4)
+  if boot.ndim >= 5:
+    avg = np.mean(boot, axis=4)
+  else:
+    avg = []
+    for i, irrep in enumerate(boot):
+      avg_irrep = []
+      for g1, gevp_row in enumerate(irrep):
+        avg_gevp_row = []
+        for g2, gevp_col in enumerate(gevp_row):
+          avg_gevp_col = []
+          for r, row in enumerate(gevp_col):
+            avg_gevp_col.append(np.sum(row, axis=0))
+          avg_gevp_col = np.asarray(avg_gevp_col)
+          avg_gevp_row.append(avg_gevp_col)
+        avg_gevp_row = np.asarray(avg_gevp_row)
+        avg_irrep.append(avg_gevp_row)
+      avg_irrep = np.asarray(avg_irrep)
+      avg.append(avg_irrep)
+    avg = np.asarray(avg)
   print avg.shape
-
-  qn_avg = np.empty_like(qn_subduced[...,0,:])
-  for i in np.ndindex(qn_subduced[...,0,0].shape):
-    qn_avg[i] = np.insert( np.insert( \
-                  qn_subduced[i][0,-3:], 
-                    np.dot(qn_subduced[i+(0,1)], qn_subduced[i+(0,1)]), 0, \
-                                                                       axis=-1), 
-                      np.dot(qn_subduced[i+(0,0)], qn_subduced[i+(0,0)]), 0, \
-                                                                        axis=-1)
-  print qn_avg.shape
   np.save(path, avg)
+
   path = './bootdata/p%1i/C20_p%1i_subduced_avg_vecks_qn' % (p, p)
+  qn_avg = []
+  for i, qn_irrep in enumerate(qn_subduced):
+    qn_avg_irrep = []
+    for g1, qn_gevp_row in enumerate(qn_irrep):
+      qn_avg_gevp_row = []
+      for g2, qn_gevp_col in enumerate(qn_gevp_row):
+        qn_avg_gevp_col = []
+        for r, qn_row in enumerate(qn_gevp_col):
+          qn_avg_gevp_col.append(np.insert( np.insert( \
+                  qn_row[0,-3:], 
+                    0, np.dot(qn_row[0,1], qn_row[0,1]), axis=-1), \
+                      0, np.dot(qn_row[0,0], qn_row[0,0]), axis=-1))
+
+#          qn_avg_gevp_col.append(np.asarray( [np.dot(qn_row[0,1], qn_row[0,1]), \
+#                                   np.dot(qn_row[0,0], qn_row[0,1]), \
+#                                                                qn_row[0,-3:] ]))
+        qn_avg_gevp_col = np.asarray(qn_avg_gevp_col)
+        qn_avg_gevp_row.append(qn_avg_gevp_col)
+      qn_avg_gevp_row = np.asarray(qn_avg_gevp_row)
+      qn_avg_irrep.append(qn_avg_gevp_row)
+    qn_avg_irrep = np.asarray(qn_avg_irrep)
+    qn_avg.append(qn_avg_irrep)
+  qn_avg = np.asarray(qn_avg)
   np.save(path, qn_avg)
 
    # write means over all operators subducing into same irrep
   path = './bootdata/p%1i/C20_p%1i_subduced_avg_rows' % (p, p)
-  avg = np.mean(avg, axis=3)
+  if avg.ndim >= 4:
+    avg = np.mean(avg, axis=3)
+  else:
+    avg_tmp = []
+    for i, irrep in enumerate(avg):
+      avg_irrep = []
+      for g1, gevp_row in enumerate(irrep):
+        avg_gevp_row = []
+        for g2, gevp_col in enumerate(gevp_row):
+          avg_gevp_row.append(np.mean(gevp_col, axis=0))
+        avg_gevp_row = np.asarray(avg_gevp_row)
+        avg_irrep.append(avg_gevp_row)
+      avg_irrep = np.asarray(avg_irrep)
+      avg_tmp.append(avg_irrep)
+    avg = np.asarray(avg_tmp)
   print avg.shape
   np.save(path, avg)
-  qn_avg = qn_avg[...,0,:]
+
   path = './bootdata/p%1i/C20_p%1i_subduced_avg_rows_qn' % (p, p)
+  qn_avg_tmp = []
+  for i, qn_irrep in enumerate(qn_avg):
+    qn_avg_irrep = []
+    for g1, qn_gevp_row in enumerate(qn_irrep):
+      qn_avg_gevp_row = []
+      for g2, qn_gevp_col in enumerate(qn_gevp_row):
+        qn_avg_gevp_row.append(qn_gevp_col[0])
+      qn_avg_gevp_row = np.asarray(qn_avg_gevp_row)
+      qn_avg_irrep.append(qn_avg_gevp_row)
+    qn_avg_irrep = np.asarray(qn_avg_irrep)
+    qn_avg_tmp.append(qn_avg_irrep)
+  qn_avg = np.asarray(qn_avg_tmp)
+#  qn_avg = qn_avg[...,0,:]
   np.save(path, qn_avg)
 
-   # write the subduced correlators for each irrep, row and gamma seperately
-  for i in np.ndindex(qn_subduced[...,0].shape):
-    path = './bootdata/p%1i/subduced/C20_uu_%s_%1i_p%1i%1i%1i.d000.%s_' \
-                                                   'p%1i%1i%1i.d000.%s' % \
-            (p, qn_subduced[i][-1], i[-2], qn_subduced[i][0][0], qn_subduced[i][0][2], \
-             qn_subduced[i][0][2], qn_subduced[i][2], \
-             qn_subduced[i][1][0], qn_subduced[i][1][1], \
-             qn_subduced[i][1][2], qn_subduced[i][3])
-    np.save(path, boot[i])
+#   # write the subduced correlators for each irrep, row and gamma seperately
+#  for i in np.ndindex(qn_subduced[...,0].shape):
+#    path = './bootdata/p%1i/subduced/C20_uu_%s_%1i_p%1i%1i%1i.d000.%s_' \
+#                                                   'p%1i%1i%1i.d000.%s' % \
+#            (p, qn_subduced[i][-1], i[-2], qn_subduced[i][0][0], qn_subduced[i][0][2], \
+#             qn_subduced[i][0][2], qn_subduced[i][2], \
+#             qn_subduced[i][1][0], qn_subduced[i][1][1], \
+#             qn_subduced[i][1][2], qn_subduced[i][3])
+#    np.save(path, boot[i])
  
 #  # write means over all operators subducing into same irrep
 #  if p not in [1,3,4]:
@@ -199,4 +275,5 @@ def bootstrap_ensembles(p, nb_bins, nb_boot, bootstrap_original_data):
 
   print '\tfinished writing'
 
-bootstrap_ensembles(p, nb_bins, nb_boot, bootstrap_original_data)
+for p in range(2):
+  bootstrap_ensembles(p, nb_bins, nb_boot, bootstrap_original_data)
