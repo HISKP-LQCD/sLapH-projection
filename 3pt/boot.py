@@ -11,7 +11,7 @@ import utils
 # Parameters ###################################################################
 
 ################################################################################
-bootstrap_original_data = True
+bootstrap_original_data = False
 
 p = 0         # momentum
 
@@ -121,15 +121,23 @@ def write_ensemble(boot, qn_boot, name, p, write_mean=False):
         for g2, qn_gevp_col in enumerate(qn_gevp_row):
           qn_avg_gevp_col = []
           for r, qn_row in enumerate(qn_gevp_col):
-            qn_avg_row = []
-            for k, qn_vec in enumerate(qn_row):
+#            qn_avg_row = []
+#            for k, qn_vec in enumerate(qn_row):
   #            qn_avg_row.append(np.asarray([np.dot(qn_avg_vec[1], qn_avg_vec[1]), \
   #                               np.dot(qn_avg_vec[1], qn_avg_vec[1]), \
   #                                                              qn_avg_vec[-3:]]))
-              qn_avg_row.append(np.insert( np.insert( \
-                    qn_vec[-3:], 
-                      0, np.dot(qn_vec[1], qn_vec[1]), axis=-1), \
-                        0, np.dot(qn_vec[0], qn_vec[0]), axis=-1))
+#              qn_avg_row.append(np.insert( \
+#                  np.insert( qn_vec[-5:], 0, \
+#                      (np.dot(qn_vec[-7][1], qn_vec[-7][1]), np.dot(qn_vec[-7][0], qn_vec[-7][0])), \
+#                      axis=-1), \
+#                  0, np.dot(qn_vec[-6], qn_vec[-6]), axis=-1))
+
+#              qn_avg_row.append(np.insert( np.insert( \
+#                    qn_vec[-3:], 
+#                      0, np.dot(qn_vec[1], qn_vec[1]), axis=-1), \
+#                        0, np.dot(qn_vec[0], qn_vec[0]), axis=-1))
+
+            qn_avg_row = qn_row[0][-5:]
   
             qn_avg_row = np.asarray(qn_avg_row)
             qn_avg_gevp_col.append(qn_avg_row)
@@ -309,5 +317,5 @@ def bootstrap_ensemble(p, nb_bins, nb_boot, bootstrap_original_data):
 #  path = './bootdata/p%1i/%s_p%1i_subduced_avg_rows_qn' % (p, diagram, p)
 #  np.save(path, qn_avg)
 
-for p in range(1,2):
+for p in range(0,2):
   bootstrap_ensemble(p, nb_bins, nb_boot, bootstrap_original_data)

@@ -57,9 +57,66 @@ diagram = 'C3+'
 
 ################################################################################
 # computes the mean and the error, and writes both out
+#def mean_error_print(boot, write = 0):
+#  mean = np.mean(boot, axis=-1)
+#  err  = np.std(boot, axis=-1)
+#  if write:
+#    for t, m, e in zip(range(0, len(mean)), mean, err):
+#      print t, m, e
+#  return mean, err
 def mean_error_print(boot, write = 0):
-  mean = np.mean(boot, axis=-1)
-  err  = np.std(boot, axis=-1)
+  mean = []
+  err = []
+  for i, irrep in enumerate(boot):
+    mean.append(np.mean(irrep, axis=-1))
+    err.append(np.std(irrep, axis=-1))
+  mean = np.asarray(mean)
+  err = np.asarray(err)
+  if write:
+    for t, m, e in zip(range(0, len(mean)), mean, err):
+      print t, m, e
+  return mean, err
+
+
+# computes the mean and the error, and writes both out
+def mean_error_print_foreach_veck(boot, write = 0):
+#  mean = np.zeros_like(boot)
+#  err  = np.zeros_like(boot)
+  mean = []
+  err = []
+  for i,irrep in enumerate(boot):
+    mean_irrep = []
+    err_irrep = []
+    for g1, gevp_row in enumerate(irrep):
+      mean_gevp_row = []
+      err_gevp_row = []
+      for g2, gevp_col in enumerate(gevp_row):
+        mean_gevp_col = []
+        err_gevp_col = []
+        for r, row in enumerate(gevp_col):
+          mean_row = []
+          err_row = []
+          for k, veck in enumerate(row):
+            mean_row.append(np.mean(veck, axis=-1))
+            err_row.append(np.std(veck, axis=-1))
+          mean_row = np.asarray(mean_row)
+          mean_gevp_col.append(mean_row)
+          err_row = np.asarray(err_row)
+          err_gevp_col.append(err_row)
+        mean_gevp_col = np.asarray(mean_gevp_col)
+        mean_gevp_row.append(mean_gevp_col)
+        err_gevp_col = np.asarray(err_gevp_col)
+        err_gevp_row.append(err_gevp_col)
+      mean_gevp_row = np.asarray(mean_gevp_row)
+      mean_irrep.append(mean_gevp_row)
+      err_gevp_row = np.asarray(err_gevp_row)
+      err_irrep.append(err_gevp_row)
+    mean_irrep = np.asarray(mean_irrep)
+    mean.append(mean_irrep)
+    err_irrep = np.asarray(err_irrep)
+    err.append(err_irrep)
+  mean = np.asarray(mean)
+  err = np.asarray(err)
   if write:
     for t, m, e in zip(range(0, len(mean)), mean, err):
       print t, m, e
@@ -67,18 +124,55 @@ def mean_error_print(boot, write = 0):
 
 # computes the mean and the error, and writes both out
 def mean_error_print_foreach_row(boot, write = 0):
-  mean = np.zeros_like(boot)
-  err  = np.zeros_like(boot)
+#  mean = np.zeros_like(boot)
+#  err  = np.zeros_like(boot)
+  mean = []
+  err = []
   for i,irrep in enumerate(boot):
-    for k,k1k2 in enumerate(irrep):
-      for g, gamma in enumerate(k1k2):
-        for r,row in enumerate(gamma):
-          mean[i,k,g,r] = np.mean(row, axis=-1)
-          err[i,k,g,r]  = np.std(row, axis=-1)
+    mean_irrep = []
+    err_irrep = []
+    for g1, gevp_row in enumerate(irrep):
+      mean_gevp_row = []
+      err_gevp_row = []
+      for g2, gevp_col in enumerate(gevp_row):
+        mean_gevp_col = []
+        err_gevp_col = []
+        for r, row in enumerate(gevp_col):
+          mean_gevp_col.append(np.mean(row, axis=-1))
+          err_gevp_col.append(np.std(row, axis=-1))
+        mean_gevp_col = np.asarray(mean_gevp_col)
+        mean_gevp_row.append(mean_gevp_col)
+        err_gevp_col = np.asarray(err_gevp_col)
+        err_gevp_row.append(err_gevp_col)
+      mean_gevp_row = np.asarray(mean_gevp_row)
+      mean_irrep.append(mean_gevp_row)
+      err_gevp_row = np.asarray(err_gevp_row)
+      err_irrep.append(err_gevp_row)
+    mean_irrep = np.asarray(mean_irrep)
+    mean.append(mean_irrep)
+    err_irrep = np.asarray(err_irrep)
+    err.append(err_irrep)
+  mean = np.asarray(mean)
+  err = np.asarray(err)
   if write:
     for t, m, e in zip(range(0, len(mean)), mean, err):
       print t, m, e
   return mean, err
+
+## computes the mean and the error, and writes both out
+#def mean_error_print_foreach_row(boot, write = 0):
+#  mean = np.zeros_like(boot)
+#  err  = np.zeros_like(boot)
+#  for i,irrep in enumerate(boot):
+#    for k,k1k2 in enumerate(irrep):
+#      for g, gamma in enumerate(k1k2):
+#        for r,row in enumerate(gamma):
+#          mean[i,k,g,r] = np.mean(row, axis=-1)
+#          err[i,k,g,r]  = np.std(row, axis=-1)
+#  if write:
+#    for t, m, e in zip(range(0, len(mean)), mean, err):
+#      print t, m, e
+#  return mean, err
 
 ################################################################################
 # mass computation
@@ -113,20 +207,22 @@ def symmetrize(data, sinh):
 
   return sym
 
-def read_ensemble(p, name, foreach_row=False):
+def read_ensemble(p, name, foreach_veck=False, foreach_row=False):
 
   # subduced correlators
   filename = './bootdata/p%1i/%s.npy' % (p, name)
   data = np.load(filename)
-  if not foreach_row:
-    mean, err = mean_error_print(data)
-  else:
+  if foreach_veck:
+    mean, err = mean_error_print_foreach_veck(data)
+  elif foreach_row:
     mean, err = mean_error_print_foreach_row(data)
+  else:
+    mean, err = mean_error_print(data)
   
   filename = './bootdata/p%1i/%s_qn.npy' % (p, name)
   qn = np.load(filename)
   if ( (qn.shape[0] != mean.shape[0]) ):
-    print 'Bootstrapped operators %s do not aggree with expected operators' % \
+    print 'Bootstrapped operators %s do not agree with expected operators' % \
                                                                             name
     exit(0)
   print qn.shape
@@ -217,6 +313,7 @@ def plot_vecks(mean_sin, err_sin, qn_sin, mean_avg, err_avg, gammas, pdfplot):
     for k, gevp_row in enumerate(irrep):
       for g, gevp_col in enumerate(gevp_row):
         for r, row in enumerate(gevp_col):
+          print row.shape
           print 'plot row %i of irrep %s, [%i,%i] -> %s' % (r, row[0,-1], \
                  row[0,-5][0], row[0,-5][1], row[0,-2])
   
@@ -231,9 +328,9 @@ def plot_vecks(mean_sin, err_sin, qn_sin, mean_avg, err_avg, gammas, pdfplot):
             plt.title(r'$%s%s$ - $%s$ Operators ' \
                       r'subduced into $p = %i$, $[%i,%i] \ \to \ [%i]$ ' \
                       r'under $\Lambda = %s$ $\mu = %i$' % \
-                        (latex[row[op,-3]], latex[row[op,-3]], \
+                        (latex[row[op,-4][0]], latex[row[op,-4][1]], \
                          latex[row[op,-2]], p, row[op][-5][0], row[op][-5][1], \
-                         p, row[op][-1], r+1),\
+                         row[op][-3], row[op][-1], r+1),\
                       fontsize=12)
             plt.xlabel(r'$t/a$', fontsize=12)
             plt.ylabel(r'$%s(t/a)$' % diagram, fontsize=12)
@@ -241,16 +338,16 @@ def plot_vecks(mean_sin, err_sin, qn_sin, mean_avg, err_avg, gammas, pdfplot):
   #          if abs(mean_sin[i,k,r][op,0]) >= 0.05*abs(np.max(mean_sin[i,k,r][:,0])):
             label = r'$[(%2i,%2i,%2i), (%2i,%2i,%2i)] \ \to \ ' \
                     r'[(%2i,%2i,%2i)]$' % \
-                      (row[op][0][0], row[op][0][1], row[op][0][2], \
-                       row[op][1][0], row[op][1][1], row[op][1][2], \
-                       row[op][2][0], row[op][2][1], row[op][2][2])
+                      (row[op][0][0][0], row[op][0][0][1], row[op][0][0][2], \
+                       row[op][0][1][0], row[op][0][1][1], row[op][0][1][2], \
+                       row[op][1][0], row[op][1][1], row[op][1][2])
   #          else:
   #            label = '_nolegend_'
             
             # prepare data for plotting
             # TODO: put that in subduction
-            mean = mean_sin[i,k,g,r][op,]
-            err = err_sin[i,k,g,r][op,]
+            mean = mean_sin[i][k,g,r][op,]
+            err = err_sin[i][k,g,r][op,]
                   
   #            # Shrink current axis by 20%
   #            box = ax.get_position()
@@ -266,8 +363,8 @@ def plot_vecks(mean_sin, err_sin, qn_sin, mean_avg, err_avg, gammas, pdfplot):
                          elinewidth=0.5, markeredgecolor=cmap_brg[op], \
                                                                     linewidth='0.0')
   
-          mean = mean_avg[i,k,g,r,]
-          err = err_avg[i,k,g,r,]
+          mean = mean_avg[i][k,g,r,]
+          err = err_avg[i][k,g,r,]
           plt.errorbar(np.asarray(range(0, mean.shape[-1]))+op*shift, mean, err, \
                        fmt='o', color='black', \
                        label='average', markersize=3, capsize=3, capthick=0.5, \
@@ -291,8 +388,11 @@ def plot_rows(mean_sin, err_sin, qn_sin, mean_avg, err_avg, gammas, pdfplot, plo
   for i, irrep in enumerate(qn_sin):
     for k, gevp_row in enumerate(irrep):
       for g, gevp_col in enumerate(gevp_row):
-        print 'plot irrep %s, [%i,%i] -> %s' % (gevp_col[0,-1], \
-               gevp_col[0,-5][0], gevp_col[0,-5][1], gevp_col[0,-2])
+        if gevp_col[tuple(it.repeat(0, gevp_col.ndim-1)) + (-1,)] in ['A1', 'B1', 'B2']:
+          break
+
+        print 'plot irrep %s, [%i,%i] -> %s' % (gevp_col[0][-1], \
+               gevp_col[0][-5][0], gevp_col[0][-5][1], gevp_col[0][-2])
   
         cmap_brg = plt.cm.brg(np.asarray(range(0, gevp_col.shape[0])) * \
                                          256/(gevp_col.shape[0]-1))
@@ -306,9 +406,9 @@ def plot_rows(mean_sin, err_sin, qn_sin, mean_avg, err_avg, gammas, pdfplot, plo
           plt.title(r'$%s%s$ - $%s$ Operators ' \
                     r'subduced into $p = %i$, $[%i,%i] \ \to \ [%i]$ ' \
                     r'under $\Lambda = %s$' % \
-                      (latex[gevp_col[op,-3]], latex[gevp_col[op,-3]], \
-                       latex[gevp_col[op,-2]], p, gevp_col[op][-5][0], \
-                       gevp_col[op][-5][1], p, gevp_col[op][-1]), \
+                      (latex[gevp_col[op][-4][0]], latex[gevp_col[op][-4][0]], \
+                       latex[gevp_col[op][-2]], p, gevp_col[op][-5][0], \
+                       gevp_col[op][-5][1], gevp_col[op][-3], gevp_col[op][-1]), \
                     fontsize=12)
           plt.xlabel(r'$t/a$', fontsize=12)
           plt.ylabel(r'$%s(t/a)$' % diagram, fontsize=12)
@@ -321,8 +421,8 @@ def plot_rows(mean_sin, err_sin, qn_sin, mean_avg, err_avg, gammas, pdfplot, plo
           
           # prepare data for plotting
           # TODO: put that in subduction
-          mean = mean_sin[i,k,g,op]
-          err = err_sin[i,k,g,op]
+          mean = mean_sin[i][k,g,op]
+          err = err_sin[i][k,g,op]
 
                
           plt.yscale('log')
@@ -333,8 +433,8 @@ def plot_rows(mean_sin, err_sin, qn_sin, mean_avg, err_avg, gammas, pdfplot, plo
                                                                   linewidth='0.0')
   
         if plot_mean:
-          mean = mean_avg[i,k,g]
-          err = err_avg[i,k,g]
+          mean = mean_avg[i][k,g]
+          err = err_avg[i][k,g]
           plt.yscale('log')
           plt.errorbar(np.asarray(range(0, mean.shape[-1]))+op*shift, mean, err, \
                        fmt='o', color='black', \
@@ -362,6 +462,7 @@ def plot_abs(mean_sin, err_sin, qn_sin, mean_avg, err_avg, gammas, pdfplot):
     for k, gevp_row in enumerate(irrep):
       for g, gevp_col in enumerate(gevp_row):
         for r, row in enumerate(gevp_col):
+          print row.shape
           print 'plot row %i of irrep %s, [%i,%i] -> %i' % (r, row[0,-1], \
                  row[0,-5][0], row[0,-5][1], p)
   
@@ -376,9 +477,9 @@ def plot_abs(mean_sin, err_sin, qn_sin, mean_avg, err_avg, gammas, pdfplot):
             plt.title(r'$%s%s$ - $%s$ Operators ' \
                       r'subduced into $p = %i$, $[%i,%i] \ \to \ [%i]$ ' \
                       r'under $\Lambda = %s$ $\mu = %i$' % \
-                        (latex[row[op,-3]], latex[row[op,-3]], \
+                        (latex[row[op,-4][0]], latex[row[op,-4][1]], \
                          latex[row[op,-2]], p, row[op][-5][0], row[op][-5][1], \
-                         p, row[op][-1], r+1),\
+                         row[op,-3], row[op][-1], r+1),\
                       fontsize=12)
             plt.xlabel(r'$t/a$', fontsize=12)
             plt.ylabel(r'$%s(t/a)$' % diagram, fontsize=12)
@@ -386,8 +487,8 @@ def plot_abs(mean_sin, err_sin, qn_sin, mean_avg, err_avg, gammas, pdfplot):
   #          if abs(mean_sin[i,k,r][op,0]) >= 0.05*abs(np.max(mean_sin[i,k,r][:,0])):
             label = r'$[(%2i,%2i,%2i), (%2i,%2i,%2i)] \ \to \ ' \
                     r'[(%2i,%2i,%2i)]$' % \
-                      (row[op][0][0], row[op][0][1], row[op][0][2], \
-                       row[op][2][0], row[op][2][1], row[op][2][2], \
+                      (row[op][0][0][0], row[op][0][0][1], row[op][0][0][2], \
+                       row[op][0][1][0], row[op][0][1][1], row[op][0][1][2], \
                        row[op][1][0], row[op][1][1], row[op][1][2])
   #          else:
   #            label = '_nolegend_'
@@ -395,10 +496,10 @@ def plot_abs(mean_sin, err_sin, qn_sin, mean_avg, err_avg, gammas, pdfplot):
             # prepare data for plotting
             # TODO: takewhile breaks one iteration to early
             mean = it.takewhile(lambda (x,y): x/y > 0, \
-                                it.izip(mean_sin[i,k,g,r][op,1:22], mean_sin[i,k,g,r][op,2:23]))
+                                it.izip(mean_sin[i][k,g,r][op,1:22], mean_sin[i][k,g,r][op,2:23]))
             mean = np.asarray(list(abs(m[1]) for m in mean))
-            mean = np.insert(mean, 0, abs(mean_sin[i,k,g,r][op,1]))
-            err = err_sin[i,k,g,r][op,1:(mean.shape[0]+1)]
+            mean = np.insert(mean, 0, abs(mean_sin[i][k,g,r][op,1]))
+            err = err_sin[i][k,g,r][op,1:(mean.shape[0]+1)]
                   
   #            # Shrink current axis by 20%
   #            box = ax.get_position()
@@ -475,8 +576,8 @@ def plot_signal_to_noise(mean_sin, err_sin, qn_sin, mean_avg, err_avg, gammas, p
             
             # prepare data for plotting
             # TODO: put that in subduction
-            mean = mean_sin[i,k,g,r][op,]
-            err = err_sin[i,k,g,r][op,]
+            mean = mean_sin[i][k,g,r][op,]
+            err = err_sin[i][k,g,r][op,]
                   
   #            # Shrink current axis by 20%
   #            box = ax.get_position()
@@ -490,8 +591,8 @@ def plot_signal_to_noise(mean_sin, err_sin, qn_sin, mean_avg, err_avg, gammas, p
                      label=label, markersize=3, markeredgecolor=cmap_brg[op], \
                                                                 linewidth='0.0')
   
-          mean = mean_avg[i,k,g,r,]
-          err = err_avg[i,k,g,r,]
+          mean = mean_avg[i][k,g,r,]
+          err = err_avg[i][k,g,r,]
           plt.plot(np.asarray(range(0, mean.shape[-1]))+op*shift, np.abs(err/mean), \
                    marker='o', color='black', label='average', markersize=3, \
                    markeredgecolor='black', linewidth='0.0')
@@ -508,32 +609,32 @@ def plot_signal_to_noise(mean_sin, err_sin, qn_sin, mean_avg, err_avg, gammas, p
 ################################################################################
 # read data
 
-for p in [0]:
+for p in range(1,2):
 
 
   diagram = 'C3+'
 
   # bootstrapped correlators
-  print 'reading bootstrapped correlators'
-  name = '%s_p%1i_real' % (diagram, p)
-  mean_real, err_real, qn = read_ensemble(p, name)
-
-  name = '%s_p%1i_imag' % (diagram, p)
-  mean_imag, err_imag, qn = read_ensemble(p, name)
-
-  if (mean_real.shape[0] != mean_imag.shape[0]):
-    print 'Real and imaginary part of bootstrapped operators do not aggree'
-    exit(0)
+#  print 'reading bootstrapped correlators'
+#  name = '%s_p%1i_real' % (diagram, p)
+#  mean_real, err_real, qn = read_ensemble(p, name)
+#
+#  name = '%s_p%1i_imag' % (diagram, p)
+#  mean_imag, err_imag, qn = read_ensemble(p, name)
+#
+#  if (mean_real.shape[0] != mean_imag.shape[0]):
+#    print 'Real and imaginary part of bootstrapped operators do not aggree'
+#    exit(0)
 
   # subduced correlators
   print 'reading subduced correlators'
   name = '%s_p%1i_subduced' % (diagram, p)
-  mean_sub, err_sub, qn_sub = read_ensemble(p, name, True)
+  mean_sub, err_sub, qn_sub = read_ensemble(p, name, foreach_veck=True)
 
   # subduced correlators + average over \vec{k1} and \vec{k2}
   print 'reading subduced correlators averaged over three-momenta'
   name = '%s_p%1i_subduced_avg_vecks' % (diagram, p)
-  mean_sub_vecks, err_sub_vecks, qn_sub_vecks = read_ensemble(p, name)
+  mean_sub_vecks, err_sub_vecks, qn_sub_vecks = read_ensemble(p, name, foreach_row=True)
 
   # subduced correlators + average over \vec{k1}, \vec{k2} and \mu
   print 'reading subduced correlators averaged over three-momenta and rows'

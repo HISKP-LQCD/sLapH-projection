@@ -224,12 +224,13 @@ for p in range(0,2):
   #                  print a.real
 #                correlator_row = np.vstack((correlator_row, subduced))
                 correlator_row.append(np.squeeze(subduced, axis=0))
-                qn_row.append([ so_3mom[0], so_3mom[1], si_3mom[0], \
-                              gevp_row, p, 'g5', gevp_col[-1], irreps_4pt[-1][i] ])
+                qn_row.append([ (so_3mom[0], so_3mom[1]), si_3mom[0], \
+                              gevp_row, ('g5', 'g5'), p, gevp_col[-1], irreps_4pt[-1][i] ])
                   
           correlator_row = np.asarray(correlator_row)
           correlator_gevp_col.append(np.asarray(correlator_row))
-          qn_gevp_col.append(np.asarray(qn_row))
+          qn_row = np.asarray(qn_row, dtype=object)
+          qn_gevp_col.append(qn_row)
         correlator_gevp_row.append(np.asarray(correlator_gevp_col))
         qn_gevp_row.append(np.asarray(qn_gevp_col))
       correlator_gevp_row = np.asarray(correlator_gevp_row)
@@ -295,15 +296,19 @@ for p in range(0,2):
       for g2, qn_gevp_col in enumerate(qn_gevp_row):
         qn_avg_gevp_col = []
         for r, qn_row in enumerate(qn_gevp_col):
-          qn_avg_row = []
-          for k, qn_vec in enumerate(qn_row):
+#          qn_avg_row = []
+#          for k, qn_vec in enumerate(qn_row):
 #            qn_avg_row.append(np.asarray([np.dot(qn_avg_vec[1], qn_avg_vec[1]), \
 #                               np.dot(qn_avg_vec[1], qn_avg_vec[1]), \
 #                                                              qn_avg_vec[-3:]]))
-            qn_avg_row.append(np.insert( np.insert( \
-                  qn_vec[-3:], 
-                    0, np.dot(qn_vec[1], qn_vec[1]), axis=-1), \
-                      0, np.dot(qn_vec[0], qn_vec[0]), axis=-1))
+#            qn_avg_row.append(np.insert( \
+#                np.insert( qn_vec[-5:], 0, \
+#                    (np.dot(qn_vec[-7][1], qn_vec[-7][1]), np.dot(qn_vec[-7][0], qn_vec[-7][0])), \
+#                    axis=-1), \
+#                0, np.dot(qn_vec[-6], qn_vec[-6]), axis=-1))
+
+          #inserting not necessary as gevp elements belong to qn
+          qn_avg_row = qn_row[0][-5:]
 
           qn_avg_row = np.asarray(qn_avg_row)
           qn_avg_gevp_col.append(qn_avg_row)
