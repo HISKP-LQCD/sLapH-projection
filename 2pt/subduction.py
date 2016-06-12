@@ -240,7 +240,6 @@ def subduce_ensembles(p, gamma, verbose=0):
 
    # write means over all operators subducing into same irrep
   path = './readdata/p%1i/C20_p%1i_subduced_avg_rows' % (p, p)
-
   if avg.ndim >= 4:
     avg = np.mean(avg, axis=3)
   else:

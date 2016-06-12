@@ -49,6 +49,8 @@ def split_to_vector(string):
 # reading configurations
 
 def read_ensembles(sta_cnfg, end_cnfg, del_cnfg, p, T, directory, missing_configs, verbose=0):
+  
+  print 'reading data for p=%i' % p
   # calculate number of configurations
   nb_cnfg = 0
   for i in range(sta_cnfg, end_cnfg+1, del_cnfg):
@@ -69,7 +71,8 @@ def read_ensembles(sta_cnfg, end_cnfg, del_cnfg, p, T, directory, missing_config
       continue
     if i % (nb_cnfg/10) == 0:
       print '\tread config %i' % i
-    data_cnfg = np.zeros((0, T), dtype=np.complex)
+#    data_cnfg = np.zeros((0, T), dtype=np.complex)
+    data_cnfg = []
     qn_cnfg = []
     # only walk through directories containing the configuration number or a 'C'
     # (for Correlator)
@@ -112,12 +115,14 @@ def read_ensembles(sta_cnfg, end_cnfg, del_cnfg, p, T, directory, missing_config
             read_data[t] = complex(struct.unpack('d', f.read(8))[0], \
                                    struct.unpack('d', f.read(8))[0])
           f.close()
-          data_cnfg = np.vstack((data_cnfg, read_data))
+#          data_cnfg = np.vstack((data_cnfg, read_data))
+          data_cnfg.append(read_data)
           # set up quantum numbers and reference shape in first iteration
           qn_cnfg.append(ensemble_data)
   
     # check if number of operators is consistent between configurations and 
     # operators are identical
+    data_cnfg = np.asarray(data_cnfg)
     qn_cnfg = np.asarray(qn_cnfg)
     if(cnfg == 0):
       shape = data_cnfg.shape
@@ -213,4 +218,5 @@ def read_ensembles(sta_cnfg, end_cnfg, del_cnfg, p, T, directory, missing_config
   #avg_imag = bootstrap(avg.imag, nb_boot)
   #print avg.shape
 
-read_ensembles(sta_cnfg, end_cnfg, del_cnfg, p, T, directory, missing_configs, verbose=0)
+for p in range(3):
+  read_ensembles(sta_cnfg, end_cnfg, del_cnfg, p, T, directory, missing_configs, verbose=0)

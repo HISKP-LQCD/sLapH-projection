@@ -60,13 +60,22 @@ def set_lookup_p(p_cm, diagram):
   lookup_p3 = it.ifilter(lambda x: abs2(x) <= p_max, \
                                  it.product(range(-p_max, p_max+1), repeat=3))
   
+#  lookup_p3 = list(it.ifilter(lambda x : abs2(x) == p_cm, lookup_p3))
+#  print lookup_p3
+#  print (0,0,0) in lookup_p3
+  lookup_p3, tmp = it.tee(lookup_p3, 2)
+  tmp = list(it.ifilter(lambda x : abs2(x) == p_cm, tmp))
   if diagram == 'C3+':
     lookup_p = it.ifilter(lambda (w,x,y): \
                # if the sum of both momenta is the desired center of mass 
-               # momentum
-               tuple(it.imap(operator.add, w, y)) == lookup_p3_reduced[p_cm] \
-               and tuple(it.imap(operator.neg, x)) \
-                                                  == lookup_p3_reduced[p_cm] \
+               # momentum and momentum conservation
+#               tuple(it.imap(operator.add, w, y)) == lookup_p3_reduced[p_cm] \
+#               and tuple(it.imap(operator.neg, x)) \
+#                                                  == lookup_p3_reduced[p_cm] \
+#
+               (tuple(it.imap(operator.add, w, y)) == tuple(it.imap(operator.neg, x))) \
+               and tuple(it.imap(operator.add, w, y)) in tmp \
+
                # for zero center of mass momentum omit the case were both 
                # particles are at rest (s-wave)
                and not (p_cm == 0 and (tuple(w) == tuple(y))) \
@@ -102,7 +111,7 @@ def set_qn(p, g, name, diagram):
 
 #TODO: create np-array with all necessary momenta in z-direction -> dudek paper
 
-for p_cm in range(0,1):
+for p_cm in range(0,2):
   print 'p_cm = %i' % p_cm
   for d, diagram in enumerate(diagrams):
     print '\tread diagram %s' % diagram
@@ -122,7 +131,8 @@ for p_cm in range(0,1):
       print 'number of configurations: %i' % nb_cnfg
   
     #TODO: check if all files are there
-    data = [None]*nb_cnfg
+#    data = [None]*nb_cnfg
+    data = []
     ensemble_data = []
     cnfg = 0
     for i in range(sta_cnfg, end_cnfg+1, del_cnfg):
@@ -131,7 +141,8 @@ for p_cm in range(0,1):
       if i % max(1,(nb_cnfg/10)) == 0:
         print '\tread config %i' % i
 
-      data_cnfg = np.zeros((0, T), dtype=np.complex)
+#      data_cnfg = np.zeros((0, T), dtype=np.complex)
+      data_cnfg = []
 
       for gamma in gammas:
         for g in gamma[:-1]:
@@ -169,8 +180,9 @@ for p_cm in range(0,1):
               read_data[t] = complex(struct.unpack('d', f.read(8))[0], \
                                      struct.unpack('d', f.read(8))[0])
             f.close()
-            data_cnfg = np.vstack((data_cnfg, read_data))
-      
+#            data_cnfg = np.vstack((data_cnfg, read_data))
+            data_cnfg.append(read_data)
+      data_cnfg = np.asarray(data_cnfg) 
       # check if number of operators is consistent between configurations and 
       # operators are identical
   #    if(cnfg == 0):
@@ -188,7 +200,7 @@ for p_cm in range(0,1):
   #          print 'Wrong operator for cnfg %i' %i
   #          exit(0)
     
-      data[cnfg] = data_cnfg
+      data.append(data_cnfg)
       cnfg = cnfg + 1
     
     quantum_numbers = np.asarray(ensemble_data)
