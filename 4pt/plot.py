@@ -591,7 +591,7 @@ def plot_vecks(mean_sin, err_sin, qn_sin, mean_avg, err_avg, pdfplot):
       for k2, gevp_col in enumerate(gevp_row):
         for r, row in enumerate(gevp_col):
           print 'plot row %i of irrep %s, [%i,%i] -> [%i,%i]' % (r, row[0,-1], \
-                 row[0,-5][0], row[0,-5][1], row[0,-4][0], row[0,-4][1])
+                 row[0,-5][0], row[0,-5][1], row[0,-3][0], row[0,-3][1])
 
           cmap_brg = plt.cm.brg(np.asarray(range(0, row.shape[0])) * \
                                            256/(row.shape[0]-1))
@@ -603,9 +603,9 @@ def plot_vecks(mean_sin, err_sin, qn_sin, mean_avg, err_avg, pdfplot):
           plt.title(r'$%s%s$ - $%s%s$ Operators ' \
                     r'subduced into $p = %i$, $[%i,%i] \ \to \ [%i,%i]$ ' \
                     r'under $\Lambda = %s$ $\mu = %i$' % \
-                      (latex[row[0,-3]], latex[row[0,-3]], latex[row[0,-2]], \
-                       latex[row[0,-2]], p, row[0][-5][0], row[0][-5][1], \
-                       row[0][-4][0], row[0][-4][1], row[0][-1], r+1),\
+                      (latex[row[0,-4][0]], latex[row[0,-4][1]], latex[row[0,-2][0]], \
+                       latex[row[0,-2][1]], p, row[0][-5][0], row[0][-5][1], \
+                       row[0][-3][0], row[0][-3][1], row[0][-1], r+1),\
                     fontsize=12)
           plt.xlabel(r'$t/a$', fontsize=12)
           plt.ylabel(r'$%s(t/a)$' % diagram, fontsize=12)
@@ -614,16 +614,16 @@ def plot_vecks(mean_sin, err_sin, qn_sin, mean_avg, err_avg, pdfplot):
 
             label = r'$[(%2i,%2i,%2i), (%2i,%2i,%2i)] \ \to \ ' \
                     r'[(%2i,%2i,%2i), (%2i,%2i,%2i)]$' % \
-                      (row[op][0][0], row[op][0][1], row[op][0][2], \
-                       row[op][1][0], row[op][1][1], row[op][1][2], \
-                       row[op][2][0], row[op][2][1], row[op][2][2], \
-                       row[op][3][0], row[op][3][1], row[op][3][2])
+                      (row[op][0][0][0], row[op][0][0][1], row[op][0][0][2], \
+                       row[op][0][1][0], row[op][0][1][1], row[op][0][1][2], \
+                       row[op][1][2][0], row[op][1][2][1], row[op][1][2][2], \
+                       row[op][1][3][0], row[op][1][3][1], row[op][1][3][2])
 #            label = '_nolegend_'
             
             # prepare data for plotting
             # TODO: put that in subduction
-            mean = mean_sin[i,k1,k2,r][op]
-            err = err_sin[i,k1,k2,r][op]
+            mean = mean_sin[i][k1,k2,r][op]
+            err = err_sin[i][k1,k2,r][op]
                   
 #              # Shrink current axis by 20%
 #              box = ax.get_position()
@@ -639,8 +639,8 @@ def plot_vecks(mean_sin, err_sin, qn_sin, mean_avg, err_avg, pdfplot):
                          elinewidth=0.5, markeredgecolor=cmap_brg[op], \
                                                                     linewidth='0.0')
 
-          mean = mean_avg[i,k1,k2,r]
-          err = err_avg[i,k1,k2,r]
+          mean = mean_avg[i][k1,k2,r]
+          err = err_avg[i][k1,k2,r]
           plt.errorbar(np.asarray(range(0, mean.shape[-1]))+op*shift, mean, err, \
                        fmt='o', color='black', \
                        label='average', markersize=3, capsize=3, capthick=0.5, \
@@ -679,10 +679,11 @@ def plot_rows(mean_sin, err_sin, qn_sin, mean_avg, err_avg, pdfplot):
           plt.title(r'$%s%s$ - $%s%s$ Operators ' \
                     r'subduced into $p = %i$, $[%i,%i] \ \to \ [%i,%i]$ ' \
                     r'under $\Lambda = %s$' % \
-                      (latex[gevp_col[0,-3]], latex[gevp_col[0,-3]], latex[gevp_col[0,-2]], \
-                       latex[gevp_col[0,-2]], p, gevp_col[op][-5][0], \
-                       gevp_col[op][-5][1], gevp_col[op][-4][0], \
-                       gevp_col[op][-4][1], gevp_col[op][-1]),\
+                      (latex[gevp_col[0,-4][0]], latex[gevp_col[0,-4][1]], \
+                       latex[gevp_col[0,-2][0]], \
+                       latex[gevp_col[0,-2][1]], p, gevp_col[op][-5][0], \
+                       gevp_col[op][-5][1], gevp_col[op][-3][0], \
+                       gevp_col[op][-3][1], gevp_col[op][-1]),\
                     fontsize=12)
           plt.xlabel(r'$t/a$', fontsize=12)
           plt.ylabel(r'$%s(t/a)$' % diagram, fontsize=12)
@@ -695,8 +696,8 @@ def plot_rows(mean_sin, err_sin, qn_sin, mean_avg, err_avg, pdfplot):
           
           # prepare data for plotting
           # TODO: put that in subduction
-          mean = mean_sin[i,k1,k2,op]
-          err = err_sin[i,k1,k2,op]
+          mean = mean_sin[i][k1,k2,op]
+          err = err_sin[i][k1,k2,op]
                 
           plt.yscale('log')
           plt.errorbar(np.asarray(range(0, mean.shape[-1]))+op*shift, mean, err, \
@@ -705,8 +706,8 @@ def plot_rows(mean_sin, err_sin, qn_sin, mean_avg, err_avg, pdfplot):
                        elinewidth=0.5, markeredgecolor=cmap_brg[op], \
                                                                   linewidth='0.0')
 
-        mean = mean_avg[i,k1,k2]
-        err = err_avg[i,k1,k2]
+        mean = mean_avg[i][k1,k2]
+        err = err_avg[i][k1,k2]
         plt.yscale('log')
         plt.errorbar(np.asarray(range(0, mean.shape[-1]))+op*shift, mean, err, \
                      fmt='o', color='black', \
@@ -735,7 +736,7 @@ def plot_abs(mean_sin, err_sin, qn_sin, mean_avg, err_avg, pdfplot):
       for k2, gevp_col in enumerate(gevp_row):
         for r, row in enumerate(gevp_col):
           print 'plot row %i of irrep %s, [%i,%i] -> [%i,%i]' % (r, row[0,-1], \
-                 row[0,-5][0], row[0,-5][1], row[0,-4][0], row[0,-4][1])
+                 row[0,-5][0], row[0,-5][1], row[0,-3][0], row[0,-3][1])
 
           cmap_brg = plt.cm.brg(np.asarray(range(0, row.shape[0])) * \
                                            256/(row.shape[0]-1))
@@ -749,9 +750,9 @@ def plot_abs(mean_sin, err_sin, qn_sin, mean_avg, err_avg, pdfplot):
             plt.title(r'$%s%s$ - $%s%s$ Operators ' \
                       r'subduced into $p = %i$, $[%i,%i] \ \to \ [%i,%i]$ ' \
                       r'under $\Lambda = %s$ $\mu = %i$' % \
-                        (latex[row[0,-3]], latex[row[0,-3]], latex[row[0,-2]], \
-                         latex[row[0,-2]], p, row[op][-5][0], row[op][-5][1], \
-                         row[op][-4][0], row[op][-4][1], row[op][-1], r+1),\
+                        (latex[row[0,-4][0]], latex[row[0,-4][1]], latex[row[0,-2][0]], \
+                         latex[row[0,-2][1]], p, row[op][-5][0], row[op][-5][1], \
+                         row[op][-3][0], row[op][-3][1], row[op][-1], r+1),\
                       fontsize=12)
             plt.xlabel(r'$t/a$', fontsize=12)
             plt.ylabel(r'$%s(t/a)$' % diagram, fontsize=12)
@@ -759,20 +760,21 @@ def plot_abs(mean_sin, err_sin, qn_sin, mean_avg, err_avg, pdfplot):
 #            if abs(mean_sin[i,k,r][op,0]) >= 0.05*abs(np.max(mean_sin[i,k,r][:,0])):
             label = r'$[(%2i,%2i,%2i), (%2i,%2i,%2i)] \ \to \ ' \
                     r'[(%2i,%2i,%2i), (%2i,%2i,%2i)]$' % \
-                      (row[op][0][0], row[op][0][1], row[op][0][2], \
-                       row[op][1][0], row[op][1][1], row[op][1][2], \
-                       row[op][2][0], row[op][2][1], row[op][2][2], \
-                       row[op][3][0], row[op][3][1], row[op][3][2])
+                      (row[op][0][0][0], row[op][0][0][1], row[op][0][0][2], \
+                       row[op][0][1][0], row[op][0][1][1], row[op][0][1][2], \
+                       row[op][1][2][0], row[op][1][2][1], row[op][1][2][2], \
+                       row[op][1][3][0], row[op][1][3][1], row[op][1][3][2])
 #            else:
 #              label = '_nolegend_'
             
             # prepare data for plotting
             # TODO: takewhile breaks one iteration to early
             mean = it.takewhile(lambda (x,y): x/y > 0, \
-                                it.izip(mean_sin[i,k1,k2,r][op,1:22], mean_sin[i,k1,k2,r][op,2:23]))
+                                it.izip(mean_sin[i][k1,k2,r][op,1:22], \
+                                              mean_sin[i][k1,k2,r][op,2:23]))
             mean = np.asarray(list(abs(m[1]) for m in mean))
-            mean = np.insert(mean, 0, abs(mean_sin[i,k1,k2,r][op,1]))
-            err = err_sin[i,k1,k2,r][op,1:(mean.shape[0]+1)]
+            mean = np.insert(mean, 0, abs(mean_sin[i][k1,k2,r][op,1]))
+            err = err_sin[i][k1,k2,r][op,1:(mean.shape[0]+1)]
                   
 #              # Shrink current axis by 20%
 #              box = ax.get_position()

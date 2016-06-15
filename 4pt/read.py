@@ -17,7 +17,7 @@ end_cnfg = 1214
 del_cnfg = 2
 
 T = 48
-p_cm = 0
+p = range(1,2)
 p_max = 4
 
 p_cm_max = np.asarray((4,5,6,7,4), dtype=int)
@@ -45,6 +45,8 @@ def set_lookup_p(p_cm, diagram):
   # contractions
   lookup_p3 = it.ifilter(lambda x: abs2(x) <= p_max, \
                                  it.product(range(-p_max, p_max+1), repeat=3))
+  lookup_p3, tmp = it.tee(lookup_p3, 2)
+  tmp = list(it.ifilter(lambda x : abs2(x) == p_cm, tmp))
   
   if diagram == 'C4+B':
     lookup_p = it.ifilter(lambda (w,x,y,z): \
@@ -70,9 +72,11 @@ def set_lookup_p(p_cm, diagram):
     lookup_p = it.ifilter(lambda (w,x,y,z): \
                # if the sum of both momenta is the desired center of mass 
                # momentum
-               tuple(it.imap(operator.add, w, y)) == lookup_p3_reduced[p_cm] \
-               and tuple(it.imap(operator.neg, it.imap(operator.add, x, z))) \
-                                                  == lookup_p3_reduced[p_cm] \
+               (tuple(it.imap(operator.add, w, y)) \
+               == tuple(it.imap(operator.neg, it.imap(operator.add, x, z)))) \
+               and tuple(it.imap(operator.add, w, y)) in tmp \
+#               and tuple(it.imap(operator.neg, it.imap(operator.add, x, z))) \
+#                                                  in tmp \
                # for zero center of mass momentum omit the case were both 
                # particles are at rest (s-wave)
                and not (p_cm == 0 and 
@@ -114,7 +118,7 @@ def set_qn(p, name, diagram):
 
 #TODO: create np-array with all necessary momenta in z-direction -> dudek paper
 
-for p_cm in range(0,1):
+for p_cm in p:
   print 'p_cm = %i' % p_cm
   for d, diagram in enumerate(diagrams):
     print '\tread diagram %s' % diagram
@@ -143,7 +147,8 @@ for p_cm in range(0,1):
       if i % max(1,(nb_cnfg/10)) == 0:
         print '\tread config %i' % i
 
-      data_cnfg = np.zeros((0, T), dtype=np.complex)
+      data_cnfg = []
+#      data_cnfg = np.zeros((0, T), dtype=np.complex)
 
       itera, lookup_p = it.tee(lookup_p, 2)
       for p in itera:
@@ -179,7 +184,8 @@ for p_cm in range(0,1):
           read_data[t] = complex(struct.unpack('d', f.read(8))[0], \
                                  struct.unpack('d', f.read(8))[0])
         f.close()
-        data_cnfg = np.vstack((data_cnfg, read_data))
+        data_cnfg.append(read_data)
+#        data_cnfg = np.vstack((data_cnfg, read_data))
     
       # check if number of operators is consistent between configurations and 
       # operators are identical
@@ -198,7 +204,7 @@ for p_cm in range(0,1):
   #          print 'Wrong operator for cnfg %i' %i
   #          exit(0)
     
-      data[cnfg] = data_cnfg
+      data[cnfg] = np.asarray(data_cnfg)
       cnfg = cnfg + 1
     
     quantum_numbers = np.asarray(ensemble_data)

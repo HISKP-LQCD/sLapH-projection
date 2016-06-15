@@ -313,7 +313,6 @@ def plot_vecks(mean_sin, err_sin, qn_sin, mean_avg, err_avg, gammas, pdfplot):
     for k, gevp_row in enumerate(irrep):
       for g, gevp_col in enumerate(gevp_row):
         for r, row in enumerate(gevp_col):
-          print row.shape
           print 'plot row %i of irrep %s, [%i,%i] -> %s' % (r, row[0,-1], \
                  row[0,-5][0], row[0,-5][1], row[0,-2])
   
@@ -462,7 +461,6 @@ def plot_abs(mean_sin, err_sin, qn_sin, mean_avg, err_avg, gammas, pdfplot):
     for k, gevp_row in enumerate(irrep):
       for g, gevp_col in enumerate(gevp_row):
         for r, row in enumerate(gevp_col):
-          print row.shape
           print 'plot row %i of irrep %s, [%i,%i] -> %i' % (r, row[0,-1], \
                  row[0,-5][0], row[0,-5][1], p)
   

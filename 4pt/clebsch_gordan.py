@@ -72,8 +72,46 @@ T1 = [[[np.asarray([ 1,  0,  0], dtype=int), np.asarray([-1,  0,  0], dtype=int)
        [np.asarray([-1,  0, -1], dtype=int), np.asarray([ 1,  0,  1], dtype=int), -1./4]]]
 
 ################################################################################
+A1 = [[[np.asarray([ 0,  0,  0], dtype=int), np.asarray([ 0,  0,  1], dtype=int),  1.], \
+       [np.asarray([ 1,  0,  0], dtype=int), np.asarray([-1,  0,  1], dtype=int),  1./2], \
+       [np.asarray([ 0,  1,  0], dtype=int), np.asarray([ 0, -1,  1], dtype=int),  1./2], \
+       [np.asarray([-1,  0,  0], dtype=int), np.asarray([ 1,  0,  1], dtype=int),  1./2], \
+       [np.asarray([ 0, -1,  0], dtype=int), np.asarray([ 0,  1,  1], dtype=int),  1./2], \
+       [np.asarray([ 1,  1,  0], dtype=int), np.asarray([-1, -1,  1], dtype=int),  1./2], \
+       [np.asarray([ 1, -1,  0], dtype=int), np.asarray([-1,  1,  1], dtype=int),  1./2], \
+       [np.asarray([-1,  1,  0], dtype=int), np.asarray([ 1, -1,  1], dtype=int),  1./2], \
+       [np.asarray([-1, -1,  0], dtype=int), np.asarray([ 1,  1,  1], dtype=int),  1./2], \
+       [np.asarray([ 0,  0, -1], dtype=int), np.asarray([ 0,  0,  2], dtype=int),  1.]]]
+A1 = np.asarray(A1)
+
+################################################################################
+E2 = [[[np.asarray([ 1,  0,  0], dtype=int), np.asarray([-1,  0,  1], dtype=int), 0], \
+       [np.asarray([ 0,  1,  0], dtype=int), np.asarray([ 0, -1,  1], dtype=int),  -1j/sqrt2], \
+       [np.asarray([-1,  0,  0], dtype=int), np.asarray([ 1,  0,  1], dtype=int), 0], \
+       [np.asarray([ 0, -1,  0], dtype=int), np.asarray([ 0,  1,  1], dtype=int),   1j/sqrt2], \
+       [np.asarray([ 1,  1,  0], dtype=int), np.asarray([-1, -1,  1], dtype=int),  -1j/2], \
+       [np.asarray([ 1, -1,  0], dtype=int), np.asarray([-1,  1,  1], dtype=int),   1j/2], \
+       [np.asarray([-1,  1,  0], dtype=int), np.asarray([ 1, -1,  1], dtype=int),  -1j/2], \
+       [np.asarray([-1, -1,  0], dtype=int), np.asarray([ 1,  1,  1], dtype=int),   1j/2]], \
+                                                                               \
+      [[np.asarray([ 1,  0,  0], dtype=int), np.asarray([-1,  0,  1], dtype=int), -1./sqrt2], \
+       [np.asarray([ 0,  1,  0], dtype=int), np.asarray([ 0, -1,  1], dtype=int),  0], \
+       [np.asarray([-1,  0,  0], dtype=int), np.asarray([ 1,  0,  1], dtype=int),  1./sqrt2], \
+       [np.asarray([ 0, -1,  0], dtype=int), np.asarray([ 0,  1,  1], dtype=int),  0], \
+       [np.asarray([ 1,  1,  0], dtype=int), np.asarray([-1, -1,  1], dtype=int), -1./2], \
+       [np.asarray([ 1, -1,  0], dtype=int), np.asarray([-1,  1,  1], dtype=int), -1./2], \
+       [np.asarray([-1,  1,  0], dtype=int), np.asarray([ 1, -1,  1], dtype=int),  1./2], \
+       [np.asarray([-1, -1,  0], dtype=int), np.asarray([ 1,  1,  1], dtype=int),  1./2]]]
+E2 = np.asarray(E2)
+
+
+################################################################################
 
 def coefficients(irrep):
   if irrep is 'T1':
     return T1
+  elif irrep is 'A1':
+    return A1
+  elif irrep is 'E2':
+    return E2
 

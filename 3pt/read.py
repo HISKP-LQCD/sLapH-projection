@@ -60,9 +60,6 @@ def set_lookup_p(p_cm, diagram):
   lookup_p3 = it.ifilter(lambda x: abs2(x) <= p_max, \
                                  it.product(range(-p_max, p_max+1), repeat=3))
   
-#  lookup_p3 = list(it.ifilter(lambda x : abs2(x) == p_cm, lookup_p3))
-#  print lookup_p3
-#  print (0,0,0) in lookup_p3
   lookup_p3, tmp = it.tee(lookup_p3, 2)
   tmp = list(it.ifilter(lambda x : abs2(x) == p_cm, tmp))
   if diagram == 'C3+':
