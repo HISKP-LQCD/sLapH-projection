@@ -55,8 +55,58 @@ diagram = 'C4'
 ################################################################################
 # computes the mean and the error, and writes both out
 def mean_error_print(boot, write = 0):
-  mean = np.mean(boot, axis=-1)
-  err  = np.std(boot, axis=-1)
+  mean = []
+  err = []
+  for i, irrep in enumerate(boot):
+    mean.append(np.mean(irrep, axis=-1))
+    err.append(np.std(irrep, axis=-1))
+  mean = np.asarray(mean)
+  err = np.asarray(err)
+  if write:
+    for t, m, e in zip(range(0, len(mean)), mean, err):
+      print t, m, e
+  return mean, err
+
+
+# computes the mean and the error, and writes both out
+def mean_error_print_foreach_veck(boot, write = 0):
+#  mean = np.zeros_like(boot)
+#  err  = np.zeros_like(boot)
+  mean = []
+  err = []
+  for i,irrep in enumerate(boot):
+    mean_irrep = []
+    err_irrep = []
+    for g1, gevp_row in enumerate(irrep):
+      mean_gevp_row = []
+      err_gevp_row = []
+      for g2, gevp_col in enumerate(gevp_row):
+        mean_gevp_col = []
+        err_gevp_col = []
+        for r, row in enumerate(gevp_col):
+          mean_row = []
+          err_row = []
+          for k, veck in enumerate(row):
+            mean_row.append(np.mean(veck, axis=-1))
+            err_row.append(np.std(veck, axis=-1))
+          mean_row = np.asarray(mean_row)
+          mean_gevp_col.append(mean_row)
+          err_row = np.asarray(err_row)
+          err_gevp_col.append(err_row)
+        mean_gevp_col = np.asarray(mean_gevp_col)
+        mean_gevp_row.append(mean_gevp_col)
+        err_gevp_col = np.asarray(err_gevp_col)
+        err_gevp_row.append(err_gevp_col)
+      mean_gevp_row = np.asarray(mean_gevp_row)
+      mean_irrep.append(mean_gevp_row)
+      err_gevp_row = np.asarray(err_gevp_row)
+      err_irrep.append(err_gevp_row)
+    mean_irrep = np.asarray(mean_irrep)
+    mean.append(mean_irrep)
+    err_irrep = np.asarray(err_irrep)
+    err.append(err_irrep)
+  mean = np.asarray(mean)
+  err = np.asarray(err)
   if write:
     for t, m, e in zip(range(0, len(mean)), mean, err):
       print t, m, e
@@ -64,18 +114,63 @@ def mean_error_print(boot, write = 0):
 
 # computes the mean and the error, and writes both out
 def mean_error_print_foreach_row(boot, write = 0):
-  mean = np.zeros_like(boot)
-  err  = np.zeros_like(boot)
+#  mean = np.zeros_like(boot)
+#  err  = np.zeros_like(boot)
+  mean = []
+  err = []
   for i,irrep in enumerate(boot):
-    for k1, gevp_row in enumerate(irrep):
-      for k2, gevp_col in enumerate(gevp_row):
-        for r,row in enumerate(gevp_col):
-          mean[i,k1,k2,r] = np.mean(row, axis=-1)
-          err[i,k1,k2,r]  = np.std(row, axis=-1)
+    mean_irrep = []
+    err_irrep = []
+    for g1, gevp_row in enumerate(irrep):
+      mean_gevp_row = []
+      err_gevp_row = []
+      for g2, gevp_col in enumerate(gevp_row):
+        mean_gevp_col = []
+        err_gevp_col = []
+        for r, row in enumerate(gevp_col):
+          mean_gevp_col.append(np.mean(row, axis=-1))
+          err_gevp_col.append(np.std(row, axis=-1))
+        mean_gevp_col = np.asarray(mean_gevp_col)
+        mean_gevp_row.append(mean_gevp_col)
+        err_gevp_col = np.asarray(err_gevp_col)
+        err_gevp_row.append(err_gevp_col)
+      mean_gevp_row = np.asarray(mean_gevp_row)
+      mean_irrep.append(mean_gevp_row)
+      err_gevp_row = np.asarray(err_gevp_row)
+      err_irrep.append(err_gevp_row)
+    mean_irrep = np.asarray(mean_irrep)
+    mean.append(mean_irrep)
+    err_irrep = np.asarray(err_irrep)
+    err.append(err_irrep)
+  mean = np.asarray(mean)
+  err = np.asarray(err)
   if write:
     for t, m, e in zip(range(0, len(mean)), mean, err):
       print t, m, e
   return mean, err
+
+#def mean_error_print(boot, write = 0):
+#  mean = np.mean(boot, axis=-1)
+#  err  = np.std(boot, axis=-1)
+#  if write:
+#    for t, m, e in zip(range(0, len(mean)), mean, err):
+#      print t, m, e
+#  return mean, err
+
+# computes the mean and the error, and writes both out
+#def mean_error_print_foreach_row(boot, write = 0):
+#  mean = np.zeros_like(boot)
+#  err  = np.zeros_like(boot)
+#  for i,irrep in enumerate(boot):
+#    for k1, gevp_row in enumerate(irrep):
+#      for k2, gevp_col in enumerate(gevp_row):
+#        for r,row in enumerate(gevp_col):
+#          mean[i,k1,k2,r] = np.mean(row, axis=-1)
+#          err[i,k1,k2,r]  = np.std(row, axis=-1)
+#  if write:
+#    for t, m, e in zip(range(0, len(mean)), mean, err):
+#      print t, m, e
+#  return mean, err
 
 ################################################################################
 # mass computation
@@ -616,8 +711,8 @@ def plot_vecks(mean_sin, err_sin, qn_sin, mean_avg, err_avg, pdfplot):
                     r'[(%2i,%2i,%2i), (%2i,%2i,%2i)]$' % \
                       (row[op][0][0][0], row[op][0][0][1], row[op][0][0][2], \
                        row[op][0][1][0], row[op][0][1][1], row[op][0][1][2], \
-                       row[op][1][2][0], row[op][1][2][1], row[op][1][2][2], \
-                       row[op][1][3][0], row[op][1][3][1], row[op][1][3][2])
+                       row[op][1][0][0], row[op][1][0][1], row[op][1][0][2], \
+                       row[op][1][1][0], row[op][1][1][1], row[op][1][1][2])
 #            label = '_nolegend_'
             
             # prepare data for plotting
@@ -665,7 +760,7 @@ def plot_rows(mean_sin, err_sin, qn_sin, mean_avg, err_avg, pdfplot):
     for k1, gevp_row in enumerate(irrep):
       for k2, gevp_col in enumerate(gevp_row):
         print 'plot irrep %s, [%i,%i] -> [%i,%i]' % (gevp_col[0,-1], \
-               gevp_col[0,-5][0], gevp_col[0,-5][1], gevp_col[0,-4][0], gevp_col[0,-4][1])
+               gevp_col[0,-5][0], gevp_col[0,-5][1], gevp_col[0,-3][0], gevp_col[0,-3][1])
 
         cmap_brg = plt.cm.brg(np.asarray(range(0, gevp_col.shape[0])) * \
                                          256/(gevp_col.shape[0]-1))
@@ -762,8 +857,8 @@ def plot_abs(mean_sin, err_sin, qn_sin, mean_avg, err_avg, pdfplot):
                     r'[(%2i,%2i,%2i), (%2i,%2i,%2i)]$' % \
                       (row[op][0][0][0], row[op][0][0][1], row[op][0][0][2], \
                        row[op][0][1][0], row[op][0][1][1], row[op][0][1][2], \
-                       row[op][1][2][0], row[op][1][2][1], row[op][1][2][2], \
-                       row[op][1][3][0], row[op][1][3][1], row[op][1][3][2])
+                       row[op][1][0][0], row[op][1][0][1], row[op][1][0][2], \
+                       row[op][1][1][0], row[op][1][1][1], row[op][1][1][2])
 #            else:
 #              label = '_nolegend_'
             
@@ -885,7 +980,7 @@ def plot_signal_to_noise_rows(qn_sin, mean_avg, err_avg, pdfplot):
 ################################################################################
 # read data
 
-for p in [0]:
+for p in range(1,2):
 
   # bootstrapped correlators
   diagram = 'C4'
@@ -912,7 +1007,7 @@ for p in [0]:
   # subduced correlators
   filename = './bootdata/p%1i/%s_p%1i_subduced.npy' % (p, diagram, p)
   data = np.load(filename)
-  mean_sub, err_sub = mean_error_print_foreach_row(data)
+  mean_sub, err_sub = mean_error_print_foreach_veck(data)
   
   filename = './bootdata/p%1i/%s_p%1i_subduced_qn.npy' % \
                                                                  (p, diagram, p)
@@ -925,7 +1020,7 @@ for p in [0]:
    # subduced correlators + average over \vec{k1} and \vec{k2}
   filename = './bootdata/p%1i/%s_p%1i_subduced_avg_vecks.npy' % (p, diagram, p)
   data = np.load(filename)
-  mean_sub_vecks, err_sub_vecks = mean_error_print(data)
+  mean_sub_vecks, err_sub_vecks = mean_error_print_foreach_row(data)
   
   filename = './bootdata/p%1i/%s_p%1i_subduced_avg_vecks_qn.npy' % \
                                                                  (p, diagram, p)
@@ -969,25 +1064,25 @@ for p in [0]:
 #  plot_single(mean_real, err_real, mean_imag, err_imag, qn, pdfplot)
 #  pdfplot.close()
 
-#  plot_path = './plots/%s_vecks_p%1i.pdf' % (diagram, p)
-#  pdfplot = PdfPages(plot_path)
-#  plot_vecks(mean_sub, err_sub, qn_sub, mean_sub_vecks, err_sub_vecks, pdfplot)
-#  pdfplot.close()
-#
-#  plot_path = './plots/%s_rows_p%1i.pdf' % (diagram, p)
-#  pdfplot = PdfPages(plot_path)
-#  plot_rows(mean_sub_vecks, err_sub_vecks, qn_sub_vecks, mean_sub_rows, err_sub_rows, pdfplot)
-#  pdfplot.close()
-
-#  plot_path = './plots/%s_abs_p%1i.pdf' % (diagram, p)
-#  pdfplot = PdfPages(plot_path)
-#  plot_abs(mean_sub, err_sub, qn_sub, mean_sub_vecks, err_sub_vecks, pdfplot)
-#  pdfplot.close()
-
-  plot_path = './plots/%s_relerr_p%1i.pdf' % (diagram, p)
+  plot_path = './plots/%s_vecks_p%1i.pdf' % (diagram, p)
   pdfplot = PdfPages(plot_path)
-  plot_signal_to_noise_rows(qn_sub_vecks, mean_sub_rows, err_sub_rows, pdfplot)
+  plot_vecks(mean_sub, err_sub, qn_sub, mean_sub_vecks, err_sub_vecks, pdfplot)
   pdfplot.close()
+
+  plot_path = './plots/%s_rows_p%1i.pdf' % (diagram, p)
+  pdfplot = PdfPages(plot_path)
+  plot_rows(mean_sub_vecks, err_sub_vecks, qn_sub_vecks, mean_sub_rows, err_sub_rows, pdfplot)
+  pdfplot.close()
+
+  plot_path = './plots/%s_abs_p%1i.pdf' % (diagram, p)
+  pdfplot = PdfPages(plot_path)
+  plot_abs(mean_sub, err_sub, qn_sub, mean_sub_vecks, err_sub_vecks, pdfplot)
+  pdfplot.close()
+
+#  plot_path = './plots/%s_relerr_p%1i.pdf' % (diagram, p)
+#  pdfplot = PdfPages(plot_path)
+#  plot_signal_to_noise_rows(qn_sub_vecks, mean_sub_rows, err_sub_rows, pdfplot)
+#  pdfplot.close()
 
 #  plot_path = './plots/Correlators_grouped_p%1i.pdf' % p
 #  pdfplot = PdfPages(plot_path)
