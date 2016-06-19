@@ -6,4 +6,12 @@
 *.dat
 *.npy
 *.out
+3pt/test
+
+# untracked files
+3pt_non_hermitian/
+analyse_lattice2015/
+analyse_may/plots/
+gevp/
+pion_mass/
 
