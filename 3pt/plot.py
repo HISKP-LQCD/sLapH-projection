@@ -607,7 +607,7 @@ def plot_signal_to_noise(mean_sin, err_sin, qn_sin, mean_avg, err_avg, gammas, p
 ################################################################################
 # read data
 
-for p in range(1,2):
+for p in range(5):
 
 
   diagram = 'C3+'

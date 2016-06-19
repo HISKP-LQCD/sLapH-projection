@@ -317,5 +317,5 @@ def bootstrap_ensemble(p, nb_bins, nb_boot, bootstrap_original_data):
 #  path = './bootdata/p%1i/%s_p%1i_subduced_avg_rows_qn' % (p, diagram, p)
 #  np.save(path, qn_avg)
 
-for p in range(0,2):
+for p in range(0,5):
   bootstrap_ensemble(p, nb_bins, nb_boot, bootstrap_original_data)

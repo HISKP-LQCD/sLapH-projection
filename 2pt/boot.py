@@ -275,5 +275,5 @@ def bootstrap_ensembles(p, nb_bins, nb_boot, bootstrap_original_data):
 
   print '\tfinished writing'
 
-for p in range(2):
+for p in range(5):
   bootstrap_ensembles(p, nb_bins, nb_boot, bootstrap_original_data)

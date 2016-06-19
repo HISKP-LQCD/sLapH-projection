@@ -17,7 +17,7 @@ end_cnfg = 1214
 del_cnfg = 2
 
 T = 48
-p = range(1,2)
+p = range(5)
 p_max = 4
 
 p_cm_max = np.asarray((4,5,6,7,4), dtype=int)

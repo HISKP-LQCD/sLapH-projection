@@ -5,7 +5,7 @@ import numpy as np
 import utils
 # add all relevant diagrams with according Clebsch-Gordans
 
-p = range(1,2)
+p = range(5)
 
 diagrams = ['C4+B', 'C4+D']
 

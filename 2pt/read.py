@@ -218,5 +218,5 @@ def read_ensembles(sta_cnfg, end_cnfg, del_cnfg, p, T, directory, missing_config
   #avg_imag = bootstrap(avg.imag, nb_boot)
   #print avg.shape
 
-for p in range(3):
+for p in range(5):
   read_ensembles(sta_cnfg, end_cnfg, del_cnfg, p, T, directory, missing_configs, verbose=0)

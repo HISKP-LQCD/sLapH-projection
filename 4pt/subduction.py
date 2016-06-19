@@ -10,7 +10,7 @@ import collections
 import clebsch_gordan as cg
 import utils as utils
 
-p = range(1,2)
+p = range(5)
 p_max = 4
 
 diagram = 'C4'
@@ -66,6 +66,8 @@ for p_cm in p:
     irreps = [['T1']]
   elif p_cm in [1,3,4]:
     irreps = [['A1', 'E2']]
+  elif p_cm in [2]:
+    irreps = [['A1', 'B1', 'B2']]
   else:
     irreps = [[]]
   # get factors for the desired irreps

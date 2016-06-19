@@ -13,7 +13,7 @@ import utils
 ################################################################################
 bootstrap_original_data = False
 
-p = range(1,2)         # momentum
+p = range(5)         # momentum
 
 nb_bins = 1
 nb_boot = 500

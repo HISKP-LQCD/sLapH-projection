@@ -830,7 +830,7 @@ def plot_mass(avg, qn_avg, pdfplot):
 ################################################################################
 # read data
 
-for p in range(1,2):
+for p in range(5):
   # bootstrapped correlators
 #  filename = './bootdata/p%1i/C20_p%1i_real.npy' % (p, p)
 #  data = np.load(filename)

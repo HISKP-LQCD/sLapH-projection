@@ -13,7 +13,7 @@ import utils as utils
 # parameters ###################################################################
 
 ################################################################################
-p = 0         # momentum
+p = range(5)         # momentum
 
 verbose = 0
 
@@ -32,15 +32,15 @@ gamma = [gamma_i, gamma_0i, gamma_50i]
 # read original data and quantum numbers
 # data must have shape [operators x ...]
 
-def subduce_ensembles(p, gamma, verbose=0):
-  print 'subducing p = %i' % p
+def subduce_ensembles(p_cm, gamma, verbose=0):
+  print 'subducing p = %i' % p_cm
 
-  filename = './readdata/p%1i/C20_p%1i.npy' % (p, p)
+  filename = './readdata/p%1i/C20_p%1i.npy' % (p_cm, p_cm)
   data = np.load(filename)
   if verbose:
     print data.shape
   
-  path = './readdata/p%1i/C20_p%1i_quantum_numbers.npy' % (p, p)
+  path = './readdata/p%1i/C20_p%1i_quantum_numbers.npy' % (p_cm, p_cm)
   qn_data = np.load(path)
   
   if ( (qn_data.shape[0] != data.shape[0])):
@@ -49,11 +49,11 @@ def subduce_ensembles(p, gamma, verbose=0):
   
   ##############################################################################
   # From analytic calculation: Irreps contributing to momenta 0 <= p <= 4
-  if p in [0]:
+  if p_cm in [0]:
     irreps = [['T1']]
-  elif p in [1, 3, 4]:
+  elif p_cm in [1, 3, 4]:
     irreps = [['A1', 'E2']]
-  elif p in [2]:
+  elif p_cm in [2]:
     irreps = [['A1', 'B1', 'B2']]
   
   # get factors for the desired irreps
@@ -159,19 +159,18 @@ def subduce_ensembles(p, gamma, verbose=0):
   # write data to disc
   
   utils.ensure_dir('./readdata')
-  utils.ensure_dir('./readdata/p%1i/' % p)
-  #utils.ensure_dir('./readdata/p%1i/single' % p)
+  utils.ensure_dir('./readdata/p%1i/' % p_cm)
   utils.ensure_dir('./binarydata/')
-  utils.ensure_dir('./binarydata/p%1i/' % p)
+  utils.ensure_dir('./binarydata/p%1i/' % p_cm)
   
   # write all subduced correlators
-  path = './readdata/p%1i/C20_p%1i_subduced' % (p, p)
+  path = './readdata/p%1i/C20_p%1i_subduced' % (p_cm, p_cm)
   np.save(path, correlator)
-  path = './readdata/p%1i/C20_p%1i_subduced_qn' % (p, p)
+  path = './readdata/p%1i/C20_p%1i_subduced_qn' % (p_cm, p_cm)
   np.save(path, qn_subduced)
 
   # write means over all operators subducing into same irrep row
-  path = './readdata/p%1i/C20_p%1i_subduced_avg_vecks' % (p, p)
+  path = './readdata/p%1i/C20_p%1i_subduced_avg_vecks' % (p_cm, p_cm)
   # TODO: mp.mean or np.sum?
   # TODO: put that into some function
 #  print correlator[0,0,0].shape
@@ -235,11 +234,11 @@ def subduce_ensembles(p, gamma, verbose=0):
 #                                                                        axis=-1)
   print qn_avg.shape
   np.save(path, avg)
-  path = './readdata/p%1i/C20_p%1i_subduced_avg_vecks_qn' % (p, p)
+  path = './readdata/p%1i/C20_p%1i_subduced_avg_vecks_qn' % (p_cm, p_cm)
   np.save(path, qn_avg)
 
    # write means over all operators subducing into same irrep
-  path = './readdata/p%1i/C20_p%1i_subduced_avg_rows' % (p, p)
+  path = './readdata/p%1i/C20_p%1i_subduced_avg_rows' % (p_cm, p_cm)
   if avg.ndim >= 4:
     avg = np.mean(avg, axis=3)
   else:
@@ -258,7 +257,7 @@ def subduce_ensembles(p, gamma, verbose=0):
   print avg.shape
   np.save(path, avg)
 
-  path = './readdata/p%1i/C20_p%1i_subduced_avg_rows_qn' % (p, p)
+  path = './readdata/p%1i/C20_p%1i_subduced_avg_rows_qn' % (p_cm, p_cm)
   qn_avg_tmp = []
   for i, qn_irrep in enumerate(qn_avg):
     qn_avg_irrep = []
@@ -361,7 +360,7 @@ def subduce_ensembles(p, gamma, verbose=0):
   #                                               qn_subduced[i,j,0,-1])
   #   np.save(path, qn_subduced[i])
 
-for p in range(0,3):
-  subduce_ensembles(p, gamma, verbose=0)
+for p_cm in p:
+  subduce_ensembles(p_cm, gamma, verbose=0)
 
 

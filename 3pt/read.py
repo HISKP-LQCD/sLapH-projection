@@ -17,7 +17,7 @@ end_cnfg = 1214
 del_cnfg = 2
 
 T = 48
-p_cm = 0
+p = range(5)
 p_max = 4
 
 p_cm_max = np.asarray((4,5,6,7,4), dtype=int)
@@ -108,7 +108,7 @@ def set_qn(p, g, name, diagram):
 
 #TODO: create np-array with all necessary momenta in z-direction -> dudek paper
 
-for p_cm in range(0,2):
+for p_cm in p:
   print 'p_cm = %i' % p_cm
   for d, diagram in enumerate(diagrams):
     print '\tread diagram %s' % diagram

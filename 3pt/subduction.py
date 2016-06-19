@@ -62,7 +62,7 @@ def unique_everseen(iterable, key=None):
         seen_add(k)
         yield element
   
-for p in range(0,2):
+for p in range(0,5):
   print 'subducing p = %i' % p
 
   ################################################################################
@@ -98,6 +98,9 @@ for p in range(0,2):
   elif p in [1,3,4]:
     irreps_2pt = [['A1', 'E2']]
     irreps_4pt = [['A1', 'E2']]
+  elif p in [2]:
+    irreps_2pt = [['A1', 'B1', 'B2']]
+    irreps_4pt = [['A1', 'B1', 'B2']]
   else:
     irreps_2pt = [[]]
     irreps_4pt = [[]]
