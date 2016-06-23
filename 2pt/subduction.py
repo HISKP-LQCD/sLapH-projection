@@ -13,7 +13,7 @@ import utils as utils
 # parameters ###################################################################
 
 ################################################################################
-p = range(5)         # momentum
+p = range(1)         # momentum
 
 verbose = 0
 
@@ -21,7 +21,7 @@ verbose = 0
 # compatible notation for plot labels
 gamma_i =   [1, 2, 3, 'gi']
 gamma_0i =  [10, 11, 12, 'g0gi']
-gamma_50i = [15, 14, 13, 'g5g0gi']
+gamma_50i = [13, 14, 15, 'g5g0gi']
 
 gamma = [gamma_i, gamma_0i, gamma_50i]
 
@@ -40,7 +40,7 @@ def subduce_ensembles(p_cm, gamma, verbose=0):
   if verbose:
     print data.shape
   
-  path = './readdata/p%1i/C20_p%1i_quantum_numbers.npy' % (p_cm, p_cm)
+  path = './readdata/p%1i/C20_p%1i_qn.npy' % (p_cm, p_cm)
   qn_data = np.load(path)
   
   if ( (qn_data.shape[0] != data.shape[0])):
