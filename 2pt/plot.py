@@ -15,7 +15,7 @@ import matplotlib.axes as ax
 import itertools as it
 
 import utils
-import irreps as representation
+import clebsch_gordan as representation
 
 ################################################################################
 T = 48

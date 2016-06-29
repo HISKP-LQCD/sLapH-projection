@@ -13,7 +13,7 @@ import utils as utils
 # parameters ###################################################################
 
 ################################################################################
-p = range(1)         # momentum
+p = range(5)         # momentum
 
 verbose = 0
 
@@ -94,44 +94,32 @@ def subduce_ensembles(p_cm, gamma, verbose=0):
               if np.array_equal(el[0], qn[0]):
                 for g_so in range(0,3):
                   for g_si in range(0,3):
-                    # Hardcoded 2pt functions here because 
-                    #   sink operator = conj(source operator)
-                    # and irreps are diagonal. Otherwise el[g_si] must be 
-                    # calculated in seperate loop over the sink momentum
-                    factor = el[g_so+1] * np.conj(el[g_si+1])
-                    if (factor == 0):
+                    cg_factor = el[g_so+1] * np.conj(el[g_si+1])
+                    if (cg_factor == 0):
                       continue
 
-                    # calculating the Correlators yields imaginary parts in 
-                    # gi-g0gi, gi-gjgk and cc. Switching real and imaginary
-                    # part in the subduction factor accounts for this.
-                    if (gevp_row[g_so] in gamma_i) != \
-                                                    (gevp_col[g_si] in gamma_i):
-                      factor = factor.imag + factor.real * 1j
-
-                    # HARDCODED: factors I'm not certain about
-#                     if(((gevp_row[g_so] in gamma_i) and \
-#                                                   (gevp_col[g_si] in gamma_0i)) \
-#                        or ((gevp_row[g_so] in gamma_i) and 
-#                                                    (gevp_col[g_si] in gamma_0i))):
-#                       factor = (-1) * factor
-                  
-                    if(((gevp_row[g_so] in gamma_i) and \
-                                                 (gevp_col[g_si] in gamma_0i)) \
-                       or ((gevp_row[g_so] in gamma_50i) and 
-                                                 (gevp_col[g_si] in gamma_i))):
-                      factor = 2 * factor
+                    if ((gevp_row[g_so] in gamma_i) and (gevp_col[g_si] in gamma_0i)) \
+                      or ((gevp_row[g_so] in gamma_0i) and (gevp_col[g_si] in gamma_0i)):
+                      wick_factor = -2.
+                    elif ((gevp_row[g_so] in gamma_i) and (gevp_col[g_si] in gamma_50i)) \
+                      or ((gevp_row[g_so] in gamma_50i) and (gevp_col[g_si] in gamma_i)) \
+                      or ((gevp_row[g_so] in gamma_0i) and (gevp_col[g_si] in gamma_50i)):
+                      wick_factor = 2. * 1j
+                    elif ((gevp_row[g_so] in gamma_50i) and (gevp_col[g_si] in gamma_0i)):
+                      wick_factor = -2. * 1j
                     else:
-                      factor = (-2) * factor
+                      # case diagonal elements or g0gi-gi
+                      wick_factor = 2.
 
+                    factor = cg_factor*wick_factor
                     if (gevp_row[g_so] == qn[2]) and (gevp_col[g_si] == qn[5]):
-                      subduced[0] = subduced[0] + factor.real * data[op].real \
-                                                   + factor.imag * data[op].imag
+                      subduced[0] = subduced[0] + (factor*data[op]).real
                       if verbose:
                         print '\tsubduced g_so = %i, g_si = %i' % \
                                                 (gevp_row[g_so], gevp_col[g_si])
                         print '\t\tsubduction coefficient = % .2f + % .2fi' % \
                                                       (factor.real, factor.imag)
+
             # Omit correlator if no contracted operators are contributing
             if(subduced.any() != 0):
               if verbose:

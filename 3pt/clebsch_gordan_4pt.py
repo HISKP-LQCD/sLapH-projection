@@ -75,7 +75,7 @@ T1 = np.asarray(T1)
 
 ################################################################################
 # possibly get a sign if j11+j2-J odd and momenta are interchanged for one momentum 0
-A1 = [[[np.asarray([ 0,  0,  0], dtype=int), np.asarray([ 0,  0,  1], dtype=int),  1.], \
+A1 = [[[np.asarray([ 0,  0,  0], dtype=int), np.asarray([ 0,  0,  1], dtype=int), -1.], \
        [np.asarray([ 0,  0,  1], dtype=int), np.asarray([ 0,  0,  0], dtype=int),  1.], \
        [np.asarray([ 1,  0,  0], dtype=int), np.asarray([-1,  0,  1], dtype=int),  1./2], \
        [np.asarray([ 0,  1,  0], dtype=int), np.asarray([ 0, -1,  1], dtype=int),  1./2], \
@@ -86,7 +86,7 @@ A1 = [[[np.asarray([ 0,  0,  0], dtype=int), np.asarray([ 0,  0,  1], dtype=int)
        [np.asarray([-1,  1,  0], dtype=int), np.asarray([ 1, -1,  1], dtype=int),  1./2], \
        [np.asarray([-1, -1,  0], dtype=int), np.asarray([ 1,  1,  1], dtype=int),  1./2], \
        [np.asarray([ 0,  0, -1], dtype=int), np.asarray([ 0,  0,  2], dtype=int),  1.], \
-       [np.asarray([ 0,  0,  0], dtype=int), np.asarray([ 0,  1,  1], dtype=int),  1.], \
+       [np.asarray([ 0,  0,  0], dtype=int), np.asarray([ 0,  1,  1], dtype=int), -1.], \
        [np.asarray([ 0,  1,  1], dtype=int), np.asarray([ 0,  0,  0], dtype=int),  1.], \
        [np.asarray([ 0,  1,  0], dtype=int), np.asarray([ 0,  0,  1], dtype=int),  1./sqrt2], \
        [np.asarray([ 0,  0,  1], dtype=int), np.asarray([ 0,  1,  0], dtype=int),  1./sqrt2], \
@@ -98,7 +98,7 @@ A1 = [[[np.asarray([ 0,  0,  0], dtype=int), np.asarray([ 0,  0,  1], dtype=int)
        [np.asarray([-1,  1,  0], dtype=int), np.asarray([ 1,  0,  1], dtype=int),  1./2], \
        [np.asarray([ 0,  1, -1], dtype=int), np.asarray([ 0,  0,  2], dtype=int),  1./sqrt2], \
        [np.asarray([ 0, -1,  1], dtype=int), np.asarray([ 0,  2,  0], dtype=int),  1./sqrt2], \
-       [np.asarray([ 0,  0,  0], dtype=int), np.asarray([ 1,  1,  1], dtype=int),  1.], \
+       [np.asarray([ 0,  0,  0], dtype=int), np.asarray([ 1,  1,  1], dtype=int), -1.], \
        [np.asarray([ 1,  1,  1], dtype=int), np.asarray([ 0,  0,  0], dtype=int),  1.], \
        [np.asarray([ 1,  0,  0], dtype=int), np.asarray([ 0,  1,  1], dtype=int),  1./sqrt3], \
        [np.asarray([ 0,  1,  0], dtype=int), np.asarray([ 1,  0,  1], dtype=int),  1./sqrt3], \
@@ -106,7 +106,7 @@ A1 = [[[np.asarray([ 0,  0,  0], dtype=int), np.asarray([ 0,  0,  1], dtype=int)
        [np.asarray([ 2,  0,  0], dtype=int), np.asarray([-1,  1,  1], dtype=int),  1./sqrt3], \
        [np.asarray([ 0,  2,  0], dtype=int), np.asarray([ 1, -1,  1], dtype=int),  1./sqrt3], \
        [np.asarray([ 0,  0,  2], dtype=int), np.asarray([ 1,  1, -1], dtype=int),  1./sqrt3], \
-       [np.asarray([ 0,  0,  0], dtype=int), np.asarray([ 0,  0,  2], dtype=int),  1.], \
+       [np.asarray([ 0,  0,  0], dtype=int), np.asarray([ 0,  0,  2], dtype=int), -1.], \
        [np.asarray([ 0,  0,  2], dtype=int), np.asarray([ 0,  0,  0], dtype=int),  1.]]]
 A1 = np.asarray(A1)
 

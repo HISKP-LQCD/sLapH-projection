@@ -131,8 +131,10 @@ for p_cm in p:
                 factor = so_3mom[-1] * np.conj(si_3mom[-1])
                 if factor == 0:
                   continue
-                subduced[0] = subduced[0] + factor.real * data[op].real + \
-                                                       factor.imag * data[op].imag
+#                subduced[0] = subduced[0] + factor.real * data[op].real + \
+#                                                       factor.imag * data[op].imag
+                subduced[0] = subduced[0] + (factor*data[op]).real
+
               # Omit correlator if no contracted operators are contributing
               if(subduced.any() != 0):
                 correlator_row.append(np.squeeze(subduced, axis=0))

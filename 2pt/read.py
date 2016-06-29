@@ -17,12 +17,12 @@ import utils
 # parameters ###################################################################
 
 sta_cnfg = 714
-end_cnfg = 1214
+end_cnfg = 2750
 del_cnfg = 2
 
 T = 48        # number of timeslices
 p_max = 4
-p = range(1)         # momentum
+p = range(5)         # momentum
 
 # gamma structure wich shall be averaged. Last entry of gamma must contain all
 # names in LaTeX compatible notation for plot labels

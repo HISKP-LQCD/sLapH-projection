@@ -14,11 +14,11 @@ import utils
 # parameters ###################################################################
 
 sta_cnfg = 714
-end_cnfg = 814
+end_cnfg = 2750
 del_cnfg = 2
 
 T = 48
-p = range(1)
+p = range(5)
 p_max = 4
 
 p_cm_max = np.asarray((4,5,6,7,4), dtype=int)

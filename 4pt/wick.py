@@ -19,7 +19,7 @@ for p_cm in p:
   for diagram in diagrams:
     path = './readdata/p%1i/%s_p%1i.npy' % (p_cm, diagram, p_cm)
     data.append(np.load(path))
-    path = './readdata/p%1i/%s_p%1i_quantum_numbers.npy' % (p_cm, diagram, p_cm)
+    path = './readdata/p%1i/%s_p%1i_qn.npy' % (p_cm, diagram, p_cm)
     qn_data.append(np.load(path))
     if ( (qn_data[-1].shape[0] != data[-1].shape[0])):
       print '\tBootstrapped operators do not aggree with expected operators'
