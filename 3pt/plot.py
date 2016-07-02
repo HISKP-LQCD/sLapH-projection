@@ -345,8 +345,8 @@ def plot_vecks(mean_sin, err_sin, qn_sin, mean_avg, err_avg, gammas, pdfplot):
             
             # prepare data for plotting
             # TODO: put that in subduction
-            mean = mean_sin[i][k,g,r][op,]
-            err = err_sin[i][k,g,r][op,]
+            mean = mean_sin[i][k][g][r][op]
+            err = err_sin[i][k][g][r][op]
                   
   #            # Shrink current axis by 20%
   #            box = ax.get_position()
@@ -362,8 +362,8 @@ def plot_vecks(mean_sin, err_sin, qn_sin, mean_avg, err_avg, gammas, pdfplot):
                          elinewidth=0.5, markeredgecolor=cmap_brg[op], \
                                                                     linewidth='0.0')
   
-          mean = mean_avg[i][k,g,r,]
-          err = err_avg[i][k,g,r,]
+          mean = mean_avg[i][k][g][r]
+          err = err_avg[i][k][g][r]
           plt.errorbar(np.asarray(range(0, mean.shape[-1]))+op*shift, mean, err, \
                        fmt='o', color='black', \
                        label='average', markersize=3, capsize=3, capthick=0.5, \
@@ -420,8 +420,8 @@ def plot_rows(mean_sin, err_sin, qn_sin, mean_avg, err_avg, gammas, pdfplot, plo
           
           # prepare data for plotting
           # TODO: put that in subduction
-          mean = mean_sin[i][k,g,op]
-          err = err_sin[i][k,g,op]
+          mean = mean_sin[i][k][g][op]
+          err = err_sin[i][k][g][op]
 
                
           plt.yscale('log')
@@ -432,8 +432,8 @@ def plot_rows(mean_sin, err_sin, qn_sin, mean_avg, err_avg, gammas, pdfplot, plo
                                                                   linewidth='0.0')
   
         if plot_mean:
-          mean = mean_avg[i][k,g]
-          err = err_avg[i][k,g]
+          mean = mean_avg[i][k][g]
+          err = err_avg[i][k][g]
           plt.yscale('log')
           plt.errorbar(np.asarray(range(0, mean.shape[-1]))+op*shift, mean, err, \
                        fmt='o', color='black', \
@@ -494,10 +494,10 @@ def plot_abs(mean_sin, err_sin, qn_sin, mean_avg, err_avg, gammas, pdfplot):
             # prepare data for plotting
             # TODO: takewhile breaks one iteration to early
             mean = it.takewhile(lambda (x,y): x/y > 0, \
-                                it.izip(mean_sin[i][k,g,r][op,1:22], mean_sin[i][k,g,r][op,2:23]))
+                                it.izip(mean_sin[i][k][g][r][op,1:22], mean_sin[i][k][g][r][op,2:23]))
             mean = np.asarray(list(abs(m[1]) for m in mean))
-            mean = np.insert(mean, 0, abs(mean_sin[i][k,g,r][op,1]))
-            err = err_sin[i][k,g,r][op,1:(mean.shape[0]+1)]
+            mean = np.insert(mean, 0, abs(mean_sin[i][k][g][r][op,1]))
+            err = err_sin[i][k][g][r][op,1:(mean.shape[0]+1)]
                   
   #            # Shrink current axis by 20%
   #            box = ax.get_position()
@@ -607,22 +607,22 @@ def plot_signal_to_noise(mean_sin, err_sin, qn_sin, mean_avg, err_avg, gammas, p
 ################################################################################
 # read data
 
-for p in range(5):
+for p in range(0,1):
 
 
   diagram = 'C3+'
 
   # bootstrapped correlators
-#  print 'reading bootstrapped correlators'
-#  name = '%s_p%1i_real' % (diagram, p)
-#  mean_real, err_real, qn = read_ensemble(p, name)
-#
-#  name = '%s_p%1i_imag' % (diagram, p)
-#  mean_imag, err_imag, qn = read_ensemble(p, name)
-#
-#  if (mean_real.shape[0] != mean_imag.shape[0]):
-#    print 'Real and imaginary part of bootstrapped operators do not aggree'
-#    exit(0)
+  print 'reading bootstrapped correlators'
+  name = '%s_p%1i_real' % (diagram, p)
+  mean_real, err_real, qn = read_ensemble(p, name)
+
+  name = '%s_p%1i_imag' % (diagram, p)
+  mean_imag, err_imag, qn = read_ensemble(p, name)
+
+  if (mean_real.shape[0] != mean_imag.shape[0]):
+    print 'Real and imaginary part of bootstrapped operators do not aggree'
+    exit(0)
 
   # subduced correlators
   print 'reading subduced correlators'
@@ -645,10 +645,10 @@ for p in range(5):
 
   utils.ensure_dir('./plots')
 
-#  plot_path = './plots/%s_single_p%1i.pdf' % (diagram, p)
-#  pdfplot = PdfPages(plot_path)
-#  plot_single(mean_real, err_real, mean_imag, err_imag, qn, pdfplot)
-#  pdfplot.close()
+  plot_path = './plots/%s_single_p%1i.pdf' % (diagram, p)
+  pdfplot = PdfPages(plot_path)
+  plot_single(mean_real, err_real, mean_imag, err_imag, qn, pdfplot)
+  pdfplot.close()
 
   plot_path = './plots/%s_vecks_p%1i.pdf' % (diagram, p)
   pdfplot = PdfPages(plot_path)

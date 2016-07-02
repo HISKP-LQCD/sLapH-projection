@@ -64,28 +64,7 @@ A1 = np.asarray(A1)
 
 ################################################################################
 # E2
-E2 = [[[np.asarray([ 0, 0, 1], dtype=int), -1j,        0,         0], \
-       [np.asarray([ 0, 0,-1], dtype=int),  1j,        0,         0], \
-       [np.asarray([ 1, 0, 0], dtype=int),  0,         0,         1j], \
-       [np.asarray([-1, 0, 0], dtype=int),  0,         0,         1j], \
-       [np.asarray([ 0, 1, 0], dtype=int),  0,         0,         1j], \
-       [np.asarray([ 0,-1, 0], dtype=int),  0,         0,         1j], \
-       [np.asarray([ 1, 1, 1], dtype=int), -1j/sqrt6, -1j/sqrt6,  2j/sqrt6], \
-       [np.asarray([-1, 1, 1], dtype=int),  1j/sqrt6, -1j/sqrt6,  2j/sqrt6], \
-       [np.asarray([-1,-1, 1], dtype=int),  1j/sqrt6,  1j/sqrt6,  2j/sqrt6], \
-       [np.asarray([ 1,-1, 1], dtype=int), -1j/sqrt6,  1j/sqrt6,  2j/sqrt6], \
-       [np.asarray([-1,-1,-1], dtype=int),  1j/sqrt6,  1j/sqrt6, -2j/sqrt6], \
-       [np.asarray([ 1,-1,-1], dtype=int), -1j/sqrt6,  1j/sqrt6, -2j/sqrt6], \
-       [np.asarray([ 1, 1,-1], dtype=int), -1j/sqrt6, -1j/sqrt6, -2j/sqrt6], \
-       [np.asarray([-1, 1,-1], dtype=int),  1j/sqrt6, -1j/sqrt6, -2j/sqrt6], \
-       [np.asarray([ 0, 0, 2], dtype=int), -1j,        0,         0], \
-       [np.asarray([ 0, 0,-2], dtype=int),  1j,        0,         0], \
-       [np.asarray([ 2, 0, 0], dtype=int),  0,         0,         1j], \
-       [np.asarray([-2, 0, 0], dtype=int),  0,         0,         1j], \
-       [np.asarray([ 0, 2, 0], dtype=int),  0,         0,         1j], \
-       [np.asarray([ 0,-2, 0], dtype=int),  0,         0,         1j]], \
-                                                                       \
-      [[np.asarray([ 0, 0, 1], dtype=int),  0,       -1,       0], \
+E2 = [[[np.asarray([ 0, 0, 1], dtype=int),  0,       -1,       0], \
        [np.asarray([ 0, 0,-1], dtype=int),  0,       -1,       0], \
        [np.asarray([ 1, 0, 0], dtype=int),  0,       -1,       0], \
        [np.asarray([-1, 0, 0], dtype=int),  0,        1,       0], \
@@ -104,28 +83,33 @@ E2 = [[[np.asarray([ 0, 0, 1], dtype=int), -1j,        0,         0], \
        [np.asarray([ 2, 0, 0], dtype=int),  0,       -1,       0], \
        [np.asarray([-2, 0, 0], dtype=int),  0,        1,       0], \
        [np.asarray([ 0, 2, 0], dtype=int),  1,        0,       0], \
-       [np.asarray([ 0,-2, 0], dtype=int), -1,        0,       0]]]
+       [np.asarray([ 0,-2, 0], dtype=int), -1,        0,       0]], \
+                                                                    \
+      [[np.asarray([ 0, 0, 1], dtype=int), -1j,        0,         0], \
+       [np.asarray([ 0, 0,-1], dtype=int),  1j,        0,         0], \
+       [np.asarray([ 1, 0, 0], dtype=int),  0,         0,         1j], \
+       [np.asarray([-1, 0, 0], dtype=int),  0,         0,         1j], \
+       [np.asarray([ 0, 1, 0], dtype=int),  0,         0,         1j], \
+       [np.asarray([ 0,-1, 0], dtype=int),  0,         0,         1j], \
+       [np.asarray([ 1, 1, 1], dtype=int), -1j/sqrt6, -1j/sqrt6,  2j/sqrt6], \
+       [np.asarray([-1, 1, 1], dtype=int),  1j/sqrt6, -1j/sqrt6,  2j/sqrt6], \
+       [np.asarray([-1,-1, 1], dtype=int),  1j/sqrt6,  1j/sqrt6,  2j/sqrt6], \
+       [np.asarray([ 1,-1, 1], dtype=int), -1j/sqrt6,  1j/sqrt6,  2j/sqrt6], \
+       [np.asarray([-1,-1,-1], dtype=int),  1j/sqrt6,  1j/sqrt6, -2j/sqrt6], \
+       [np.asarray([ 1,-1,-1], dtype=int), -1j/sqrt6,  1j/sqrt6, -2j/sqrt6], \
+       [np.asarray([ 1, 1,-1], dtype=int), -1j/sqrt6, -1j/sqrt6, -2j/sqrt6], \
+       [np.asarray([-1, 1,-1], dtype=int),  1j/sqrt6, -1j/sqrt6, -2j/sqrt6], \
+       [np.asarray([ 0, 0, 2], dtype=int), -1j,        0,         0], \
+       [np.asarray([ 0, 0,-2], dtype=int),  1j,        0,         0], \
+       [np.asarray([ 2, 0, 0], dtype=int),  0,         0,         1j], \
+       [np.asarray([-2, 0, 0], dtype=int),  0,         0,         1j], \
+       [np.asarray([ 0, 2, 0], dtype=int),  0,         0,         1j], \
+       [np.asarray([ 0,-2, 0], dtype=int),  0,         0,         1j]]]
 E2 = np.asarray(E2)
 
-#################################################################################
-# B1
-B1 = [[[np.asarray([ 0, 1, 1], dtype=int), -1j,        0,        0], \
-       [np.asarray([ 0, 1,-1], dtype=int),  1j,        0,        0], \
-       [np.asarray([ 0,-1,-1], dtype=int), -1j,        0,        0], \
-       [np.asarray([ 0,-1, 1], dtype=int),  1j,        0,        0], \
-       [np.asarray([ 1, 0, 1], dtype=int),  0,        1j,        0], \
-       [np.asarray([ 1, 0,-1], dtype=int),  0,        1j,        0], \
-       [np.asarray([-1, 0,-1], dtype=int),  0,       -1j,        0], \
-       [np.asarray([-1, 0, 1], dtype=int),  0,       -1j,        0], \
-       [np.asarray([ 1, 1, 0], dtype=int),  0,        0,        1j], \
-       [np.asarray([-1, 1, 0], dtype=int),  0,        0,       -1j], \
-       [np.asarray([-1,-1, 0], dtype=int),  0,        0,       -1j], \
-       [np.asarray([ 1,-1, 0], dtype=int),  0,        0,        1j]]]
-B1 = np.asarray(B1)
-
 ################################################################################
-# B2
-B2 = [[[np.asarray([ 0, 1, 1], dtype=int),  0,        -1/sqrt2,  1/sqrt2], \
+# B1
+B1 = [[[np.asarray([ 0, 1, 1], dtype=int),  0,        -1/sqrt2,  1/sqrt2], \
        [np.asarray([ 0, 1,-1], dtype=int),  0,        -1/sqrt2, -1/sqrt2], \
        [np.asarray([ 0,-1,-1], dtype=int),  0,         1/sqrt2, -1/sqrt2], \
        [np.asarray([ 0,-1, 1], dtype=int),  0,         1/sqrt2,  1/sqrt2], \
@@ -138,6 +122,22 @@ B2 = [[[np.asarray([ 0, 1, 1], dtype=int),  0,        -1/sqrt2,  1/sqrt2], \
        [np.asarray([-1,-1, 0], dtype=int),  1/sqrt2,  -1/sqrt2, 0], \
        [np.asarray([ 1,-1, 0], dtype=int), -1/sqrt2,  -1/sqrt2, 0]]]
 
+B1 = np.asarray(B1)
+
+#################################################################################
+# B2
+B2 = [[[np.asarray([ 0, 1, 1], dtype=int), -1j,        0,        0], \
+       [np.asarray([ 0, 1,-1], dtype=int),  1j,        0,        0], \
+       [np.asarray([ 0,-1,-1], dtype=int), -1j,        0,        0], \
+       [np.asarray([ 0,-1, 1], dtype=int),  1j,        0,        0], \
+       [np.asarray([ 1, 0, 1], dtype=int),  0,        1j,        0], \
+       [np.asarray([ 1, 0,-1], dtype=int),  0,        1j,        0], \
+       [np.asarray([-1, 0,-1], dtype=int),  0,       -1j,        0], \
+       [np.asarray([-1, 0, 1], dtype=int),  0,       -1j,        0], \
+       [np.asarray([ 1, 1, 0], dtype=int),  0,        0,        1j], \
+       [np.asarray([-1, 1, 0], dtype=int),  0,        0,       -1j], \
+       [np.asarray([-1,-1, 0], dtype=int),  0,        0,       -1j], \
+       [np.asarray([ 1,-1, 0], dtype=int),  0,        0,        1j]]]
 B2 = np.asarray(B2)
 
 ################################################################################

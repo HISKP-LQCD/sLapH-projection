@@ -127,8 +127,9 @@ def subduce_ensembles(p_cm, gamma, verbose=0):
                                                   (el[0][0], el[0][1], el[0][2])
                 print ' '
               correlator_row = np.vstack((correlator_row, subduced))
-              qn_row.append([ el[0], (-1)*el[0], gevp_row[-1], gevp_col[-1], irreps[-1][i] ])
-
+              qn_row.append([ el[0], (-1)*el[0], np.dot(el[0], el[0]), \
+                              gevp_row[-1], np.dot(el[0], el[0]), \
+                              gevp_col[-1], irreps[-1][i] ])
           correlator_gevp_col.append(correlator_row)
           qn_gevp_col.append(qn_row)
         correlator_gevp_row.append(correlator_gevp_col)
@@ -192,18 +193,11 @@ def subduce_ensembles(p_cm, gamma, verbose=0):
       for g2, qn_gevp_col in enumerate(qn_gevp_row):
         qn_avg_gevp_col = []
         for r, qn_row in enumerate(qn_gevp_col):
-          qn_avg_row = []
-          for k, qn_vec in enumerate(qn_row):
 #            qn_avg_row.append(np.asarray([np.dot(qn_avg_vec[1], qn_avg_vec[1]), \
 #                               np.dot(qn_avg_vec[1], qn_avg_vec[1]), \
 #                                                              qn_avg_vec[-3:]]))
-            qn_avg_row.append(np.insert( np.insert( \
-                  qn_vec[-3:], 
-                    0, np.dot(qn_vec[1], qn_vec[1]), axis=-1), \
-                      0, np.dot(qn_vec[0], qn_vec[0]), axis=-1))
+          qn_avg_gevp_col.append(qn_row[0,-5:])
 
-          qn_avg_row = np.asarray(qn_avg_row)
-          qn_avg_gevp_col.append(qn_avg_row)
         qn_avg_gevp_col = np.asarray(qn_avg_gevp_col)
         qn_avg_gevp_row.append(qn_avg_gevp_col)
       qn_avg_gevp_row = np.asarray(qn_avg_gevp_row)

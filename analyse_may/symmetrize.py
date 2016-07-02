@@ -8,7 +8,7 @@ import itertools as it
 import sys
 #sys.stdout = open('./irrep_and_gevp.out', 'w')
 
-import gevp
+#import gevp
 import utils
 
 ################################################################################
@@ -21,7 +21,7 @@ gevp = [[['gi', (1,1), (2,2)]], \
         [['gi', (4,1), (3,2), (2,1), (1,0)], \
          ['gi', (3,2), (2,1)]], \
         [['gi', (4,2), (3,1), (2,0), (2,2), (1,1)], \
-         ['gi', (4,2), (2,2), (1,1)], \
+         ['gi', (4,2), (2,2), (1,1)],
          ['gi', (3,1), (2,2)]], \
         [['gi', (4,3), (3,0), (2,1)]], \
         [['gi', (4,0)]]]
@@ -64,6 +64,7 @@ def mean_error_print(boot, write = 0):
   return mean, err
 
 for p_cm in p:
+  print 'building gevp for p_cm = %i\n' % p_cm
   ################################################################################
   # reading data #################################################################
   
@@ -78,7 +79,7 @@ for p_cm in p:
   if ( (qn_2pt.shape[0] != data_2pt.shape[0]) ):
     print 'Bootstrapped operators do not aggree with expected operators'
     exit(0)
-  print qn_2pt.shape
+  print '\tqn_2pt: ', qn_2pt.shape
   
   # 3pt subduced + averaged correlators
   filename = '../3pt/bootdata/p%1i/C3+_p%1i_subduced_avg_rows.npy' % (p_cm, p_cm)
@@ -89,7 +90,7 @@ for p_cm in p:
   if ( (qn_3pt.shape[0] != data_3pt.shape[0]) ):
     print 'Bootstrapped operators do not aggree with expected operators'
     exit(0)
-  print qn_3pt.shape
+  print '\tqn_3pt: ', qn_3pt.shape
   
   # 4pt subduced + averaged correlators
   filename = '../4pt/bootdata/p%1i/C4_p%1i_subduced_avg_rows.npy' % (p_cm, p_cm)
@@ -100,14 +101,14 @@ for p_cm in p:
   if ( (qn_4pt.shape[0] != data_4pt.shape[0]) ):
     print 'Bootstrapped operators do not aggree with expected operators'
     exit(0)
-  print qn_4pt.shape
+  print '\tqn_4pt: ', qn_4pt.shape
   print ' '
   
   ################################################################################
   #GEVP ##########################################################################
   
   for i in range(len(gevp[p_cm])):
-    print i
+
     data = np.concatenate( \
             (np.concatenate((data_2pt[i], np.swapaxes(data_3pt[i], 0, 1)), axis=1), \
              np.concatenate((data_3pt[i],             data_4pt[i]),        axis=1)), \
@@ -127,15 +128,18 @@ for p_cm in p:
                        [+1, -1, -1, +1, +1]])
     
     sym = []
+
+    print qn
+    print ' '
+    print gevp[p_cm][i]
     
     mask = np.empty(qn.shape[:-1], dtype=np.int)
     # TODO: automize slicing by giving list of desired quantum numbers
     #for i in enumerate(qn):
     for j in np.ndindex(mask.shape):
-      mask[j] = False if np.sum(list(qn[j]).count(g) for g in gevp[p_cm][i]) == 2 else True
-      # only supported in numpy 1.9.1 or higher
-      #  values, counts = np.unique(qn, return_counts=True)
-    
+      values, counts = np.unique(qn[j], return_counts=True)
+      dictionary = {v : c for v,c in zip(values,counts)} 
+      mask[j] = False if np.sum(dictionary.get(g, 0) for g in gevp[p_cm][i]) == 2 else True
 #    sinh_for_gevp = np.asarray([sinh[i] for i in np.ndindex(mask.shape[1:]) \
 #                             if not mask[(0,) + i]]).reshape((len(gevp), len(gevp)))
     data_for_gevp = np.asarray([data[j] for j in np.ndindex(mask.shape) \
@@ -165,10 +169,8 @@ for p_cm in p:
     
     # TODO: maybe there is a more elegant solution featuring np.unique (without the
     # sorting)
-#    qn_for_gevp = np.swapaxes(qn_for_gevp.diagonal(axis1=-3, axis2=-2), -2, -1)
-#    qn_for_gevp = np.delete(qn_for_gevp, [0,2], -1)
+    qn_for_gevp = qn_for_gevp.diagonal().T
     print 'qn', qn_for_gevp.shape
-    print qn_for_gevp[:,:,:-1].diagonal()
     
     ################################################################################
     # Write data to disc ###########################################################
@@ -177,9 +179,9 @@ for p_cm in p:
     utils.ensure_dir('./bootdata')
     utils.ensure_dir('./bootdata/p%1i' % p_cm)
     ## write all (anti-)symmetrized gevp eigenvalues
-    path = './bootdata/p%1i/Crho_p%1i_%s_sym' % (p_cm, p_cm, qn_for_gevp[0,0,-1])
+    path = './bootdata/p%1i/Crho_p%1i_%s_sym' % (p_cm, p_cm, qn_for_gevp[0,-1])
     np.save(path, sym)
-    path = './bootdata/p%1i/Crho_p%1i_%s_sym_qn' % (p_cm, p_cm, qn_for_gevp[0,0,-1])
+    path = './bootdata/p%1i/Crho_p%1i_%s_sym_qn' % (p_cm, p_cm, qn_for_gevp[0,-1])
     np.save(path, qn_for_gevp)
     ## TODO: save t0 in qn
   

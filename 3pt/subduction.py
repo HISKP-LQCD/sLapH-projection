@@ -20,7 +20,7 @@ import utils as utils
 p = 0
 p_max = 4
 
-verbose = 0
+verbose = 1
 
 diagram = 'C3+'
 
@@ -62,7 +62,7 @@ def unique_everseen(iterable, key=None):
         seen_add(k)
         yield element
   
-for p in range(0,5):
+for p in range(0,1):
   print 'subducing p = %i' % p
 
   ################################################################################
@@ -153,6 +153,7 @@ for p in range(0,5):
                 for g_si in range(0,3):
       
                   cg_factor = so_3mom[-1] * np.conj(si_3mom[g_si+1])
+#                  cg_factor = so_3mom[-1] * si_3mom[g_si+1]
                   if cg_factor == 0:
                     continue
 
@@ -165,17 +166,23 @@ for p in range(0,5):
 
                   factor = cg_factor*wick_factor
                   if (gevp_col[g_si] == qn[5]):
+#                    subduced[0] = subduced[0] + (factor*data[op]).real
                     subduced[0] = subduced[0] + (factor*data[op]).real
                     if verbose:
                       print '\tsubduced g_so = %i' % (gevp_col[g_si])
                       print '\t\tsubduction coefficient = % .2f + % .2fi' % \
                                                         (factor.real, factor.imag)
+                      for j in range(3):
+                        print '\t\t\t', data[op][j][0]
+                      print ' '
+                      for j in range(3):
+                        print '\t\t\t', factor*data[op][j][0]
   
               if(subduced.any() != 0):
                 if verbose:
                   print '\tinto momenta [(%i,%i,%i), (%i,%i,%i)]' % \
                          (so_3mom[0][0], so_3mom[0][1], so_3mom[0][2], \
-                                      so_3mom[0][0], so_3mom[0][1], so_3mom[0][2])
+                                      so_3mom[1][0], so_3mom[1][1], so_3mom[1][2])
                 correlator_row.append(np.squeeze(subduced, axis=0))
                 qn_row.append([ (so_3mom[0], so_3mom[1]), si_3mom[0], \
                               gevp_row, ('g5', 'g5'), p, gevp_col[-1], irreps_4pt[-1][i] ])
@@ -190,7 +197,6 @@ for p in range(0,5):
           continue
         correlator_gevp_row.append(np.asarray(correlator_gevp_col))
         qn_gevp_row.append(np.asarray(qn_gevp_col))
-        print i, gevp_row
       correlator_gevp_row = np.asarray(correlator_gevp_row)
       if(np.any(correlator_gevp_row != 0) and correlator_gevp_row.size != 0):
         correlator_irrep.append(np.asarray(correlator_gevp_row))

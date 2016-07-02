@@ -201,7 +201,7 @@ def bootstrap_ensemble(p, nb_bins, nb_boot, bootstrap_original_data):
   if bootstrap_original_data:
     path = './readdata/p%1i/%s_p%1i.npy' % (p, diagram, p)
     data = np.load(path)
-    path = './readdata/p%1i/%s_p%1i_quantum_numbers.npy' % (p, diagram, p)
+    path = './readdata/p%1i/%s_p%1i_qn.npy' % (p, diagram, p)
     qn_data = np.load(path)
     if ( (qn_data.shape[0] != data.shape[0])):
       print '\tBootstrapped operators do not aggree with expected operators'
