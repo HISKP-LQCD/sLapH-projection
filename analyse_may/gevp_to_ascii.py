@@ -15,66 +15,64 @@ import utils
 # some global variables ########################################################
 
 ################################################################################
-# some global variables ########################################################
-
-################################################################################
 p = range(5) # momenta to analyse
 
 gevp = [[['gi', (1,1), (2,2)]], \
         [['gi', (4,1), (3,2), (2,1), (1,0)], \
          ['gi', (3,2), (2,1)]], \
         [['gi', (4,2), (3,1), (2,0), (2,2), (1,1)], \
-         ['gi', (4,2), (2,2), (1,1)], \
+         ['gi', (4,2), (2,2), (1,1)],
          ['gi', (3,1), (2,2)]], \
         [['gi', (4,3), (3,0), (2,1)]], \
         [['gi', (4,0)]]]
 
-################################################################################
+##################################################################################
 for p_cm in p:
-
-  ##############################################################################
-  # reading data ###############################################################
+  print 'building gevp for p_cm = %i\n' % p_cm
+  ################################################################################
+  # reading data #################################################################
+  
+  ################################################################################
   
   # 2pt subduced + averaged correlators
-  filename = '../2pt/bootdata/p%1i/C20_p%1i_subduced_avg_rows.npy' % (p_cm, p_cm)
+  filename = '../2pt/readdata/p%1i/C20_p%1i_subduced_avg_rows.npy' % (p_cm, p_cm)
   data_2pt = np.load(filename)
   
-  filename = '../2pt/bootdata/p%1i/C20_p%1i_subduced_avg_rows_qn.npy' % (p_cm, p_cm)
+  filename = '../2pt/readdata/p%1i/C20_p%1i_subduced_avg_rows_qn.npy' % (p_cm, p_cm)
   qn_2pt = np.load(filename)
   if ( (qn_2pt.shape[0] != data_2pt.shape[0]) ):
-    print 'Bootstrapped operators do not aggree with expected operators'
+    print 'Operators do not aggree with expected operators'
     exit(0)
-  print qn_2pt.shape
+  print '\tqn_2pt: ', qn_2pt.shape
   
   # 3pt subduced + averaged correlators
-  filename = '../3pt/bootdata/p%1i/C3+_p%1i_subduced_avg_rows.npy' % (p_cm, p_cm)
+  filename = '../3pt/readdata/p%1i/C3+_p%1i_subduced_avg_rows.npy' % (p_cm, p_cm)
   data_3pt = np.load(filename)
   
-  filename = '../3pt/bootdata/p%1i/C3+_p%1i_subduced_avg_rows_qn.npy' % (p_cm, p_cm)
+  filename = '../3pt/readdata/p%1i/C3+_p%1i_subduced_avg_rows_qn.npy' % (p_cm, p_cm)
   qn_3pt = np.load(filename)
   if ( (qn_3pt.shape[0] != data_3pt.shape[0]) ):
-    print 'Bootstrapped operators do not aggree with expected operators'
+    print 'Operators do not aggree with expected operators'
     exit(0)
-  print qn_3pt.shape
+  print '\tqn_3pt: ', qn_3pt.shape
   
   # 4pt subduced + averaged correlators
-  filename = '../4pt/bootdata/p%1i/C4_p%1i_subduced_avg_rows.npy' % (p_cm, p_cm)
+  filename = '../4pt/readdata/p%1i/C4_p%1i_subduced_avg_rows.npy' % (p_cm, p_cm)
   data_4pt = np.load(filename)
   
-  filename = '../4pt/bootdata/p%1i/C4_p%1i_subduced_avg_rows_qn.npy' % (p_cm, p_cm)
+  filename = '../4pt/readdata/p%1i/C4_p%1i_subduced_avg_rows_qn.npy' % (p_cm, p_cm)
   qn_4pt = np.load(filename)
   if ( (qn_4pt.shape[0] != data_4pt.shape[0]) ):
-    print 'Bootstrapped operators do not aggree with expected operators'
+    print 'Operators do not aggree with expected operators'
     exit(0)
-  print qn_4pt.shape
+  print '\tqn_4pt: ', qn_4pt.shape
   print ' '
   
   ################################################################################
   #GEVP ##########################################################################
   
-  #TODO: automize recognition of irreps
   for i in range(len(gevp[p_cm])):
-    print i
+
     data = np.concatenate( \
             (np.concatenate((data_2pt[i], np.swapaxes(data_3pt[i], 0, 1)), axis=1), \
              np.concatenate((data_3pt[i],             data_4pt[i]),        axis=1)), \
@@ -85,15 +83,12 @@ for p_cm in p:
     
     print data.shape
     print qn.shape
-    
+   
     mask = np.empty(qn.shape[:-1], dtype=np.int)
-    # TODO: automize slicing by giving list of desired quantum numbers
-    #for i in enumerate(qn):
     for j in np.ndindex(mask.shape):
-      mask[j] = False if np.sum(list(qn[j]).count(g) for g in gevp[p_cm][i]) == 2 else True
-      # only supported in numpy 1.9.1 or higher
-      #  values, counts = np.unique(qn, return_counts=True)
-    
+      values, counts = np.unique(qn[j], return_counts=True)
+      dictionary = {v : c for v,c in zip(values,counts)} 
+      mask[j] = False if np.sum(dictionary.get(g, 0) for g in gevp[p_cm][i]) == 2 else True
     data_for_gevp = np.asarray([data[j] for j in np.ndindex(mask.shape) \
                              if not mask[j]]).reshape( \
                              (len(gevp[p_cm][i]), len(gevp[p_cm][i])) + data.shape[2:])
@@ -123,7 +118,7 @@ for p_cm in p:
     
     ################################################################################
     # write the orginal data for all gevp matrix elements individually as ascii
-    for gevp_row, row in enumerate(irrep):
+    for gevp_row, row in enumerate(data_for_gevp):
       for gevp_col, col in enumerate(row):
         path = './data/p%1i/%s/Rho_Gevp_p%1d_%s.%d.%d.dat' % \
                 (p_cm, qn_for_gevp[0,-1], p_cm, \
@@ -140,7 +135,9 @@ for p_cm in p:
         # flatten indices for nb_cnfg and T and insert dummy indices for gamma 
         # and smear
         Y = np.zeros((X.shape[0]*1*4*(T/2+1), 6))
-        for c, cnfg in enumerate(range(714,1215,2)):
+        for c, cnfg in enumerate(range(714,2750,2)):
+          if cnfg in [1282]:
+            continue
           for gamma in range(1):
             for s, smear in enumerate(range(1,8,2)):
               for t in range(T/2+1):
