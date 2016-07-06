@@ -17,16 +17,51 @@ import utils
 ################################################################################
 p = range(5) # momenta to analyse
 
-gevp = [[['gi', (1,1), (2,2)]], \
+gevp = [[['gi', (2,2), (1,1)]], \
         [['gi', (4,1), (3,2), (2,1), (1,0)], \
          ['gi', (3,2), (2,1)]], \
-        [['gi', (4,2), (3,1), (2,0), (2,2), (1,1)], \
+        [['gi', (4,2), (3,1), (2,0)], \
          ['gi', (4,2), (2,2), (1,1)],
          ['gi', (3,1), (2,2)]], \
         [['gi', (4,3), (3,0), (2,1)]], \
         [['gi', (4,0)]]]
 
+#        [['gi', (4,2), (3,1), (2,0), (2,2), (1,1)], \
 ##################################################################################
+def write_data_ascii(data, filename, verbose=False):
+  """Writes the data into a file.
+  The file is written to have L. Liu's data format so that the first line
+  has information about the number of samples and the length of each sample.
+  Args:
+  filename: The filename of the file.
+  data: The numpy array with data.
+  verbose: The amount of info shown.
+  """
+  if verbose:
+    print("saving to file " + str(filename))
+  
+  # in case the dimension is 1, treat the data as one sample
+  # to make the rest easier we add an extra axis
+  if len(data.shape) == 1:
+    data = data.reshape(1, -1)
+  # init variables
+  nsamples = data.shape[0]
+  T = data.shape[1]
+  L = int(T/2)
+  # write header
+  head = "%i %i %i %i %i" % (nsamples, T, 0, L, 0)
+  # prepare data and counter
+  #_data = data.flatten()
+  _data = data.reshape((T*nsamples), -1)
+  _counter = np.fromfunction(lambda i, *j: i%T,
+                             (_data.shape[0],) + (1,)*(len(_data.shape)-1), dtype=int)
+  _fdata = np.concatenate((_counter,_data), axis=1)
+  # generate format string
+  fmt = ('%.0f',) + ('%.14f',) * _data[0].size
+  # write data to file
+  np.savetxt(filename, _fdata, header=head, comments='', fmt=fmt)
+##################################################################################
+
 for p_cm in p:
   print 'building gevp for p_cm = %i\n' % p_cm
   ################################################################################
@@ -123,30 +158,31 @@ for p_cm in p:
         path = './data/p%1i/%s/Rho_Gevp_p%1d_%s.%d.%d.dat' % \
                 (p_cm, qn_for_gevp[0,-1], p_cm, \
                           qn_for_gevp[0,-1], gevp_row, gevp_col)
-        print 'writing to', path
-        T = col.shape[0]
-    
-        # insert zeros as symmetrization partner for timeslices 0 and T/2
-        X = np.copy(col)
-        X = np.insert(X, T, 0, axis=0)
-        X = np.insert(X, T/2+1, 0, axis=0)
-        X = np.asarray((X[:(T/2+1),...], X[:(T/2):-1,...])).T
-        
-        # flatten indices for nb_cnfg and T and insert dummy indices for gamma 
-        # and smear
-        Y = np.zeros((X.shape[0]*1*4*(T/2+1), 6))
-        for c, cnfg in enumerate(range(714,2750,2)):
-          if cnfg in [1282]:
-            continue
-          for gamma in range(1):
-            for s, smear in enumerate(range(1,8,2)):
-              for t in range(T/2+1):
-                Y[t+s*(T/2+1)+c*4*(T/2+1)] = np.asarray([gamma, smear, t, \
-                                                        X[c,t,0], X[c,t,1], cnfg])
-        print '\t', Y.shape
-    
-        np.savetxt(path, Y, fmt=['%d','%d','%d','%f','%f','%d'], delimiter=' ', \
-                             newline='\n')
+#        print 'writing to', path
+
+        write_data_ascii(col.T, path, True)
+
+#        # insert zeros as symmetrization partner for timeslices 0 and T/2
+#        X = np.copy(col)
+#        X = np.insert(X, T, 0, axis=0)
+#        X = np.insert(X, T/2+1, 0, axis=0)
+#        X = np.asarray((X[:(T/2+1),...], X[:(T/2):-1,...])).T
+#        
+#        # flatten indices for nb_cnfg and T and insert dummy indices for gamma 
+#        # and smear
+#        Y = np.zeros((X.shape[0]*1*4*(T/2+1), 6))
+#        for c, cnfg in enumerate(range(714,2750,2)):
+#          if cnfg in [1282]:
+#            continue
+#          for gamma in range(1):
+#            for s, smear in enumerate(range(1,8,2)):
+#              for t in range(T/2+1):
+#                Y[t+s*(T/2+1)+c*4*(T/2+1)] = np.asarray([gamma, smear, t, \
+#                                                        X[c,t,0], X[c,t,1], cnfg])
+#        print '\t', Y.shape
+#    
+#        np.savetxt(path, Y, fmt=['%d','%d','%d','%f','%f','%d'], delimiter=' ', \
+#                             newline='\n')
     
     # TODO:
     # write the orginal data for all gevp matrix elements individually as binary

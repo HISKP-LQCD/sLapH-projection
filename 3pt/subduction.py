@@ -62,7 +62,7 @@ def unique_everseen(iterable, key=None):
         seen_add(k)
         yield element
   
-for p in range(0,1):
+for p in range(0,5):
   print 'subducing p = %i' % p
 
   ################################################################################
@@ -152,7 +152,8 @@ for p in range(0,1):
                   continue
                 for g_si in range(0,3):
       
-                  cg_factor = so_3mom[-1] * np.conj(si_3mom[g_si+1])
+#                  cg_factor = so_3mom[-1] * np.conj(si_3mom[g_si+1])
+                  cg_factor = np.conj(so_3mom[-1]) * si_3mom[g_si+1]
 #                  cg_factor = so_3mom[-1] * si_3mom[g_si+1]
                   if cg_factor == 0:
                     continue
@@ -337,7 +338,6 @@ for p in range(0,1):
   
   for c in avg:
     print c.shape
-  
   
   
   

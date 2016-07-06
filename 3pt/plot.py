@@ -607,22 +607,22 @@ def plot_signal_to_noise(mean_sin, err_sin, qn_sin, mean_avg, err_avg, gammas, p
 ################################################################################
 # read data
 
-for p in range(0,1):
+for p in range(0,5):
 
 
   diagram = 'C3+'
 
-  # bootstrapped correlators
-  print 'reading bootstrapped correlators'
-  name = '%s_p%1i_real' % (diagram, p)
-  mean_real, err_real, qn = read_ensemble(p, name)
-
-  name = '%s_p%1i_imag' % (diagram, p)
-  mean_imag, err_imag, qn = read_ensemble(p, name)
-
-  if (mean_real.shape[0] != mean_imag.shape[0]):
-    print 'Real and imaginary part of bootstrapped operators do not aggree'
-    exit(0)
+#  # bootstrapped correlators
+#  print 'reading bootstrapped correlators'
+#  name = '%s_p%1i_real' % (diagram, p)
+#  mean_real, err_real, qn = read_ensemble(p, name)
+#
+#  name = '%s_p%1i_imag' % (diagram, p)
+#  mean_imag, err_imag, qn = read_ensemble(p, name)
+#
+#  if (mean_real.shape[0] != mean_imag.shape[0]):
+#    print 'Real and imaginary part of bootstrapped operators do not aggree'
+#    exit(0)
 
   # subduced correlators
   print 'reading subduced correlators'
@@ -645,10 +645,10 @@ for p in range(0,1):
 
   utils.ensure_dir('./plots')
 
-  plot_path = './plots/%s_single_p%1i.pdf' % (diagram, p)
-  pdfplot = PdfPages(plot_path)
-  plot_single(mean_real, err_real, mean_imag, err_imag, qn, pdfplot)
-  pdfplot.close()
+#  plot_path = './plots/%s_single_p%1i.pdf' % (diagram, p)
+#  pdfplot = PdfPages(plot_path)
+#  plot_single(mean_real, err_real, mean_imag, err_imag, qn, pdfplot)
+#  pdfplot.close()
 
   plot_path = './plots/%s_vecks_p%1i.pdf' % (diagram, p)
   pdfplot = PdfPages(plot_path)
