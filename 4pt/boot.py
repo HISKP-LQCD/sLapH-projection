@@ -15,7 +15,7 @@ bootstrap_original_data = False
 
 p = range(5)         # momentum
 
-nb_bins = 1
+nb_bins = 25
 nb_boot = 500
 
 verbose = 0

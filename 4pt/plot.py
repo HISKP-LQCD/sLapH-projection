@@ -980,7 +980,7 @@ def plot_signal_to_noise_rows(qn_sin, mean_avg, err_avg, pdfplot):
 ################################################################################
 # read data
 
-for p in range(1,2):
+for p in range(5):
 
   # bootstrapped correlators
   diagram = 'C4'

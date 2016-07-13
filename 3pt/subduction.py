@@ -20,7 +20,7 @@ import utils as utils
 p = 0
 p_max = 4
 
-verbose = 0
+verbose = 1
 
 diagram = 'C3+'
 
@@ -70,7 +70,7 @@ for p in range(0,5):
   
   path = './readdata/p%1i/%s_p%1i.npy' % (p, diagram, p)
   data = np.load(path)
-  path = './readdata/p%1i/%s_p%1i_quantum_numbers.npy' % (p, diagram, p)
+  path = './readdata/p%1i/%s_p%1i_qn.npy' % (p, diagram, p)
   qn_data = np.load(path)
   if ( (qn_data.shape[0] != data.shape[0])):
     print '\tRead operators do not aggree with expected operators'
@@ -130,13 +130,11 @@ for p in range(0,5):
         qn_gevp_col = []
         for row in range(len(irrep_so)):
       
-#          correlator_row = np.zeros((0, ) + data[0].shape, dtype=np.double)
           correlator_row = []
           qn_row = []
       
           for so_3mom in irrep_so[row]:
             for si_3mom in irrep_si[row]:
-#              if (np.dot(so_3mom[0], so_3mom[0]), np.dot(so_3mom[1], so_3mom[1])) == gevp_row:
               if not ((((np.dot(so_3mom[0], so_3mom[0]), \
                                       np.dot(so_3mom[1], so_3mom[1])) == gevp_row) \
                       or ((np.dot(so_3mom[0], so_3mom[0]), \
@@ -154,86 +152,50 @@ for p in range(0,5):
                   continue
                 for g_si in range(0,3):
       
-                  factor = so_3mom[-1] * np.conj(si_3mom[g_si+1])
-                  if factor == 0:
+#                  cg_factor = so_3mom[-1] * np.conj(si_3mom[g_si+1])
+                  cg_factor = np.conj(so_3mom[-1]) * si_3mom[g_si+1]
+#                  cg_factor = so_3mom[-1] * si_3mom[g_si+1]
+                  if cg_factor == 0:
                     continue
-  
-                  # calculating the Correlators yields imaginary parts for all of
-                  # them. Switching real and imaginary part in the subduction 
-                  # factor accounts for this.
-  
-                  data_for_subduction = factor * data[op]
-                  if ((gevp_col[g_si] in gamma_50i) or (gevp_col[g_si] in gamma_0i)):
-                    data_for_subduction = 2 * data_for_subduction.real
-                  elif ((gevp_col[g_si] in gamma_i)) :
-                    # factor 1j?
-                    data_for_subduction = 2 * data_for_subduction.imag
-                  else:
-                    print 'continue'
-                    continue
-  
-                  # HARDCODED: factors I don't understand
-  #                if ((gevp_col[g_si] in gamma_i) or (gevp_col[g_si] in gamma_0i)):
-  #                  data_for_subduction = (-1) * data_for_subduction
-  #                if (g_si == 2):
-  #                  data_for_subduction = (-1) * data_for_subduction
-  
-                  if (row == 0 or row == 2):
-                    data_for_subduction = (-1) * data_for_subduction
-   
-  #                data_for_subduction = factor * data[op]
-  #                if (gevp_col[g_si] in gamma_i):
-  #                  data_for_subduction = 2 * data_for_subduction.real
-  #                elif ((gevp_col[g_si] in gamma_0i) or (gevp_col[g_si] in gamma_50i)):
-  #                  # factor 1j?
-  #                  data_for_subduction = 2 * (1j*data_for_subduction).imag
-  #                else:
-  #                  print 'continue'
-  #                  continue
-  
-  #                if (gevp_col[g_si] == 14): 
-  #                  data_for_subduction = (-1) * data_for_subduction
-  
+
+                  if gevp_col[g_si] in gamma_i:
+                    wick_factor = 2.
+                  elif gevp_col[g_si] in gamma_0i:
+                    wick_factor = -2.
+                  elif gevp_col[g_si] in gamma_50i:
+                    wick_factor = 2*1j
+
+                  factor = cg_factor*wick_factor
                   if (gevp_col[g_si] == qn[5]):
-                    subduced[0] = subduced[0] + data_for_subduction
+#                    subduced[0] = subduced[0] + (factor*data[op]).real
+                    subduced[0] = subduced[0] + (factor*data[op]).real
                     if verbose:
                       print '\tsubduced g_so = %i' % (gevp_col[g_si])
                       print '\t\tsubduction coefficient = % .2f + % .2fi' % \
                                                         (factor.real, factor.imag)
+                      for j in range(3):
+                        print '\t\t\t', data[op][j][0]
+                      print ' '
+                      for j in range(3):
+                        print '\t\t\t', factor*data[op][j][0]
   
-                  # calculating the Correlators yields imaginary parts for all of
-                  # them. Switching real and imaginary part in the subduction 
-                  # factor accounts for this.
-  #                if (gevp_col[g_si] in gamma_50i):
-  #                  factor = factor.imag + factor.real * 1j
-  #                if (gevp_col[g_si] == 14): 
-  #                  factor = factor * (-1)
-  #
-  #                if (gevp_col[g_si] == qn[5]):
-  #                  subduced[0] = subduced[0] + factor.real * data[op].real + \
-  #                                                     factor.imag * data[op].imag
-  #                  if verbose:
-  #                    print '\tsubduced g_so = %i' % (gevp_col[g_si])
-  #                    print '\t\tsubduction coefficient = % .2f + % .2fi' % \
-  #                                                      (factor.real, factor.imag)
-  #
               if(subduced.any() != 0):
                 if verbose:
                   print '\tinto momenta [(%i,%i,%i), (%i,%i,%i)]' % \
                          (so_3mom[0][0], so_3mom[0][1], so_3mom[0][2], \
-                                      so_3mom[0][0], so_3mom[0][1], so_3mom[0][2])
-                  print ' '
-  #                for a in subduced[0,:,85]:
-  #                  print a.real
-#                correlator_row = np.vstack((correlator_row, subduced))
+                                      so_3mom[1][0], so_3mom[1][1], so_3mom[1][2])
                 correlator_row.append(np.squeeze(subduced, axis=0))
                 qn_row.append([ (so_3mom[0], so_3mom[1]), si_3mom[0], \
                               gevp_row, ('g5', 'g5'), p, gevp_col[-1], irreps_4pt[-1][i] ])
                   
+          if len(correlator_row) == 0: 
+            continue
           correlator_row = np.asarray(correlator_row)
-          correlator_gevp_col.append(np.asarray(correlator_row))
+          correlator_gevp_col.append(correlator_row)
           qn_row = np.asarray(qn_row, dtype=object)
           qn_gevp_col.append(qn_row)
+        if len(correlator_gevp_col) == 0:
+          continue
         correlator_gevp_row.append(np.asarray(correlator_gevp_col))
         qn_gevp_row.append(np.asarray(qn_gevp_col))
       correlator_gevp_row = np.asarray(correlator_gevp_row)
@@ -269,7 +231,7 @@ for p in range(0,5):
   print '\taveraging over momenta'
   path = './readdata/p%1i/%s_p%1i_subduced_avg_vecks' % (p, diagram, p)
   if correlator.ndim >= 5:
-    avg = np.mean(correlator, axis=4)
+    avg = np.sum(correlator, axis=4)
   else:
     avg = []
     for i, irrep in enumerate(correlator):
@@ -311,10 +273,11 @@ for p in range(0,5):
 #                0, np.dot(qn_vec[-6], qn_vec[-6]), axis=-1))
 
           #inserting not necessary as gevp elements belong to qn
-          qn_avg_row = qn_row[0][-5:]
-
-          qn_avg_row = np.asarray(qn_avg_row)
-          qn_avg_gevp_col.append(qn_avg_row)
+#          print r, qn_row.shape, qn_row[0][-5:]
+#          qn_avg_row = qn_row[0][-5:]
+#          qn_avg_row = np.asarray(qn_avg_row)
+#          print qn_avg_row.shape
+          qn_avg_gevp_col.append(qn_row[0][-5:])
         qn_avg_gevp_col = np.asarray(qn_avg_gevp_col)
         qn_avg_gevp_row.append(qn_avg_gevp_col)
       qn_avg_gevp_row = np.asarray(qn_avg_gevp_row)
@@ -375,7 +338,6 @@ for p in range(0,5):
   
   for c in avg:
     print c.shape
-  
   
   
   

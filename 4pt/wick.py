@@ -6,6 +6,7 @@ import utils
 # add all relevant diagrams with according Clebsch-Gordans
 
 p = range(5)
+verbose = 1
 
 diagrams = ['C4+B', 'C4+D']
 
@@ -19,7 +20,7 @@ for p_cm in p:
   for diagram in diagrams:
     path = './readdata/p%1i/%s_p%1i.npy' % (p_cm, diagram, p_cm)
     data.append(np.load(path))
-    path = './readdata/p%1i/%s_p%1i_quantum_numbers.npy' % (p_cm, diagram, p_cm)
+    path = './readdata/p%1i/%s_p%1i_qn.npy' % (p_cm, diagram, p_cm)
     qn_data.append(np.load(path))
     if ( (qn_data[-1].shape[0] != data[-1].shape[0])):
       print '\tBootstrapped operators do not aggree with expected operators'
@@ -48,8 +49,9 @@ for p_cm in p:
       # if source momenta equal
       if (qn_box[0] == qn_dia[0] and qn_box[3] == qn_dia[3]):
         # if sink momenta equal
-        if (qn_box[6] == qn_dia[6] and qn_box[6] == qn_dia[6]):
-          print i, j, qn_box[0], qn_box[3], qn_box[6], qn_box[9]
+        if (qn_box[6] == qn_dia[6] and qn_box[9] == qn_dia[9]):
+          if verbose: 
+            print i, j, qn_box[0], qn_box[3], qn_box[6], qn_box[9]
           # add diagrams
           wickd.append((-2)*data[0][i]+1*data[1][j])
           qn_wickd.append([qn_box[0], qn_box[1], qn_box[2], \

@@ -188,14 +188,12 @@ def bootstrap_ensembles(p, nb_bins, nb_boot, bootstrap_original_data):
       for g2, qn_gevp_col in enumerate(qn_gevp_row):
         qn_avg_gevp_col = []
         for r, qn_row in enumerate(qn_gevp_col):
-          qn_avg_gevp_col.append(np.insert( np.insert( \
-                  qn_row[0,-3:], 
-                    0, np.dot(qn_row[0,1], qn_row[0,1]), axis=-1), \
-                      0, np.dot(qn_row[0,0], qn_row[0,0]), axis=-1))
 
 #          qn_avg_gevp_col.append(np.asarray( [np.dot(qn_row[0,1], qn_row[0,1]), \
 #                                   np.dot(qn_row[0,0], qn_row[0,1]), \
 #                                                                qn_row[0,-3:] ]))
+          qn_avg_gevp_col.append(qn_row[0,-5:])
+
         qn_avg_gevp_col = np.asarray(qn_avg_gevp_col)
         qn_avg_gevp_row.append(qn_avg_gevp_col)
       qn_avg_gevp_row = np.asarray(qn_avg_gevp_row)

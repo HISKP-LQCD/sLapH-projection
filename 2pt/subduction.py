@@ -21,7 +21,7 @@ verbose = 0
 # compatible notation for plot labels
 gamma_i =   [1, 2, 3, 'gi']
 gamma_0i =  [10, 11, 12, 'g0gi']
-gamma_50i = [15, 14, 13, 'g5g0gi']
+gamma_50i = [13, 14, 15, 'g5g0gi']
 
 gamma = [gamma_i, gamma_0i, gamma_50i]
 
@@ -40,7 +40,7 @@ def subduce_ensembles(p_cm, gamma, verbose=0):
   if verbose:
     print data.shape
   
-  path = './readdata/p%1i/C20_p%1i_quantum_numbers.npy' % (p_cm, p_cm)
+  path = './readdata/p%1i/C20_p%1i_qn.npy' % (p_cm, p_cm)
   qn_data = np.load(path)
   
   if ( (qn_data.shape[0] != data.shape[0])):
@@ -94,44 +94,32 @@ def subduce_ensembles(p_cm, gamma, verbose=0):
               if np.array_equal(el[0], qn[0]):
                 for g_so in range(0,3):
                   for g_si in range(0,3):
-                    # Hardcoded 2pt functions here because 
-                    #   sink operator = conj(source operator)
-                    # and irreps are diagonal. Otherwise el[g_si] must be 
-                    # calculated in seperate loop over the sink momentum
-                    factor = el[g_so+1] * np.conj(el[g_si+1])
-                    if (factor == 0):
+                    cg_factor = el[g_so+1] * np.conj(el[g_si+1])
+                    if (cg_factor == 0):
                       continue
 
-                    # calculating the Correlators yields imaginary parts in 
-                    # gi-g0gi, gi-gjgk and cc. Switching real and imaginary
-                    # part in the subduction factor accounts for this.
-                    if (gevp_row[g_so] in gamma_i) != \
-                                                    (gevp_col[g_si] in gamma_i):
-                      factor = factor.imag + factor.real * 1j
-
-                    # HARDCODED: factors I'm not certain about
-#                     if(((gevp_row[g_so] in gamma_i) and \
-#                                                   (gevp_col[g_si] in gamma_0i)) \
-#                        or ((gevp_row[g_so] in gamma_i) and 
-#                                                    (gevp_col[g_si] in gamma_0i))):
-#                       factor = (-1) * factor
-                  
-                    if(((gevp_row[g_so] in gamma_i) and \
-                                                 (gevp_col[g_si] in gamma_0i)) \
-                       or ((gevp_row[g_so] in gamma_50i) and 
-                                                 (gevp_col[g_si] in gamma_i))):
-                      factor = 2 * factor
+                    if ((gevp_row[g_so] in gamma_i) and (gevp_col[g_si] in gamma_0i)) \
+                      or ((gevp_row[g_so] in gamma_0i) and (gevp_col[g_si] in gamma_0i)):
+                      wick_factor = -2.
+                    elif ((gevp_row[g_so] in gamma_i) and (gevp_col[g_si] in gamma_50i)) \
+                      or ((gevp_row[g_so] in gamma_50i) and (gevp_col[g_si] in gamma_i)) \
+                      or ((gevp_row[g_so] in gamma_0i) and (gevp_col[g_si] in gamma_50i)):
+                      wick_factor = 2. * 1j
+                    elif ((gevp_row[g_so] in gamma_50i) and (gevp_col[g_si] in gamma_0i)):
+                      wick_factor = -2. * 1j
                     else:
-                      factor = (-2) * factor
+                      # case diagonal elements or g0gi-gi
+                      wick_factor = 2.
 
+                    factor = cg_factor*wick_factor
                     if (gevp_row[g_so] == qn[2]) and (gevp_col[g_si] == qn[5]):
-                      subduced[0] = subduced[0] + factor.real * data[op].real \
-                                                   + factor.imag * data[op].imag
+                      subduced[0] = subduced[0] + (factor*data[op]).real
                       if verbose:
                         print '\tsubduced g_so = %i, g_si = %i' % \
                                                 (gevp_row[g_so], gevp_col[g_si])
                         print '\t\tsubduction coefficient = % .2f + % .2fi' % \
                                                       (factor.real, factor.imag)
+
             # Omit correlator if no contracted operators are contributing
             if(subduced.any() != 0):
               if verbose:
@@ -139,8 +127,9 @@ def subduce_ensembles(p_cm, gamma, verbose=0):
                                                   (el[0][0], el[0][1], el[0][2])
                 print ' '
               correlator_row = np.vstack((correlator_row, subduced))
-              qn_row.append([ el[0], (-1)*el[0], gevp_row[-1], gevp_col[-1], irreps[-1][i] ])
-
+              qn_row.append([ el[0], (-1)*el[0], np.dot(el[0], el[0]), \
+                              gevp_row[-1], np.dot(el[0], el[0]), \
+                              gevp_col[-1], irreps[-1][i] ])
           correlator_gevp_col.append(correlator_row)
           qn_gevp_col.append(qn_row)
         correlator_gevp_row.append(correlator_gevp_col)
@@ -175,6 +164,8 @@ def subduce_ensembles(p_cm, gamma, verbose=0):
   # TODO: put that into some function
 #  print correlator[0,0,0].shape
   if correlator.ndim >= 5:
+#    avg = np.sum(correlator, axis=4)
+    # due to all center of mass combinations entering here
     avg = np.mean(correlator, axis=4)
   else:
     avg = []
@@ -185,7 +176,8 @@ def subduce_ensembles(p_cm, gamma, verbose=0):
         for g2, gevp_col in enumerate(gevp_row):
           avg_gevp_col = []
           for r, row in enumerate(gevp_col):
-            avg_gevp_col.append(np.sum(row, axis=0))
+#            avg_gevp_col.append(np.sum(row, axis=0))
+            avg_gevp_col.append(np.mean(row, axis=0))
           avg_gevp_col = np.asarray(avg_gevp_col)
           avg_gevp_row.append(avg_gevp_col)
         avg_gevp_row = np.asarray(avg_gevp_row)
@@ -204,18 +196,11 @@ def subduce_ensembles(p_cm, gamma, verbose=0):
       for g2, qn_gevp_col in enumerate(qn_gevp_row):
         qn_avg_gevp_col = []
         for r, qn_row in enumerate(qn_gevp_col):
-          qn_avg_row = []
-          for k, qn_vec in enumerate(qn_row):
 #            qn_avg_row.append(np.asarray([np.dot(qn_avg_vec[1], qn_avg_vec[1]), \
 #                               np.dot(qn_avg_vec[1], qn_avg_vec[1]), \
 #                                                              qn_avg_vec[-3:]]))
-            qn_avg_row.append(np.insert( np.insert( \
-                  qn_vec[-3:], 
-                    0, np.dot(qn_vec[1], qn_vec[1]), axis=-1), \
-                      0, np.dot(qn_vec[0], qn_vec[0]), axis=-1))
+          qn_avg_gevp_col.append(qn_row[0,-5:])
 
-          qn_avg_row = np.asarray(qn_avg_row)
-          qn_avg_gevp_col.append(qn_avg_row)
         qn_avg_gevp_col = np.asarray(qn_avg_gevp_col)
         qn_avg_gevp_row.append(qn_avg_gevp_col)
       qn_avg_gevp_row = np.asarray(qn_avg_gevp_row)

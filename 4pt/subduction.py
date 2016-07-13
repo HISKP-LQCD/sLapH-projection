@@ -14,6 +14,7 @@ p = range(5)
 p_max = 4
 
 diagram = 'C4'
+verbose = 1
 
 ################################################################################
 # From analytic calculation: Irreps contributing to momenta 0 <= p <= 4
@@ -61,6 +62,8 @@ for p_cm in p:
   if ( (qn_data.shape[0] != data.shape[0])):
     print '\tRead operators do not aggree with expected operators'
     exit(0)
+
+  print data.shape
 
   if p_cm in [0]:
     irreps = [['T1']]
@@ -126,15 +129,32 @@ for p_cm in p:
                         and (np.array_equal((-1)*si_3mom[0], qn[6]) and \
                                          np.array_equal((-1)*si_3mom[1], qn[9]))):
                   continue
-     
+
                 # CG = CG(source) * CG(sink)*
                 factor = so_3mom[-1] * np.conj(si_3mom[-1])
                 if factor == 0:
                   continue
-                subduced[0] = subduced[0] + factor.real * data[op].real + \
-                                                       factor.imag * data[op].imag
+#                subduced[0] = subduced[0] + factor.real * data[op].real + \
+#                                                       factor.imag * data[op].imag
+                subduced[0] = subduced[0] + (factor*data[op]).real
+                if verbose:
+                  print '\t\tsubduction coefficient = % .2f + % .2fi' % \
+                                                    (factor.real, factor.imag)
+#                  for j in range(3):
+#                    print '\t\t\t', data[op][j][0]
+#                  print ' '
+                  for j in range(6):
+                    print '\t\t\t', factor*data[op][j][0]
+
               # Omit correlator if no contracted operators are contributing
               if(subduced.any() != 0):
+                if verbose:
+                  print '\tinto momenta [(%i,%i,%i), (%i,%i,%i)] -> [(%i,%i,%i), (%i,%i,%i)]' % \
+                         (so_3mom[0][0], so_3mom[0][1], so_3mom[0][2], \
+                                      so_3mom[1][0], so_3mom[1][1], so_3mom[1][2], \
+                          si_3mom[0][0], si_3mom[0][1], si_3mom[0][2], \
+                                      si_3mom[1][0], si_3mom[1][1], si_3mom[1][2])
+
                 correlator_row.append(np.squeeze(subduced, axis=0))
 #                correlator_row = np.vstack((correlator_row, subduced))
                 qn_row.append([ (so_3mom[0], so_3mom[1]), (si_3mom[0], si_3mom[1]), \
@@ -184,7 +204,7 @@ for p_cm in p:
   print '\taveraging over momenta'
   path = './readdata/p%1i/%s_p%1i_subduced_avg_vecks' % (p_cm, diagram, p_cm)
   if correlator.ndim >= 5:
-    avg = np.mean(correlator, axis=4)
+    avg = np.sum(correlator, axis=4)
   else:
     avg = []
     for i, irrep in enumerate(correlator):
