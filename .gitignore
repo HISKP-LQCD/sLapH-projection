@@ -14,4 +14,6 @@ analyse_lattice2015/
 analyse_may/plots/
 gevp/
 pion_mass/
-
+3pt/clebsch_gordan_2pt_-0+.py
+3pt/clebsch_gordan_2pt_circ-hel.py
+4pt/clebsch_gordan_nozweig.py
