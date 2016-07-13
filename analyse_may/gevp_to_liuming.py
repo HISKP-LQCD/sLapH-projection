@@ -156,8 +156,9 @@ for p_cm in p:
     for gevp_row, row in enumerate(data_for_gevp):
       for gevp_col, col in enumerate(row):
         path = './data/p%1i/%s/Rho_Gevp_p%1d_%s.%d.%d.dat' % \
-                (p_cm, qn_for_gevp[0,-1], p_cm, \
-                          qn_for_gevp[0,-1], gevp_row, gevp_col)
+                (p_cm, qn_for_gevp[0,-1], \
+                p_cm, qn_for_gevp[0,-1], gevp_row, gevp_col)
+#        path = './data//Rho_Gevp_p%1d_%s.%d.%d.dat' % \
 #        print 'writing to', path
 
         write_data_ascii(col.T, path, True)

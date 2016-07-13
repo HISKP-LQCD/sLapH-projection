@@ -283,7 +283,7 @@ def plot_vecks(mean_sin, err_sin, qn_sin, mean_avg, err_avg, qn_avg, pdfplot, \
           # set plot title, labels etc.
           plt.title(r'$%s$ - $%s$ Operators subduced into $p = %i$ under '
                      '$\Lambda = %s$, $\mu = %i$' % \
-                      (latex[row[0,-3]], latex[row[0,-2]], p, row[0,-1], r+1), \
+                      (latex[row[0,-4]], latex[row[0,-2]], p, row[0,-1], r+1), \
                     fontsize=12)
           plt.xlabel(r'$t/a$', fontsize=12)
           plt.ylabel(r'$C_2^0(t/a)$', fontsize=12)
@@ -435,7 +435,7 @@ def plot_rows(mean_sin, err_sin, qn_sin, mean_avg, err_avg, qn_avg, pdfplot, \
   
         # set plot title, labels etc.
         plt.title(r'$%s$ - $%s$ Operators subduced into $p = %i$ under '
-                   '$\Lambda = %s$ ' % (latex[gevp_col[0,-3]], \
+                   '$\Lambda = %s$ ' % (latex[gevp_col[0,-4]], \
                   latex[gevp_col[0,-2]], p, gevp_col[0,-1]), fontsize=12)
         plt.xlabel(r'$t/a$', fontsize=12)
         plt.ylabel(r'$C_2^0(t/a)$', fontsize=12)

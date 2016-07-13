@@ -24,10 +24,12 @@ p_max = 4
 p_cm_max = np.asarray((4,5,6,7,4), dtype=int)
 lookup_p3_reduced = [(0,0,0), (0,0,1), (0,1,1), (1,1,1), (0,0,2)]
 
-diagrams = ['C4+B', 'C4+D']
+#diagrams = ['C4+B', 'C4+D']
+diagrams = ['C4+D']
 
 #directory = ['/hiskp2/knippsch/Rho_Feb2016/', '/hiskp2/knippsch/Rho_Jan2016/']
-directory = '/hiskp2/knippsch/Rho_Jun2016/'
+#directory = ['/hiskp2/knippsch/Rho_Jun2016/', '/hiskp2/knippsch/Rho_A40.24/']
+directory = '/hiskp2/knippsch/Rho_A40.24/'
 
 missing_configs = [1282]
 
@@ -158,12 +160,12 @@ for p_cm in p:
       data_cnfg = []
       for p in lookup_p:
 
-        # filename and path
         groupname = diagram + '_uuuu_p%1i%1i%1i.d000.g5' % (p[0][0], p[0][1], p[0][2]) + \
-               '_p%1i%1i%1i.d000.g5' % (p[1][0], p[1][1], p[1][2]) + \
-               '_p%1i%1i%1i.d000.g5' % (p[2][0], p[2][1], p[2][2]) + \
-               '_p%1i%1i%1i.d000.g5' % (p[3][0], p[3][1], p[3][2])
+             '_p%1i%1i%1i.d000.g5' % (p[1][0], p[1][1], p[1][2]) + \
+             '_p%1i%1i%1i.d000.g5' % (p[2][0], p[2][1], p[2][2]) + \
+             '_p%1i%1i%1i.d000.g5' % (p[3][0], p[3][1], p[3][2])
 
+        # filename and path
         if diagram == 'C4+B':
           data_cnfg.append(np.asarray(f[groupname]).view(np.complex))
         elif diagram == 'C4+D':

@@ -231,7 +231,7 @@ for p in range(0,5):
   print '\taveraging over momenta'
   path = './readdata/p%1i/%s_p%1i_subduced_avg_vecks' % (p, diagram, p)
   if correlator.ndim >= 5:
-    avg = np.mean(correlator, axis=4)
+    avg = np.sum(correlator, axis=4)
   else:
     avg = []
     for i, irrep in enumerate(correlator):

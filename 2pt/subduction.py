@@ -164,6 +164,8 @@ def subduce_ensembles(p_cm, gamma, verbose=0):
   # TODO: put that into some function
 #  print correlator[0,0,0].shape
   if correlator.ndim >= 5:
+#    avg = np.sum(correlator, axis=4)
+    # due to all center of mass combinations entering here
     avg = np.mean(correlator, axis=4)
   else:
     avg = []
@@ -174,7 +176,8 @@ def subduce_ensembles(p_cm, gamma, verbose=0):
         for g2, gevp_col in enumerate(gevp_row):
           avg_gevp_col = []
           for r, row in enumerate(gevp_col):
-            avg_gevp_col.append(np.sum(row, axis=0))
+#            avg_gevp_col.append(np.sum(row, axis=0))
+            avg_gevp_col.append(np.mean(row, axis=0))
           avg_gevp_col = np.asarray(avg_gevp_col)
           avg_gevp_row.append(avg_gevp_col)
         avg_gevp_row = np.asarray(avg_gevp_row)

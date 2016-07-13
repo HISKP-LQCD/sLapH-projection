@@ -6,6 +6,7 @@ import utils
 # add all relevant diagrams with according Clebsch-Gordans
 
 p = range(5)
+verbose = 1
 
 diagrams = ['C4+B', 'C4+D']
 
@@ -48,8 +49,9 @@ for p_cm in p:
       # if source momenta equal
       if (qn_box[0] == qn_dia[0] and qn_box[3] == qn_dia[3]):
         # if sink momenta equal
-        if (qn_box[6] == qn_dia[6] and qn_box[6] == qn_dia[6]):
-          print i, j, qn_box[0], qn_box[3], qn_box[6], qn_box[9]
+        if (qn_box[6] == qn_dia[6] and qn_box[9] == qn_dia[9]):
+          if verbose: 
+            print i, j, qn_box[0], qn_box[3], qn_box[6], qn_box[9]
           # add diagrams
           wickd.append((-2)*data[0][i]+1*data[1][j])
           qn_wickd.append([qn_box[0], qn_box[1], qn_box[2], \
