@@ -13,7 +13,7 @@ import utils
 ################################################################################
 bootstrap_original_data = False
 
-p = range(5)         # momentum
+p = range(2,3)         # momentum
 
 nb_bins = 25
 nb_boot = 500
@@ -211,7 +211,7 @@ def bootstrap_ensembles(p_cm, nb_bins, nb_boot, bootstrap_original_data):
   print '\taveraging over momenta'
   path = './bootdata/p%1i/%s_p%1i_subduced_avg_vecks' % (p_cm, diagram, p_cm)
   if boot.ndim >= 5:
-    avg = np.mean(boot, axis=4)
+    avg = np.sum(boot, axis=4)
   else:
     avg = []
     for i, irrep in enumerate(boot):

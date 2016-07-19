@@ -387,8 +387,8 @@ def plot_rows(mean_sin, err_sin, qn_sin, mean_avg, err_avg, gammas, pdfplot, plo
   for i, irrep in enumerate(qn_sin):
     for k, gevp_row in enumerate(irrep):
       for g, gevp_col in enumerate(gevp_row):
-        if gevp_col[tuple(it.repeat(0, gevp_col.ndim-1)) + (-1,)] in ['A1', 'B1', 'B2']:
-          break
+#        if gevp_col[tuple(it.repeat(0, gevp_col.ndim-1)) + (-1,)] in ['A1', 'B1', 'B2']:
+#          break
 
         print 'plot irrep %s, [%i,%i] -> %s' % (gevp_col[0][-1], \
                gevp_col[0][-5][0], gevp_col[0][-5][1], gevp_col[0][-2])

@@ -10,7 +10,7 @@ import collections
 import clebsch_gordan as cg
 import utils as utils
 
-p = range(5)
+p = range(2,3)
 p_max = 4
 
 diagram = 'C4'

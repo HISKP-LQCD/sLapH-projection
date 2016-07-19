@@ -80,7 +80,7 @@ def write_ensemble(boot, qn_boot, name, p, write_mean=False):
     # [k1,k2]-Gamma, mu
     path = './bootdata/p%1i/%s_avg_vecks' % (p, name)
     if boot.ndim >= 5:
-      avg = np.mean(boot, axis=4)
+      avg = np.sum(boot, axis=4)
     else:
       avg = []
       for i, irrep in enumerate(boot):

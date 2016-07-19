@@ -168,7 +168,7 @@ def bootstrap_ensembles(p, nb_bins, nb_boot, bootstrap_original_data):
         for g2, gevp_col in enumerate(gevp_row):
           avg_gevp_col = []
           for r, row in enumerate(gevp_col):
-            avg_gevp_col.append(np.sum(row, axis=0))
+            avg_gevp_col.append(np.mean(row, axis=0))
           avg_gevp_col = np.asarray(avg_gevp_col)
           avg_gevp_row.append(avg_gevp_col)
         avg_gevp_row = np.asarray(avg_gevp_row)

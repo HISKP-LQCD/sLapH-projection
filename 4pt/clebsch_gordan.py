@@ -102,23 +102,23 @@ A1 = [[[np.asarray([ 0,  0,  0], dtype=int), np.asarray([ 0,  0,  1], dtype=int)
        [np.asarray([ 0,  0,  0], dtype=int), np.asarray([ 0,  1,  1], dtype=int),  1.], \
        [np.asarray([ 0,  1,  1], dtype=int), np.asarray([ 0,  0,  0], dtype=int), -1.], \
        \
-       [np.asarray([ 0,  1,  0], dtype=int), np.asarray([ 0,  0,  1], dtype=int),  1./sqrt2], \
-       [np.asarray([ 0,  0,  1], dtype=int), np.asarray([ 0,  1,  0], dtype=int),  1./sqrt2], \
-       \
+#       [np.asarray([ 0,  1,  0], dtype=int), np.asarray([ 0,  0,  1], dtype=int),  1./sqrt2], \
+#       [np.asarray([ 0,  0,  1], dtype=int), np.asarray([ 0,  1,  0], dtype=int),  1./sqrt2], \
+#       \
        [np.asarray([ 1,  0,  0], dtype=int), np.asarray([-1,  1,  1], dtype=int),  1./sqrt2], \
        [np.asarray([-1,  0,  0], dtype=int), np.asarray([ 1,  1,  1], dtype=int),  1./sqrt2], \
        [np.asarray([-1,  1,  1], dtype=int), np.asarray([ 1,  0,  0], dtype=int), -1./sqrt2], \
        [np.asarray([ 1,  1,  1], dtype=int), np.asarray([-1,  0,  0], dtype=int), -1./sqrt2], \
        \
-       [np.asarray([ 1,  1,  0], dtype=int), np.asarray([-1,  0,  1], dtype=int),  1./2], \
-       [np.asarray([ 1,  0,  1], dtype=int), np.asarray([-1,  1,  0], dtype=int),  1./2], \
-       [np.asarray([-1,  0,  1], dtype=int), np.asarray([ 1,  1,  0], dtype=int),  1./2], \
-       [np.asarray([-1,  1,  0], dtype=int), np.asarray([ 1,  0,  1], dtype=int),  1./2], \
-       \
+#       [np.asarray([ 1,  1,  0], dtype=int), np.asarray([-1,  0,  1], dtype=int),  1./2], \
+#       [np.asarray([ 1,  0,  1], dtype=int), np.asarray([-1,  1,  0], dtype=int),  1./2], \
+#       [np.asarray([-1,  0,  1], dtype=int), np.asarray([ 1,  1,  0], dtype=int),  1./2], \
+#       [np.asarray([-1,  1,  0], dtype=int), np.asarray([ 1,  0,  1], dtype=int),  1./2], \
+#       \
        [np.asarray([ 0,  1, -1], dtype=int), np.asarray([ 0,  0,  2], dtype=int),  1./sqrt2], \
        [np.asarray([ 0, -1,  1], dtype=int), np.asarray([ 0,  2,  0], dtype=int),  1./sqrt2], \
-       [np.asarray([ 0,  0,  2], dtype=int), np.asarray([ 0,  1, -1], dtype=int),  1./sqrt2], \
-       [np.asarray([ 0,  2,  0], dtype=int), np.asarray([ 0, -1,  1], dtype=int),  1./sqrt2], \
+       [np.asarray([ 0,  0,  2], dtype=int), np.asarray([ 0,  1, -1], dtype=int), -1./sqrt2], \
+       [np.asarray([ 0,  2,  0], dtype=int), np.asarray([ 0, -1,  1], dtype=int), -1./sqrt2], \
        \
        [np.asarray([ 0,  0,  0], dtype=int), np.asarray([ 1,  1,  1], dtype=int),  1.], \
        [np.asarray([ 1,  1,  1], dtype=int), np.asarray([ 0,  0,  0], dtype=int), -1.], \
@@ -130,12 +130,12 @@ A1 = [[[np.asarray([ 0,  0,  0], dtype=int), np.asarray([ 0,  0,  1], dtype=int)
        [np.asarray([ 1,  0,  1], dtype=int), np.asarray([ 0,  1,  0], dtype=int), -1./sqrt3], \
        [np.asarray([ 1,  1,  0], dtype=int), np.asarray([ 0,  0,  1], dtype=int), -1./sqrt3], \
        \
-       [np.asarray([ 2,  0,  0], dtype=int), np.asarray([-1,  1,  1], dtype=int),  1./sqrt3], \
-       [np.asarray([ 0,  2,  0], dtype=int), np.asarray([ 1, -1,  1], dtype=int),  1./sqrt3], \
-       [np.asarray([ 0,  0,  2], dtype=int), np.asarray([ 1,  1, -1], dtype=int),  1./sqrt3], \
-       [np.asarray([-1,  1,  1], dtype=int), np.asarray([ 2,  0,  0], dtype=int), -1./sqrt3], \
-       [np.asarray([ 1, -1,  1], dtype=int), np.asarray([ 0,  2,  0], dtype=int), -1./sqrt3], \
-       [np.asarray([ 1,  1, -1], dtype=int), np.asarray([ 0,  0,  2], dtype=int), -1./sqrt3], \
+       [np.asarray([ 2,  0,  0], dtype=int), np.asarray([-1,  1,  1], dtype=int), (-1)* 1./sqrt3], \
+       [np.asarray([ 0,  2,  0], dtype=int), np.asarray([ 1, -1,  1], dtype=int), (-1)* 1./sqrt3], \
+       [np.asarray([ 0,  0,  2], dtype=int), np.asarray([ 1,  1, -1], dtype=int), (-1)* 1./sqrt3], \
+       [np.asarray([-1,  1,  1], dtype=int), np.asarray([ 2,  0,  0], dtype=int), (-1)*(-1./sqrt3)], \
+       [np.asarray([ 1, -1,  1], dtype=int), np.asarray([ 0,  2,  0], dtype=int), (-1)*(-1./sqrt3)], \
+       [np.asarray([ 1,  1, -1], dtype=int), np.asarray([ 0,  0,  2], dtype=int), (-1)*(-1./sqrt3)], \
        \
        [np.asarray([ 0,  0,  0], dtype=int), np.asarray([ 0,  0,  2], dtype=int),  1.], \
        [np.asarray([ 0,  0,  2], dtype=int), np.asarray([ 0,  0,  0], dtype=int), -1.]]]
@@ -196,10 +196,10 @@ B1 = [[[np.asarray([ 0,  1,  0], dtype=int), np.asarray([ 0,  0,  1], dtype=int)
 B1 = np.asarray(B1)
 ################################################################################
 
-B2 = [[[np.asarray([ 1,  0,  0], dtype=int), np.asarray([-1,  1,  1], dtype=int), -1./sqrt2], \
-       [np.asarray([-1,  0,  0], dtype=int), np.asarray([ 1,  1,  1], dtype=int),  1./sqrt2], \
-       [np.asarray([-1,  1,  1], dtype=int), np.asarray([ 1,  0,  0], dtype=int),  1./sqrt2], \
-       [np.asarray([ 1,  1,  1], dtype=int), np.asarray([-1,  0,  0], dtype=int), -1./sqrt2], \
+B2 = [[[np.asarray([ 1,  0,  0], dtype=int), np.asarray([-1,  1,  1], dtype=int), (-1)*(-1./sqrt2)], \
+       [np.asarray([-1,  0,  0], dtype=int), np.asarray([ 1,  1,  1], dtype=int), (-1)* 1./sqrt2], \
+       [np.asarray([-1,  1,  1], dtype=int), np.asarray([ 1,  0,  0], dtype=int), (-1)* 1./sqrt2], \
+       [np.asarray([ 1,  1,  1], dtype=int), np.asarray([-1,  0,  0], dtype=int), (-1)*(-1./sqrt2)], \
        \
        [np.asarray([ 1,  1,  0], dtype=int), np.asarray([-1,  0,  1], dtype=int),  1./2], \
        [np.asarray([ 1,  0,  1], dtype=int), np.asarray([-1,  1,  0], dtype=int),  1./2], \
