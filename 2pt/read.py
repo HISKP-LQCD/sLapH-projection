@@ -1,15 +1,9 @@
 #!/usr/bin/python
 
-import os, glob
-import struct
-
 import h5py
 import numpy as np
 import itertools as it
 import operator
-
-import sys
-#sys.stdout = open('./read.out', 'w')
 
 import utils
 
@@ -49,21 +43,6 @@ directory = '/hiskp2/knippsch/Rho_Jun2016/'
 missing_configs = [1282]
 
 ###############################################################################
-# short function that splits a string of three signed integers into a list
-def split_to_vector(string):
-  vector = np.zeros(3, dtype=np.int)
-  i = 0
-  # loop over components
-  for j in range(0, 3):
-    # append negative number (slicing because of sign)
-    if(not string[i].isdigit()):
-      vector[j] = int(string[i:i+2])
-      i = i+1
-    # if not negative, append positive number
-    else:
-      vector[j] = int(string[i])
-    i = i+1
-  return vector
 
 def scalar_mul(x, y):
   return sum(it.imap(operator.mul, x, y))

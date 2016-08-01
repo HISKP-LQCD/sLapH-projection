@@ -1,8 +1,5 @@
 #!/usr/bin/python
 
-import os
-import struct
-
 import h5py
 import numpy as np
 import itertools as it
@@ -17,7 +14,7 @@ sta_cnfg = 714
 end_cnfg = 2750
 del_cnfg = 2
 
-T = 48
+T = 48        # number of timeslices
 p = range(5)
 p_max = 4
 
