@@ -1,5 +1,3 @@
-#!/usr/bin/python
-
 import os
 
 ################################################################################
@@ -8,5 +6,4 @@ def ensure_dir(f):
 #  d = os.path.dirname(f)
   if not os.path.exists(f):
     os.makedirs(f)
-
 

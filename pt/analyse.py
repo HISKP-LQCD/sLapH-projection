@@ -3,6 +3,8 @@
 import numpy as np
 
 import read
+import wick
+
 ################################################################################
 # parameters ###################################################################
 
@@ -12,7 +14,7 @@ del_cnfg = 2
 
 T = 48        # number of timeslices
 p_max = 4
-p = range(5)         # momentum
+p = range(3,4)         # momentum
 p_cm_max = np.asarray((4,5,6,7,4), dtype=int)
 
 # gamma structure wich shall be averaged. Last entry of gamma must contain all
@@ -29,14 +31,14 @@ gamma_5 = [5, ['\gamma_5']]
 
 gammas = [gamma_i, gamma_0i, gamma_50i]
 
-diagrams = ['C20', 'C3+']
-#diagrams = ['C20', 'C3+', 'C4+D', 'C4+B']
+diagrams = ['C20', 'C3+', 'C4+D', 'C4+B']
+
+directories = ['/hiskp2/knippsch/Rho_Jun2016/', \
+               '/hiskp2/knippsch/Rho_Jun2016/', \
+               '/hiskp2/knippsch/Rho_A40.24/', \
+               '/hiskp2/knippsch/Rho_Jun2016/']
 
 verbose = 0
-
-directories = ['/hiskp2/knippsch/Rho_Jun2016/', '/hiskp2/knippsch/Rho_Jun2016/']
-#directory = ['/hiskp2/knippsch/Rho_Jun2016/', '/hiskp2/knippsch/Rho_Jun2016/', \
-#              '/hiskp2/knippsch/Rho_Jun2016/', '/hiskp2/knippsch/Rho_A40.24/']
 
 missing_configs = [1282]
 
@@ -46,8 +48,9 @@ def main():
 
   for p_cm in p:
     for diagram, directory in zip(diagrams, directories):
-      read.ensembles(sta_cnfg, end_cnfg, del_cnfg, diagram, p_cm, p_cm_max, p_max, gammas, T, directory, \
-          missing_configs, verbose)
+      read.ensembles(sta_cnfg, end_cnfg, del_cnfg, diagram, p_cm, p_cm_max, \
+                     p_max, gammas, T, directory, missing_configs, verbose)
+    wick.rho_4pt(p_cm, ['C4+B', 'C4+D'], verbose)
 
 if __name__ == '__main__':
   try:

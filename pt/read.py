@@ -14,6 +14,7 @@ def abs2(x):
 
 def set_lookup_p(p_max, p_cm_max, p_cm, diagram):
 
+
   # create lookup table for all possible 3-momenta that can appear in our 
   # contractions
   lookup_p3 = list(it.ifilter(lambda x: abs2(x) <= p_max, \
@@ -45,6 +46,45 @@ def set_lookup_p(p_max, p_cm_max, p_cm, diagram):
                         # create lookup table with all possible combinations 
                         # of three 3-momenta 
                         it.product(lookup_p3, repeat=3))
+  elif diagram == 'C4+B':
+    lookup_p3_reduced = [(0,0,0), (0,0,1), (0,1,1), (1,1,1), (0,0,2)]
+    lookup_p = it.ifilter(lambda (w,x,y,z): \
+               # if the sum of both momenta is the desired center of mass 
+               # momentum
+               tuple(it.imap(operator.add, w, z)) == lookup_p3_reduced[p_cm] \
+               and tuple(it.imap(operator.neg, it.imap(operator.add, x, y))) \
+                                                  == lookup_p3_reduced[p_cm] \
+               # for zero center of mass momentum omit the case were both 
+               # particles are at rest (s-wave)
+               and not (p_cm == 0 and 
+                            (tuple(w) == tuple(z) or tuple(x) == tuple(y) )) \
+               # omit cases for which both particles carry high momentum 
+               # cancelling to the desired cm-momentum
+               and (abs2(w) + abs2(z) <= p_cm_max[p_cm]) and \
+                                      (abs2(x) + abs2(y) <= p_cm_max[p_cm]), \
+                        # create lookup table with all possible combinations 
+                        # of four 3-momenta 
+                        it.product(lookup_p3, repeat=4))
+  elif diagram == 'C4+D':
+    lookup_p = it.ifilter(lambda (w,x,y,z): \
+               # if the sum of both momenta is the desired center of mass 
+               # momentum
+               (tuple(it.imap(operator.add, w, y)) \
+               == tuple(it.imap(operator.neg, it.imap(operator.add, x, z)))) \
+               and tuple(it.imap(operator.add, w, y)) in tmp \
+#               and tuple(it.imap(operator.neg, it.imap(operator.add, x, z))) \
+#                                                  in tmp \
+               # for zero center of mass momentum omit the case were both 
+               # particles are at rest (s-wave)
+               and not (p_cm == 0 and 
+                            (tuple(w) == tuple(y) or tuple(x) == tuple(z) )) \
+               # omit cases for which both particles carry high momentum 
+               # cancelling to the desired cm-momentum
+               and (abs2(w) + abs2(y) <= p_cm_max[p_cm]) and \
+                                      (abs2(x) + abs2(z) <= p_cm_max[p_cm]), \
+                        # create lookup table with all possible combinations 
+                        # of four 3-momenta 
+                        it.product(lookup_p3, repeat=4))
   else:
     print 'in set_lookup_p: diagram unknown! Quantum numbers corrupted.'
   return list(lookup_p)
@@ -59,6 +99,16 @@ def set_qn(p, g, diagram):
     return [p[0], np.zeros((3,)), np.asarray(5, dtype=int), \
             p[1], np.zeros((3,)), np.asarray(g, dtype=int), \
             p[2], np.zeros((3,)), np.asarray(5, dtype=int)]
+  elif diagram == 'C4+B':
+    return [p[0], np.zeros((3,)), np.asarray(5, dtype=int), \
+            p[3], np.zeros((3,)), np.asarray(5, dtype=int), \
+            p[1], np.zeros((3,)), np.asarray(5, dtype=int), \
+            p[2], np.zeros((3,)), np.asarray(5, dtype=int)]
+  elif diagram == 'C4+D':
+    return [p[0], np.zeros((3,)), np.asarray(5, dtype=int), \
+            p[2], np.zeros((3,)), np.asarray(5, dtype=int), \
+            p[1], np.zeros((3,)), np.asarray(5, dtype=int), \
+            p[3], np.zeros((3,)), np.asarray(5, dtype=int)]
   else:
     print 'in set_qn: diagram unknown! Quantum numbers corrupted.'
   return
@@ -69,6 +119,8 @@ def set_lookup_g(gammas, diagram):
     lookup_g = it.product([g for gamma in gammas for g in gamma[:-1]], repeat=2)
   elif diagram == 'C3+':
     lookup_g = it.product([g for gamma in gammas for g in gamma[:-1]], repeat=1)
+  elif diagram in ['C4+B', 'C4+D']:
+    lookup_g = [(5,)]
   else:
     print 'in set_lookup_g: diagram unknown! Quantum numbers corrupted.'
     return
@@ -89,6 +141,11 @@ def set_groupname(diagram, p, g):
                         + '_p%1i%1i%1i.d000.g%1i' % \
                                                 (p[1][0], p[1][1], p[1][2], g[0]) \
                         + '_p%1i%1i%1i.d000.g5' % (p[2][0], p[2][1], p[2][2])
+  elif diagram in ['C4+B', 'C4+D']:
+    groupname = diagram + '_uuuu_p%1i%1i%1i.d000.g5' % (p[0][0], p[0][1], p[0][2]) + \
+             '_p%1i%1i%1i.d000.g5' % (p[1][0], p[1][1], p[1][2]) + \
+             '_p%1i%1i%1i.d000.g5' % (p[2][0], p[2][1], p[2][2]) + \
+             '_p%1i%1i%1i.d000.g5' % (p[3][0], p[3][1], p[3][2])
   else:
     print 'in set_groupname: diagram unknown! Quantum numbers corrupted.'
     return
@@ -142,7 +199,14 @@ def ensembles(sta_cnfg, end_cnfg, del_cnfg, diagram, p_cm, p_cm_max, p_max, gamm
         if verbose:
           print groupname
 
-        data_cnfg.append(np.asarray(f[groupname]).view(np.complex))
+        if diagram in ['C20', 'C3+', 'C4+B']:
+          data_cnfg.append(np.asarray(f[groupname]).view(np.complex))
+        elif diagram == 'C4+D':
+          tmp = np.asarray(f[groupname])
+          data_cnfg.append(np.asarray([complex(x,y) for x,y in \
+                      zip(tmp['rere']-tmp['imim'], tmp['reim']+tmp['imre'])]))
+        else:
+          print 'Error: Diagram %s unknown' % diagram
 
         if cnfg_counter == 0:
           qn.append(set_qn(p, g, diagram))
