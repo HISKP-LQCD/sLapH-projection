@@ -17,3 +17,6 @@ pion_mass/
 3pt/clebsch_gordan_2pt_-0+.py
 3pt/clebsch_gordan_2pt_circ-hel.py
 4pt/clebsch_gordan_nozweig.py
+3pt/clebsch_gordan_4pt_nozweig.py
+4pt/clebsch_gordan_+1.py
+4pt/clebsch_gordan_-1.py
