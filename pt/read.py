@@ -14,7 +14,6 @@ def abs2(x):
 
 def set_lookup_p(p_max, p_cm_max, p_cm, diagram):
 
-
   # create lookup table for all possible 3-momenta that can appear in our 
   # contractions
   lookup_p3 = list(it.ifilter(lambda x: abs2(x) <= p_max, \
