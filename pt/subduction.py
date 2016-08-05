@@ -28,6 +28,7 @@ diagram = 'C3'
 gamma_i =   [1, 2, 3, 'gi']
 gamma_0i =  [10, 11, 12, 'g0gi']
 gamma_50i = [13, 14, 15, 'g5g0gi']
+gamma_5 = [5, 'g5']
 
 gammas = [gamma_i, gamma_0i, gamma_50i]
 
@@ -83,6 +84,22 @@ def set_lookup_p(p_max, p_cm, diagram):
 
   return list(lookup_p)
 
+def get_irreps(p_cm, diagram, irrep):
+
+  if diagram == 'C3':
+    # get factors for the desired irreps
+    irreps_2pt = cg_2pt.coefficients(irrep)
+    irreps_4pt = cg_4pt.coefficients(irrep)
+    if len(irreps_4pt) != len(irreps_2pt):
+      print 'in get_irreps: irrep for 2pt and 4pt functions contain ' \
+            'different number of rows'
+
+    # for 3pt function we have pipi operator at source and rho operator at sink
+    return irreps_4pt, irreps_2pt
+  else:
+    print 'in get_irreps: diagram unknown! Quantum numbers corrupted.'
+    return
+
 def ensembles(p_cm, diagram, p_max, gammas, verbose):
 
   print 'subducing p = %i' % p_cm
@@ -99,112 +116,104 @@ def ensembles(p_cm, diagram, p_max, gammas, verbose):
     exit(0)
 
   lookup_p = set_lookup_p(p_max, p_cm, diagram)
-  
+
   if p_cm in [0]:
-    irreps_2pt = [['T1']]
-    irreps_4pt = [['T1']]
+    irreps = ['T1']
   elif p_cm in [1,3,4]:
-    irreps_2pt = [['A1', 'E2']]
-    irreps_4pt = [['A1', 'E2']]
+    irreps = ['A1', 'E2']
   elif p_cm in [2]:
-    irreps_2pt = [['A1', 'B1', 'B2']]
-    irreps_4pt = [['A1', 'B1', 'B2']]
+    irreps = ['A1', 'B1', 'B2']
   else:
-    irreps_2pt = [[]]
-    irreps_4pt = [[]]
-  
-  
-  # get factors for the desired irreps
-  for i in irreps_2pt[-1]:
-    irreps_2pt.insert(-1,cg_2pt.coefficients(i))
-  for i in irreps_4pt[-1]:
-    irreps_4pt.insert(-1,cg_4pt.coefficients(i))
-  if len(irreps_4pt) != len(irreps_2pt):
-    print 'in subduction.py: irrep for 2pt and 4pt functions contain ' \
-          'different number of rows'
-  
+    irreps = []
+ 
+
   correlator = []
   qn_subduced = []
-  for i, (irrep_so, irrep_si) in enumerate(zip(irreps_4pt[:-1], irreps_2pt[:-1])):
-    print 'subducing Lambda = %s' % irreps_2pt[-1][i]
+  for irrep in irreps:
+    irrep_so, irrep_si = get_irreps(p_cm, diagram, irrep)
+    print 'subducing Lambda = %s' % irrep
     correlator_irrep = []
     qn_irrep = []
     for gevp_row in lookup_p:
       print gevp_row
-      correlator_gevp_row = []
-      qn_gevp_row = []
-      for gevp_col in gammas:
-        correlator_gevp_col = []
-        qn_gevp_col = []
-        for row in range(len(irrep_so)):
-      
-          correlator_row = []
-          qn_row = []
-      
-          for so_3mom in irrep_so[row]:
-            for si_3mom in irrep_si[row]:
-              if not ((((np.dot(so_3mom[0], so_3mom[0]), \
-                                      np.dot(so_3mom[1], so_3mom[1])) == gevp_row) \
-                      or ((np.dot(so_3mom[0], so_3mom[0]), \
-                                      np.dot(so_3mom[1], so_3mom[1])) == tuple(reversed(gevp_row)))) \
-                     and (np.dot(si_3mom[0], si_3mom[0]) == p_cm)):
-                continue
-      
-              # in subduced all contributing qn (e.g. g1, g2, g3) are added up
-              subduced = np.zeros((1,) + data[0].shape)
-      
-              for op, qn in enumerate(qn_data):
-                if not ((np.array_equal(so_3mom[0], qn[0]) and \
-                                              np.array_equal(so_3mom[1], qn[6])) \
-                       and (np.array_equal((-1)*si_3mom[0], qn[3]))):
-                  continue
-                for g_si in range(0,3):
-      
-#                  cg_factor = so_3mom[-1] * np.conj(si_3mom[g_si+1])
-                  cg_factor = np.conj(so_3mom[-1]) * si_3mom[g_si+1]
-#                  cg_factor = so_3mom[-1] * si_3mom[g_si+1]
-                  if cg_factor == 0:
+      for gevp_row_2 in [gamma_5]:
+        correlator_gevp_row = []
+        qn_gevp_row = []
+        for gevp_col in gammas:
+          for gevp_col_2 in [(p_cm,)]:
+            correlator_gevp_col = []
+            qn_gevp_col = []
+            for row in range(len(irrep_so)):
+        
+              correlator_row = []
+              qn_row = []
+        
+              # ensure that momentum combination contributes to current irrep
+              for so_3mom in irrep_so[row]:
+                for si_3mom in irrep_si[row]:
+                  if not (((np.dot(so_3mom[0], so_3mom[0]), \
+                                          np.dot(so_3mom[1], so_3mom[1])) == gevp_row) \
+                          or ((np.dot(so_3mom[1], so_3mom[1]), \
+                                          np.dot(so_3mom[0], so_3mom[0])) == gevp_row)) \
+                          and ((np.dot(si_3mom[0], si_3mom[0]),) == gevp_col_2):
                     continue
-
-                  factor = cg_factor
-                  if (gevp_col[g_si] == qn[5]):
-#                    subduced[0] = subduced[0] + (factor*data[op]).real
-                    subduced[0] = subduced[0] + (factor*data[op]).real
-                    if verbose:
-                      print '\tsubduced g_so = %i' % (gevp_col[g_si])
-                      print '\t\tsubduction coefficient = % .2f + % .2fi' % \
-                                                        (factor.real, factor.imag)
-                      for j in range(3):
-                        print '\t\t\t', data[op][j][0]
-                      print ' '
-                      for j in range(3):
-                        print '\t\t\t', factor*data[op][j][0]
+        
+                  # in subduced all contributing qn (e.g. g1, g2, g3) are added up
+                  subduced = np.zeros((1,) + data[0].shape)
+        
+                  for op, qn in enumerate(qn_data):
+                    if not ((np.array_equal(so_3mom[0], qn[0]) and \
+                                                  np.array_equal(so_3mom[1], qn[6])) \
+                           and (np.array_equal((-1)*si_3mom[0], qn[3]))):
+                      continue
+                    for g_so in range(0,len(gevp_row_2)-1):
+                      for g_si in range(0,len(gevp_col)-1):
+        
+  #                      cg_factor = so_3mom[-1] * np.conj(si_3mom[g_si+1])
+                        cg_factor = np.conj(so_3mom[-1]) * si_3mom[g_si+1]
+  #                      cg_factor = so_3mom[-1] * si_3mom[g_si+1]
+                        if cg_factor == 0:
+                          continue
   
-              if(subduced.any() != 0):
-                if verbose:
-                  print '\tinto momenta [(%i,%i,%i), (%i,%i,%i)]' % \
-                         (so_3mom[0][0], so_3mom[0][1], so_3mom[0][2], \
-                                      so_3mom[1][0], so_3mom[1][1], so_3mom[1][2])
-                correlator_row.append(np.squeeze(subduced, axis=0))
-                qn_row.append([ (so_3mom[0], so_3mom[1]), si_3mom[0], \
-                              gevp_row, ('g5', 'g5'), p_cm, gevp_col[-1], irreps_4pt[-1][i] ])
-                  
-          if len(correlator_row) == 0: 
-            continue
-          correlator_row = np.asarray(correlator_row)
-          correlator_gevp_col.append(correlator_row)
-          qn_row = np.asarray(qn_row, dtype=object)
-          qn_gevp_col.append(qn_row)
-        if len(correlator_gevp_col) == 0:
-          continue
-        correlator_gevp_row.append(np.asarray(correlator_gevp_col))
-        qn_gevp_row.append(np.asarray(qn_gevp_col))
-      correlator_gevp_row = np.asarray(correlator_gevp_row)
-      if(correlator_gevp_row.size != 0 and not 
-          np.array_equal(correlator_gevp_row, np.zeros_like(correlator_gevp_row.shape))):
-#      if(np.any(correlator_gevp_row != 0) and correlator_gevp_row.size != 0):
-        correlator_irrep.append(np.asarray(correlator_gevp_row))
-        qn_irrep.append(np.asarray(qn_gevp_row))
+                        factor = cg_factor
+                        if (gevp_col[g_si] == qn[5]):
+  #                        subduced[0] = subduced[0] + (factor*data[op]).real
+                          subduced[0] = subduced[0] + (factor*data[op]).real
+                          if verbose:
+                            print '\tsubduced g_so = %i' % (gevp_col[g_si])
+                            print '\t\tsubduction coefficient = % .2f + % .2fi' % \
+                                                              (factor.real, factor.imag)
+                            for j in range(3):
+                              print '\t\t\t', data[op][j][0]
+                            print ' '
+                            for j in range(3):
+                              print '\t\t\t', factor*data[op][j][0]
+    
+                  if(subduced.any() != 0):
+                    if verbose:
+                      print '\tinto momenta [(%i,%i,%i), (%i,%i,%i)]' % \
+                             (so_3mom[0][0], so_3mom[0][1], so_3mom[0][2], \
+                                          so_3mom[1][0], so_3mom[1][1], so_3mom[1][2])
+                    correlator_row.append(np.squeeze(subduced, axis=0))
+                    qn_row.append([ (so_3mom[0], so_3mom[1]), si_3mom[0], \
+                                  gevp_row, ('g5', 'g5'), p_cm, gevp_col[-1], irrep ])
+                      
+              if len(correlator_row) == 0: 
+                continue
+              correlator_row = np.asarray(correlator_row)
+              correlator_gevp_col.append(correlator_row)
+              qn_row = np.asarray(qn_row, dtype=object)
+              qn_gevp_col.append(qn_row)
+            if len(correlator_gevp_col) == 0:
+              continue
+            correlator_gevp_row.append(np.asarray(correlator_gevp_col))
+            qn_gevp_row.append(np.asarray(qn_gevp_col))
+        correlator_gevp_row = np.asarray(correlator_gevp_row)
+        if(correlator_gevp_row.size != 0 and not 
+            np.array_equal(correlator_gevp_row, np.zeros_like(correlator_gevp_row.shape))):
+  #      if(np.any(correlator_gevp_row != 0) and correlator_gevp_row.size != 0):
+          correlator_irrep.append(np.asarray(correlator_gevp_row))
+          qn_irrep.append(np.asarray(qn_gevp_row))
 #    print len(correlator_irrep)
 #    tmp = np.array(correlator_irrep)
 #    print 'shape: ', tmp.shape
