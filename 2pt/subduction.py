@@ -114,6 +114,7 @@ def subduce_ensembles(p_cm, gamma, verbose=0):
                     factor = cg_factor*wick_factor
                     if (gevp_row[g_so] == qn[2]) and (gevp_col[g_si] == qn[5]):
                       subduced[0] = subduced[0] + (factor*data[op]).real
+
                       if verbose:
                         print '\tsubduced g_so = %i, g_si = %i' % \
                                                 (gevp_row[g_so], gevp_col[g_si])

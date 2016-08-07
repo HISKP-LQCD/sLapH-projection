@@ -21,7 +21,7 @@ p_max = 4
 
 verbose = 0
 
-diagram = 'C4'
+diagram = 'C3'
 
 # Operators entering the Gevp. Last entry must contain the name in LaTeX 
 # compatible notation for plot labels
