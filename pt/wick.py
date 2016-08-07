@@ -31,23 +31,23 @@ def rho_2pt(p_cm, diagram='C20', verbose=0):
     if verbose: 
       print i, qn[0], '-g', qn[2], qn[3], '-g', qn[5]
 
-      # multiply diagrams
-      if ((qn[2] in gamma_i) and (qn[5] in gamma_0i)) \
-        or ((qn[2] in gamma_0i) and (qn[5] in gamma_0i)):
-        wick_factor = -2.
-      elif ((qn[2] in gamma_i) and (qn[5] in gamma_50i)) \
-        or ((qn[2] in gamma_50i) and (qn[5] in gamma_i)) \
-        or ((qn[2] in gamma_0i) and (qn[5] in gamma_50i)):
-        wick_factor = 2. * 1j
-      elif ((qn[2] in gamma_50i) and (qn[5] in gamma_0i)):
-        wick_factor = -2. * 1j
-      elif ((qn[2] in gamma_0i) and (qn[5] in gamma_i)) \
-        or ((qn[2] in gamma_i) and (qn[5] in gamma_i)) \
-        or ((qn[2] in gamma_50i) and (qn[5] in gamma_50i)):
-        # case diagonal elements or g0gi-gi
-        wick_factor = 2.
-      else:
-        continue
+    # multiply diagrams
+    if ((qn[2] in gamma_i) and (qn[5] in gamma_0i)) \
+      or ((qn[2] in gamma_0i) and (qn[5] in gamma_0i)):
+      wick_factor = -2.
+    elif ((qn[2] in gamma_i) and (qn[5] in gamma_50i)) \
+      or ((qn[2] in gamma_50i) and (qn[5] in gamma_i)) \
+      or ((qn[2] in gamma_0i) and (qn[5] in gamma_50i)):
+      wick_factor = 2. * 1j
+    elif ((qn[2] in gamma_50i) and (qn[5] in gamma_0i)):
+      wick_factor = -2. * 1j
+    elif ((qn[2] in gamma_0i) and (qn[5] in gamma_i)) \
+      or ((qn[2] in gamma_i) and (qn[5] in gamma_i)) \
+      or ((qn[2] in gamma_50i) and (qn[5] in gamma_50i)):
+      # case diagonal elements or g0gi-gi
+      wick_factor = 2.
+    else:
+      continue
 
     wickd.append(wick_factor*data[i])
     qn_wickd.append(qn)
@@ -70,11 +70,11 @@ def rho_2pt(p_cm, diagram='C20', verbose=0):
   #  np.save(path, wickd[i])
   
   # write all operators
-  path = './readdata/p%1i/%s_p%1i' % (p_cm, 'C3', p_cm)
+  path = './readdata/p%1i/%s_p%1i' % (p_cm, 'C2', p_cm)
   np.save(path, wickd)
   
   # write all quantum numbers
-  path = './readdata/p%1i/%s_p%1i_qn' % (p_cm, 'C3', p_cm)
+  path = './readdata/p%1i/%s_p%1i_qn' % (p_cm, 'C2', p_cm)
   np.save(path, qn_wickd)
   
   print '\tfinished writing\n'
