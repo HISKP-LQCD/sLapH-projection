@@ -21,7 +21,7 @@ p_max = 4
 
 verbose = 0
 
-diagram = 'C2'
+diagram = 'C4'
 
 # Operators entering the Gevp. Last entry must contain the name in LaTeX 
 # compatible notation for plot labels
@@ -66,7 +66,7 @@ def set_lookup_p(p_max, p_cm, diagram):
   lookup_p3 = it.ifilter(lambda x: abs2(x) <= p_max, \
                          it.product(range(-p_max, p_max+1), repeat=3))
   
-  if diagram == 'C3':
+  if diagram in ['C3', 'C4']:
     lookup_p = it.ifilterfalse(lambda x: x[0] < x[1], \
         unique_everseen(it.starmap(lambda x, y: (abs2(x), abs2(y)), \
         it.ifilter(lambda (x,y): abs2(it.imap(operator.add, x, y)) == p_cm \
@@ -98,6 +98,9 @@ def get_irreps(p_cm, diagram, irrep):
             'different number of rows'
     # for 3pt function we have pipi operator at source and rho operator at sink
     return irreps_4pt, irreps_2pt
+  elif diagram == 'C4':
+    irreps_4pt = cg_4pt.coefficients(irrep)
+    return irreps_4pt, irreps_4pt
   else:
     print 'in get_irreps: diagram unknown! Quantum numbers corrupted.'
     return
@@ -107,6 +110,9 @@ def set_gevp_row(p_max, p_cm, gammas, diagram):
   if diagram == 'C2':
     return it.product([(p_cm,)], gammas)
   elif diagram == 'C3':
+    lookup_p = set_lookup_p(p_max, p_cm, diagram)
+    return it.product(lookup_p, [gamma_5])
+  elif diagram == 'C4':
     lookup_p = set_lookup_p(p_max, p_cm, diagram)
     return it.product(lookup_p, [gamma_5])
   else:
@@ -119,6 +125,9 @@ def set_gevp_col(p_max, p_cm, gammas, diagram):
     return it.product([(p_cm,)], gammas)
   elif diagram == 'C3':
     return it.product([(p_cm,)], gammas)
+  elif diagram == 'C4':
+    lookup_p = set_lookup_p(p_max, p_cm, diagram)
+    return it.product(lookup_p, [gamma_5])
   else:
     print 'in set_gevp_col: diagram unknown! Quantum numbers corrupted.'
     return
@@ -131,13 +140,21 @@ def check_mom(so_3mom, si_3mom, gevp_row, gevp_col):
             and np.array_equal(so_3mom[0], si_3mom[0])):
       return False
   elif diagram == 'C3':
-    if not ((((np.dot(so_3mom[0], so_3mom[0]), \
-                            np.dot(so_3mom[1], so_3mom[1])) == gevp_row) \
-            or ((np.dot(so_3mom[1], so_3mom[1]), \
-                            np.dot(so_3mom[0], so_3mom[0])) == gevp_row)) \
+    if not (((np.dot(so_3mom[0], so_3mom[0]), \
+               np.dot(so_3mom[1], so_3mom[1])) in [gevp_row, tuple(reversed(gevp_row))]) \
             and ((np.dot(si_3mom[0], si_3mom[0]),) == gevp_col)
             and np.array_equal(so_3mom[0]+so_3mom[1],si_3mom[0])):
       return False
+  elif diagram == 'C4':
+    if not (((np.dot(so_3mom[0], so_3mom[0]), \
+              np.dot(so_3mom[1], so_3mom[1])) in \
+                              [gevp_row, tuple(reversed(gevp_row))]) \
+           and ((np.dot(si_3mom[0], si_3mom[0]), \
+                 np.dot(si_3mom[1], si_3mom[1])) in \
+                              [gevp_col, tuple(reversed(gevp_col))]) \
+           and np.array_equal(so_3mom[0]+so_3mom[1],si_3mom[0]+si_3mom[1])):
+      return False
+
   else:
     print 'in check_mom: diagram unknown! Quantum numbers corrupted.'
     return False
@@ -158,6 +175,14 @@ def check_qn(so_3mom, si_3mom, so_gamma, si_gamma, qn, diagram):
       return False 
     if not ((so_gamma == qn[2]) and (si_gamma == qn[5])):
       return False
+  elif diagram == 'C4':
+    if not ((np.array_equal(so_3mom[0], qn[0]) and \
+                                  np.array_equal(so_3mom[1], qn[3])) \
+            and (np.array_equal((-1)*si_3mom[0], qn[6]) and \
+                             np.array_equal((-1)*si_3mom[1], qn[9]))):
+      return False
+    if not ((so_gamma == qn[2]) and (si_gamma == qn[5])):
+      return False
   else:
     print 'in check_qn: diagram unknown! Quantum numbers corrupted.'
     return False
@@ -172,6 +197,9 @@ def set_qn(so_3mom, si_3mom, gevp_row, p_cm, gevp_col, irrep):
   elif diagram == 'C3':
     return [ (so_3mom[0], so_3mom[1]), si_3mom[0], gevp_row, ('g5', 'g5'), \
                                                      p_cm, gevp_col[-1], irrep ]
+  elif diagram == 'C4':
+    return [ (so_3mom[0], so_3mom[1]), (si_3mom[0], si_3mom[1]), \
+                     gevp_row, ('g5', 'g5'), gevp_col, ('g5', 'g5'), irrep ]
   else:
     print 'in set_qn: diagram unknown! Quantum numbers corrupted.'
     return
