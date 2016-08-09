@@ -3,6 +3,9 @@ import numpy as np
 import itertools as it
 import operator
 
+from pandas import Series, DataFrame
+import pandas as pd
+
 import utils
 
 
@@ -161,12 +164,13 @@ def ensembles(sta_cnfg, end_cnfg, del_cnfg, diagram, p_cm, p_cm_max, p_max, gamm
 
   # calculate number of configurations
   nb_cnfg = 0
-  for i in range(sta_cnfg, end_cnfg+1, del_cnfg):
-    if i in missing_configs:
+  lookup_cnfg = []
+  for cnfg in range(sta_cnfg, end_cnfg+1, del_cnfg):
+    if cnfg in missing_configs:
       continue
-    nb_cnfg = nb_cnfg + 1
+    lookup_cnfg.append(cnfg)
   if(verbose):
-    print 'number of configurations: %i' % nb_cnfg
+    print 'number of configurations: %i' % len(lookup_cnfg)
 
   lookup_p = set_lookup_p(p_max, p_cm_max, p_cm, diagram)
   lookup_g = set_lookup_g(gammas, diagram)
@@ -174,58 +178,36 @@ def ensembles(sta_cnfg, end_cnfg, del_cnfg, diagram, p_cm, p_cm_max, p_max, gamm
   data = []
   qn = []
 
-  cnfg_counter = 0
-  for cnfg in range(sta_cnfg, end_cnfg+1, del_cnfg):
-    if cnfg in missing_configs:
-      continue
-#    if i % (nb_cnfg/10) == 0:
-#      print '\tread config %i' % i
- 
+  for cnfg in lookup_cnfg:
     # filename and path
     filename = directory + 'cnfg%i/' % cnfg + diagram + '_cnfg%i' % cnfg + '.h5'
-#    name = 
-#    filename = os.path.join(path, name)
+
     if verbose:
       print filename
 
-    f = h5py.File(filename, 'r')
-
-    data_cnfg = []
+    # to achieve hirarchical indexing for quantum numbers build DataFrame for
+    # each loop seperately
+    # TODO: is it necessary to builed that completely or can that be 
+    # constructed by successively storing each operator with pd.HDFStore()?
+    data_pg = []
     for p in lookup_p:
+      # insert DISPLACEMENT here
+      data_g = []
       for g in lookup_g:
 
         groupname = set_groupname(diagram, p, g)
         if verbose:
           print groupname
 
-        if diagram in ['C20', 'C3+', 'C4+B']:
-          data_cnfg.append(np.asarray(f[groupname]).view(np.complex))
-        elif diagram == 'C4+D':
-          tmp = np.asarray(f[groupname])
-          data_cnfg.append(np.asarray([complex(x,y) for x,y in \
-                      zip(tmp['rere']-tmp['imim'], tmp['reim']+tmp['imre'])]))
-        else:
-          print 'Error: Diagram %s unknown' % diagram
+        # TODO: catch when a groupname does not exist
 
-        if cnfg_counter == 0:
-          qn.append(set_qn(p, g, diagram))
-    data_cnfg = np.asarray(data_cnfg)
-    data.append(data_cnfg)
-
-    f.close()
-
-    cnfg_counter = cnfg_counter + 1
-
-  data = np.asarray(data)
-  qn = np.asarray(qn)
-  
-#    # check if number of operators is consistent between configurations and 
-#    # operators are identical
-  
-  # convert data to a 3-dim np-array with nb_op x x T x nb_cnfg 
-  data = np.asarray(data)
-  data = np.rollaxis(data, 0, 3)
-  print data.shape
+        data_g.append(pd.read_hdf(filename, key=groupname).stack())
+      data_g = pd.concat(data_g, keys=lookup_g, axis=1).T
+      data_pg.append(data_g)
+    data_pg = pd.concat(data_pg, keys=lookup_p)
+ 
+    data.append(data_pg)
+  data = pd.concat(data, keys=lookup_cnfg, axis=1)
   
   print '\tfinished reading'
   
@@ -233,24 +215,10 @@ def ensembles(sta_cnfg, end_cnfg, del_cnfg, diagram, p_cm, p_cm_max, p_max, gamm
   # write data to disc
   
   utils.ensure_dir('./readdata')
-  utils.ensure_dir('./readdata/p%1i' % p_cm)
 
+  store = pd.HDFStore('./readdata/%s_p%1i' % (diagram, p_cm))
   # write all operators
-  path = './readdata/p%1i/%s_p%1i' % (p_cm, diagram, p_cm)
-  np.save(path, data)
-  
-  # write all quantum numbers
-  path = './readdata/p%1i/%s_p%1i_qn' % (p_cm, diagram, p_cm)
-  np.save(path, qn)
+  store['data'] = data
   
   print '\tfinished writing'
-
-  
-#  # write every operator seperately
-#  utils.ensure_dir('./readdata/p%1i/single' % p)
-#  for i in range(0, data.shape[0]):
-#    path = './readdata/p%1i/single/%s' % \
-#            (p, quantum_numbers[i][-1])
-#    np.save(path, data[i])
-
 

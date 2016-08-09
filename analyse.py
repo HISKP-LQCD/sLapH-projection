@@ -14,7 +14,7 @@ del_cnfg = 2
 
 T = 48        # number of timeslices
 p_max = 4
-p = range(2)         # momentum
+p = range(1)         # momentum
 p_cm_max = np.asarray((4,5,6,7,4), dtype=int)
 
 # gamma structure wich shall be averaged. Last entry of gamma must contain all
@@ -30,6 +30,8 @@ gamma_50i = [13, 14, 15, \
 gamma_5 = [5, ['\gamma_5']]
 
 gammas = [gamma_i, gamma_0i, gamma_50i]
+#gammas = [[1, 2, ['\gamma_1', '\gamma_2', '\gamma_i']]]
+#gammas = [[1, ['\gamma_1', '\gamma_i']]]
 
 #diagrams = ['C20', 'C3+', 'C4+D', 'C4+B']
 diagrams = ['C20']
@@ -52,7 +54,7 @@ def main():
     for diagram, directory in zip(diagrams, directories):
       read.ensembles(sta_cnfg, end_cnfg, del_cnfg, diagram, p_cm, p_cm_max, \
                      p_max, gammas, T, directory, missing_configs, verbose)
-    wick.rho_2pt(p_cm, 'C20', verbose)
+#    wick.rho_2pt(p_cm, 'C20', verbose)
 
 #    for diagram, directory in zip(diagrams, directories):
 #      subduce.ensembles()
