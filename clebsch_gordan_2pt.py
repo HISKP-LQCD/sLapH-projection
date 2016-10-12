@@ -3,6 +3,9 @@
 import numpy as np
 import cmath
 
+import pandas as pd
+from pandas import Series, DataFrame
+
 ################################################################################
 # setup of lookup tables for subduction coefficients. ##########################
 ################################################################################
@@ -15,10 +18,24 @@ sqrt6 = np.sqrt(6.)
 
 ################################################################################
 # T1
-T1 = [[[(np.asarray([0, 0, 0], dtype=int),),  1j/sqrt2, -1./sqrt2, 0]], \
-      [[(np.asarray([0, 0, 0], dtype=int),),  0,         0,        1j]], \
-      [[(np.asarray([0, 0, 0], dtype=int),), -1j/sqrt2, -1./sqrt2, 0]]]
-T1 = np.asarray(T1)
+#T1 = [[[(np.asarray([0, 0, 0], dtype=int),),  1j/sqrt2, -1./sqrt2, 0]], \
+#      [[(np.asarray([0, 0, 0], dtype=int),),  0,         0,        1j]], \
+#      [[(np.asarray([0, 0, 0], dtype=int),), -1j/sqrt2, -1./sqrt2, 0]]]
+#T1 = np.asarray(T1)
+
+T1 = DataFrame({'p' : [(0,0,0)]*9, \
+                '\gamma' : [(1,), (2,), (3,)]*3, \
+                'cg-coefficient' : [ 1j/sqrt2, -1./sqrt2, 0, \
+                                     0,         0,        1j, \
+                                    -1j/sqrt2, -1./sqrt2, 0]}, \
+                index=pd.Index([1]*3+[2]*3+[3]*3, name='\mu'))
+
+#T1 = DataFrame({'p' : [np.array([0,0,0])]*9, \
+#                '\gamma' : [(1,), (2,), (3,)]*3, 
+#                'cg-coefficient' : [ 1j/sqrt2, -1./sqrt2, 0, \
+#                                     0,         0,        1j, \
+#                                    -1j/sqrt2, -1./sqrt2, 0]}, \
+#                index=pd.Index([1]*3+[2]*3+[3]*3, name='\row'))
 
 # In the CM-Frame this is equivalent to only taking the diagonal combinations
 #T1 = [[[np.asarray([0, 0, 0], dtype=int), 1, 0, 0]], \

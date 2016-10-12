@@ -151,6 +151,8 @@ def ensembles(sta_cnfg, end_cnfg, del_cnfg, diagram, p_cm, p_cm_max, p_max, gamm
   for t in tmp:
     lookup_qn.append(t[0]+t[1])
   lookup_qn = DataFrame(lookup_qn, columns=['p_{so}', 'p_{si}', '\gamma_{so}', '\gamma_{si}'])
+#  lookup_qn['p_{so}'] = qn['p_{so}'].apply(np.array)
+#  lookup_qn['p_{si}'] = qn['p_{si}'].apply(np.array)
 
   data = []
 

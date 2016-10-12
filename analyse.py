@@ -33,7 +33,7 @@ gammas = [gamma_i, gamma_0i, gamma_50i]
 #gammas = [[1, 2, ['\gamma_1', '\gamma_2', '\gamma_i']]]
 #gammas = [[1, ['\gamma_1', '\gamma_i']]]
 
-diagrams = ['C3+']
+diagrams = ['C20']
 #diagrams = ['C20', 'C3+', 'C4+D', 'C4+B']
 
 directories = ['/hiskp2/knippsch/Rho_Jun2016/']
@@ -54,7 +54,7 @@ def main():
     for diagram, directory in zip(diagrams, directories):
       read.ensembles(sta_cnfg, end_cnfg, del_cnfg, diagram, p_cm, p_cm_max, \
                      p_max, gammas, T, directory, missing_configs, verbose)
-    wick.rho_3pt(p_cm, 'C3+', verbose)
+    wick.rho_2pt(p_cm, 'C20', verbose)
 
 #    for diagram, directory in zip(diagrams, directories):
 #      subduce.ensembles()

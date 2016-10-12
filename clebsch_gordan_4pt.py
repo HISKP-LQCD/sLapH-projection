@@ -1,6 +1,9 @@
 import numpy as np
 import cmath
 
+import pandas as pd
+from pandas import Series, DataFrame
+
 ################################################################################
 # setup of lookup tables for subduction coefficients. ##########################
 ################################################################################
@@ -15,63 +18,157 @@ sqrt3=np.sqrt(3.)
 
 ################################################################################
 # T1
-T1 = [[[(np.asarray([ 1,  0,  0], dtype=int), np.asarray([-1,  0,  0], dtype=int)), -1./2], \
-       [(np.asarray([ 0,  1,  0], dtype=int), np.asarray([ 0, -1,  0], dtype=int)),      -1j/2], \
-       [(np.asarray([ 0,  0,  1], dtype=int), np.asarray([ 0,  0, -1], dtype=int)),  0.], \
-       [(np.asarray([-1,  0,  0], dtype=int), np.asarray([ 1,  0,  0], dtype=int)),  1./2], \
-       [(np.asarray([ 0, -1,  0], dtype=int), np.asarray([ 0,  1,  0], dtype=int)),       1j/2], \
-       [(np.asarray([ 0,  0, -1], dtype=int), np.asarray([ 0,  0,  1], dtype=int)),  0.], \
-       [(np.asarray([ 1,  1,  0], dtype=int), np.asarray([-1, -1,  0], dtype=int)), -1./4-1j/4], \
-       [(np.asarray([ 0,  1,  1], dtype=int), np.asarray([ 0, -1, -1], dtype=int)),      -1j/4], \
-       [(np.asarray([ 1,  0,  1], dtype=int), np.asarray([-1,  0, -1], dtype=int)), -1./4], \
-       [(np.asarray([ 1, -1,  0], dtype=int), np.asarray([-1,  1,  0], dtype=int)), -1./4+1j/4], \
-       [(np.asarray([ 0,  1, -1], dtype=int), np.asarray([ 0, -1,  1], dtype=int)),      -1j/4], \
-       [(np.asarray([-1,  0,  1], dtype=int), np.asarray([ 1,  0, -1], dtype=int)),  1./4], \
-       [(np.asarray([-1,  1,  0], dtype=int), np.asarray([ 1, -1,  0], dtype=int)),  1./4-1j/4], \
-       [(np.asarray([ 0, -1,  1], dtype=int), np.asarray([ 0,  1, -1], dtype=int)),       1j/4], \
-       [(np.asarray([ 1,  0, -1], dtype=int), np.asarray([-1,  0,  1], dtype=int)), -1./4], \
-       [(np.asarray([-1, -1,  0], dtype=int), np.asarray([ 1,  1,  0], dtype=int)),  1./4+1j/4], \
-       [(np.asarray([ 0, -1, -1], dtype=int), np.asarray([ 0,  1,  1], dtype=int)),       1j/4], \
-       [(np.asarray([-1,  0, -1], dtype=int), np.asarray([ 1,  0,  1], dtype=int)),  1./4]], \
-                                                                               \
-      [[(np.asarray([ 1,  0,  0], dtype=int), np.asarray([-1,  0,  0], dtype=int)),  0.], \
-       [(np.asarray([ 0,  1,  0], dtype=int), np.asarray([ 0, -1,  0], dtype=int)),  0.], \
-       [(np.asarray([ 0,  0,  1], dtype=int), np.asarray([ 0,  0, -1], dtype=int)),  1./sqrt2], \
-       [(np.asarray([-1,  0,  0], dtype=int), np.asarray([ 1,  0,  0], dtype=int)),  0.], \
-       [(np.asarray([ 0, -1,  0], dtype=int), np.asarray([ 0,  1,  0], dtype=int)),  0.], \
-       [(np.asarray([ 0,  0, -1], dtype=int), np.asarray([ 0,  0,  1], dtype=int)), -1./sqrt2], \
-       [(np.asarray([ 1,  1,  0], dtype=int), np.asarray([-1, -1,  0], dtype=int)),  0.], \
-       [(np.asarray([ 0,  1,  1], dtype=int), np.asarray([ 0, -1, -1], dtype=int)),  1./(2*sqrt2)], \
-       [(np.asarray([ 1,  0,  1], dtype=int), np.asarray([-1,  0, -1], dtype=int)),  1./(2*sqrt2)], \
-       [(np.asarray([ 1, -1,  0], dtype=int), np.asarray([-1,  1,  0], dtype=int)),  0.], \
-       [(np.asarray([ 0,  1, -1], dtype=int), np.asarray([ 0, -1,  1], dtype=int)), -1./(2*sqrt2)], \
-       [(np.asarray([-1,  0,  1], dtype=int), np.asarray([ 1,  0, -1], dtype=int)),  1./(2*sqrt2)], \
-       [(np.asarray([-1,  1,  0], dtype=int), np.asarray([ 1, -1,  0], dtype=int)),  0.], \
-       [(np.asarray([ 0, -1,  1], dtype=int), np.asarray([ 0,  1, -1], dtype=int)),  1./(2*sqrt2)], \
-       [(np.asarray([ 1,  0, -1], dtype=int), np.asarray([-1,  0,  1], dtype=int)), -1./(2*sqrt2)], \
-       [(np.asarray([-1, -1,  0], dtype=int), np.asarray([ 1,  1,  0], dtype=int)),  0.], \
-       [(np.asarray([ 0, -1, -1], dtype=int), np.asarray([ 0,  1,  1], dtype=int)), -1./(2*sqrt2)], \
-       [(np.asarray([-1,  0, -1], dtype=int), np.asarray([ 1,  0,  1], dtype=int)), -1./(2*sqrt2)]], \
-                                                                               \
-      [[(np.asarray([ 1,  0,  0], dtype=int), np.asarray([-1,  0,  0], dtype=int)),  1./2], \
-       [(np.asarray([ 0,  1,  0], dtype=int), np.asarray([ 0, -1,  0], dtype=int)),      -1j/2], \
-       [(np.asarray([ 0,  0,  1], dtype=int), np.asarray([ 0,  0, -1], dtype=int)),  0.], \
-       [(np.asarray([-1,  0,  0], dtype=int), np.asarray([ 1,  0,  0], dtype=int)), -1./2], \
-       [(np.asarray([ 0, -1,  0], dtype=int), np.asarray([ 0,  1,  0], dtype=int)),       1j/2], \
-       [(np.asarray([ 0,  0, -1], dtype=int), np.asarray([ 0,  0,  1], dtype=int)),  0.], \
-       [(np.asarray([ 1,  1,  0], dtype=int), np.asarray([-1, -1,  0], dtype=int)),  1./4-1j/4], \
-       [(np.asarray([ 0,  1,  1], dtype=int), np.asarray([ 0, -1, -1], dtype=int)),      -1j/4], \
-       [(np.asarray([ 1,  0,  1], dtype=int), np.asarray([-1,  0, -1], dtype=int)),  1./4], \
-       [(np.asarray([ 1, -1,  0], dtype=int), np.asarray([-1,  1,  0], dtype=int)),  1./4+1j/4], \
-       [(np.asarray([ 0,  1, -1], dtype=int), np.asarray([ 0, -1,  1], dtype=int)),      -1j/4], \
-       [(np.asarray([-1,  0,  1], dtype=int), np.asarray([ 1,  0, -1], dtype=int)), -1./4], \
-       [(np.asarray([-1,  1,  0], dtype=int), np.asarray([ 1, -1,  0], dtype=int)), -1./4-1j/4], \
-       [(np.asarray([ 0, -1,  1], dtype=int), np.asarray([ 0,  1, -1], dtype=int)),       1j/4], \
-       [(np.asarray([ 1,  0, -1], dtype=int), np.asarray([-1,  0,  1], dtype=int)),  1./4], \
-       [(np.asarray([-1, -1,  0], dtype=int), np.asarray([ 1,  1,  0], dtype=int)), -1./4+1j/4], \
-       [(np.asarray([ 0, -1, -1], dtype=int), np.asarray([ 0,  1,  1], dtype=int)),       1j/4], \
-       [(np.asarray([-1,  0, -1], dtype=int), np.asarray([ 1,  0,  1], dtype=int)), -1./4]]]
-T1 = np.asarray(T1)
+
+#T1 = DataFrame({'p' : [np.array( (( 1,  0,  0), (-1,  0,  0)) ), \
+#                       np.array( (( 0,  1,  0), ( 0, -1,  0)) ), \
+#                       np.array( (( 0,  0,  1), ( 0,  0, -1)) ), \
+#                       np.array( ((-1,  0,  0), ( 1,  0,  0)) ), \
+#                       np.array( (( 0, -1,  0), ( 0,  1,  0)) ), \
+#                       np.array( (( 0,  0, -1), ( 0,  0,  1)) ), \
+#                       np.array( (( 1,  1,  0), (-1, -1,  0)) ), \
+#                       np.array( (( 0,  1,  1), ( 0, -1, -1)) ), \
+#                       np.array( (( 1,  0,  1), (-1,  0, -1)) ), \
+#                       np.array( (( 1, -1,  0), (-1,  1,  0)) ), \
+#                       np.array( (( 0,  1, -1), ( 0, -1,  1)) ), \
+#                       np.array( ((-1,  0,  1), ( 1,  0, -1)) ), \
+#                       np.array( ((-1,  1,  0), ( 1, -1,  0)) ), \
+#                       np.array( (( 0, -1,  1), ( 0,  1, -1)) ), \
+#                       np.array( (( 1,  0, -1), (-1,  0,  1)) ), \
+#                       np.array( ((-1, -1,  0), ( 1,  1,  0)) ), \
+#                       np.array( (( 0, -1, -1), ( 0,  1,  1)) ), \
+#                       np.array( ((-1,  0, -1), ( 1,  0,  1)) )]*3, \
+T1 = DataFrame({'p' : [( (( 1,  0,  0), (-1,  0,  0)) ), \
+                       ( (( 0,  1,  0), ( 0, -1,  0)) ), \
+                       ( (( 0,  0,  1), ( 0,  0, -1)) ), \
+                       ( ((-1,  0,  0), ( 1,  0,  0)) ), \
+                       ( (( 0, -1,  0), ( 0,  1,  0)) ), \
+                       ( (( 0,  0, -1), ( 0,  0,  1)) ), \
+                       ( (( 1,  1,  0), (-1, -1,  0)) ), \
+                       ( (( 0,  1,  1), ( 0, -1, -1)) ), \
+                       ( (( 1,  0,  1), (-1,  0, -1)) ), \
+                       ( (( 1, -1,  0), (-1,  1,  0)) ), \
+                       ( (( 0,  1, -1), ( 0, -1,  1)) ), \
+                       ( ((-1,  0,  1), ( 1,  0, -1)) ), \
+                       ( ((-1,  1,  0), ( 1, -1,  0)) ), \
+                       ( (( 0, -1,  1), ( 0,  1, -1)) ), \
+                       ( (( 1,  0, -1), (-1,  0,  1)) ), \
+                       ( ((-1, -1,  0), ( 1,  1,  0)) ), \
+                       ( (( 0, -1, -1), ( 0,  1,  1)) ), \
+                       ( ((-1,  0, -1), ( 1,  0,  1)) )]*3, \
+                '\gamma' : [(5, 5)]*54, 
+                'cg-coefficient' : [-1./2, \
+                                           -1j/2, \
+                                       0., \
+                                       1./2, \
+                                            1j/2, \
+                                       0., \
+                                      -1./4-1j/4, \
+                                           -1j/4, \
+                                      -1./4, \
+                                      -1./4+1j/4, \
+                                           -1j/4, \
+                                       1./4, \
+                                       1./4-1j/4, \
+                                            1j/4, \
+                                      -1./4, \
+                                       1./4+1j/4, \
+                                            1j/4, \
+                                       1./4, \
+                                       0., \
+                                       0., \
+                                       1./sqrt2, \
+                                       0., \
+                                       0., \
+                                      -1./sqrt2, \
+                                       0., \
+                                       1./(2*sqrt2), \
+                                       1./(2*sqrt2), \
+                                       0., \
+                                      -1./(2*sqrt2), \
+                                       1./(2*sqrt2), \
+                                       0., \
+                                       1./(2*sqrt2), \
+                                      -1./(2*sqrt2), \
+                                       0., \
+                                      -1./(2*sqrt2), \
+                                      -1./(2*sqrt2), \
+                                       1./2, \
+                                           -1j/2, \
+                                       0., \
+                                      -1./2, \
+                                            1j/2, \
+                                       0., \
+                                       1./4-1j/4, \
+                                           -1j/4, \
+                                       1./4, \
+                                       1./4+1j/4, \
+                                           -1j/4, \
+                                      -1./4, \
+                                      -1./4-1j/4, \
+                                            1j/4, \
+                                       1./4, \
+                                      -1./4+1j/4, \
+                                            1j/4, \
+                                      -1./4]}, \
+                index=pd.Index([1]*18+[2]*18+[3]*18, name='\mu'))
+
+#T1 = [[[(np.asarray([ 1,  0,  0], dtype=int), np.asarray([-1,  0,  0], dtype=int)), -1./2], \
+#       [(np.asarray([ 0,  1,  0], dtype=int), np.asarray([ 0, -1,  0], dtype=int)),      -1j/2], \
+#       [(np.asarray([ 0,  0,  1], dtype=int), np.asarray([ 0,  0, -1], dtype=int)),  0.], \
+#       [(np.asarray([-1,  0,  0], dtype=int), np.asarray([ 1,  0,  0], dtype=int)),  1./2], \
+#       [(np.asarray([ 0, -1,  0], dtype=int), np.asarray([ 0,  1,  0], dtype=int)),       1j/2], \
+#       [(np.asarray([ 0,  0, -1], dtype=int), np.asarray([ 0,  0,  1], dtype=int)),  0.], \
+#       [(np.asarray([ 1,  1,  0], dtype=int), np.asarray([-1, -1,  0], dtype=int)), -1./4-1j/4], \
+#       [(np.asarray([ 0,  1,  1], dtype=int), np.asarray([ 0, -1, -1], dtype=int)),      -1j/4], \
+#       [(np.asarray([ 1,  0,  1], dtype=int), np.asarray([-1,  0, -1], dtype=int)), -1./4], \
+#       [(np.asarray([ 1, -1,  0], dtype=int), np.asarray([-1,  1,  0], dtype=int)), -1./4+1j/4], \
+#       [(np.asarray([ 0,  1, -1], dtype=int), np.asarray([ 0, -1,  1], dtype=int)),      -1j/4], \
+#       [(np.asarray([-1,  0,  1], dtype=int), np.asarray([ 1,  0, -1], dtype=int)),  1./4], \
+#       [(np.asarray([-1,  1,  0], dtype=int), np.asarray([ 1, -1,  0], dtype=int)),  1./4-1j/4], \
+#       [(np.asarray([ 0, -1,  1], dtype=int), np.asarray([ 0,  1, -1], dtype=int)),       1j/4], \
+#       [(np.asarray([ 1,  0, -1], dtype=int), np.asarray([-1,  0,  1], dtype=int)), -1./4], \
+#       [(np.asarray([-1, -1,  0], dtype=int), np.asarray([ 1,  1,  0], dtype=int)),  1./4+1j/4], \
+#       [(np.asarray([ 0, -1, -1], dtype=int), np.asarray([ 0,  1,  1], dtype=int)),       1j/4], \
+#       [(np.asarray([-1,  0, -1], dtype=int), np.asarray([ 1,  0,  1], dtype=int)),  1./4]], \
+#                                                                               \
+#      [[(np.asarray([ 1,  0,  0], dtype=int), np.asarray([-1,  0,  0], dtype=int)),  0.], \
+#       [(np.asarray([ 0,  1,  0], dtype=int), np.asarray([ 0, -1,  0], dtype=int)),  0.], \
+#       [(np.asarray([ 0,  0,  1], dtype=int), np.asarray([ 0,  0, -1], dtype=int)),  1./sqrt2], \
+#       [(np.asarray([-1,  0,  0], dtype=int), np.asarray([ 1,  0,  0], dtype=int)),  0.], \
+#       [(np.asarray([ 0, -1,  0], dtype=int), np.asarray([ 0,  1,  0], dtype=int)),  0.], \
+#       [(np.asarray([ 0,  0, -1], dtype=int), np.asarray([ 0,  0,  1], dtype=int)), -1./sqrt2], \
+#       [(np.asarray([ 1,  1,  0], dtype=int), np.asarray([-1, -1,  0], dtype=int)),  0.], \
+#       [(np.asarray([ 0,  1,  1], dtype=int), np.asarray([ 0, -1, -1], dtype=int)),  1./(2*sqrt2)], \
+#       [(np.asarray([ 1,  0,  1], dtype=int), np.asarray([-1,  0, -1], dtype=int)),  1./(2*sqrt2)], \
+#       [(np.asarray([ 1, -1,  0], dtype=int), np.asarray([-1,  1,  0], dtype=int)),  0.], \
+#       [(np.asarray([ 0,  1, -1], dtype=int), np.asarray([ 0, -1,  1], dtype=int)), -1./(2*sqrt2)], \
+#       [(np.asarray([-1,  0,  1], dtype=int), np.asarray([ 1,  0, -1], dtype=int)),  1./(2*sqrt2)], \
+#       [(np.asarray([-1,  1,  0], dtype=int), np.asarray([ 1, -1,  0], dtype=int)),  0.], \
+#       [(np.asarray([ 0, -1,  1], dtype=int), np.asarray([ 0,  1, -1], dtype=int)),  1./(2*sqrt2)], \
+#       [(np.asarray([ 1,  0, -1], dtype=int), np.asarray([-1,  0,  1], dtype=int)), -1./(2*sqrt2)], \
+#       [(np.asarray([-1, -1,  0], dtype=int), np.asarray([ 1,  1,  0], dtype=int)),  0.], \
+#       [(np.asarray([ 0, -1, -1], dtype=int), np.asarray([ 0,  1,  1], dtype=int)), -1./(2*sqrt2)], \
+#       [(np.asarray([-1,  0, -1], dtype=int), np.asarray([ 1,  0,  1], dtype=int)), -1./(2*sqrt2)]], \
+#                                                                               \
+#      [[(np.asarray([ 1,  0,  0], dtype=int), np.asarray([-1,  0,  0], dtype=int)),  1./2], \
+#       [(np.asarray([ 0,  1,  0], dtype=int), np.asarray([ 0, -1,  0], dtype=int)),      -1j/2], \
+#       [(np.asarray([ 0,  0,  1], dtype=int), np.asarray([ 0,  0, -1], dtype=int)),  0.], \
+#       [(np.asarray([-1,  0,  0], dtype=int), np.asarray([ 1,  0,  0], dtype=int)), -1./2], \
+#       [(np.asarray([ 0, -1,  0], dtype=int), np.asarray([ 0,  1,  0], dtype=int)),       1j/2], \
+#       [(np.asarray([ 0,  0, -1], dtype=int), np.asarray([ 0,  0,  1], dtype=int)),  0.], \
+#       [(np.asarray([ 1,  1,  0], dtype=int), np.asarray([-1, -1,  0], dtype=int)),  1./4-1j/4], \
+#       [(np.asarray([ 0,  1,  1], dtype=int), np.asarray([ 0, -1, -1], dtype=int)),      -1j/4], \
+#       [(np.asarray([ 1,  0,  1], dtype=int), np.asarray([-1,  0, -1], dtype=int)),  1./4], \
+#       [(np.asarray([ 1, -1,  0], dtype=int), np.asarray([-1,  1,  0], dtype=int)),  1./4+1j/4], \
+#       [(np.asarray([ 0,  1, -1], dtype=int), np.asarray([ 0, -1,  1], dtype=int)),      -1j/4], \
+#       [(np.asarray([-1,  0,  1], dtype=int), np.asarray([ 1,  0, -1], dtype=int)), -1./4], \
+#       [(np.asarray([-1,  1,  0], dtype=int), np.asarray([ 1, -1,  0], dtype=int)), -1./4-1j/4], \
+#       [(np.asarray([ 0, -1,  1], dtype=int), np.asarray([ 0,  1, -1], dtype=int)),       1j/4], \
+#       [(np.asarray([ 1,  0, -1], dtype=int), np.asarray([-1,  0,  1], dtype=int)),  1./4], \
+#       [(np.asarray([-1, -1,  0], dtype=int), np.asarray([ 1,  1,  0], dtype=int)), -1./4+1j/4], \
+#       [(np.asarray([ 0, -1, -1], dtype=int), np.asarray([ 0,  1,  1], dtype=int)),       1j/4], \
+#       [(np.asarray([-1,  0, -1], dtype=int), np.asarray([ 1,  0,  1], dtype=int)), -1./4]]]
+#T1 = np.asarray(T1)
 
 ################################################################################
 # possibly get a sign if j11+j2-J odd and momenta are interchanged for one momentum 0

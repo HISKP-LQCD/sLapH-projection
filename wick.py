@@ -15,22 +15,21 @@ gamma_i = [(g,) for g in gamma_i[:-1]]
 gamma_0i = [(g,) for g in gamma_0i[:-1]]
 gamma_50i = [(g,) for g in gamma_50i[:-1]]
 
-# TODO: Careful untested yet
 def rho_2pt(p_cm, diagram='C20', verbose=0):
 
   data = pd.read_hdf('readdata/%s_p%1i.h5' % (diagram, p_cm), 'data')
   qn = pd.read_hdf('readdata/%s_p%1i.h5' % (diagram, p_cm), 'qn')
 
   wick = pd.concat([ \
-  data.T[qn['\gamma_{so}'].isin(gamma_i)]   and qn['\gamma_{si}'].isin(gamma_i)]  *( 2.), \
-  data.T[qn['\gamma_{so}'].isin(gamma_i)]   and qn['\gamma_{si}'].isin(gamma_0i)] *(-2.), \
-  data.T[qn['\gamma_{so}'].isin(gamma_i)]   and qn['\gamma_{si}'].isin(gamma_50i)]*( 2.*1j), \
-  data.T[qn['\gamma_{so}'].isin(gamma_0i)]  and qn['\gamma_{si}'].isin(gamma_i)]  *( 2.), \
-  data.T[qn['\gamma_{so}'].isin(gamma_0i)]  and qn['\gamma_{si}'].isin(gamma_0i)] *(-2.), \
-  data.T[qn['\gamma_{so}'].isin(gamma_0i)]  and qn['\gamma_{si}'].isin(gamma_50i)]*( 2.*1j), \
-  data.T[qn['\gamma_{so}'].isin(gamma_50i)] and qn['\gamma_{si}'].isin(gamma_i)]  *( 2.*1j), \
-  data.T[qn['\gamma_{so}'].isin(gamma_50i)] and qn['\gamma_{si}'].isin(gamma_0i)] *(-2.*1j), \
-  data.T[qn['\gamma_{so}'].isin(gamma_50i)] and qn['\gamma_{si}'].isin(gamma_50i)]*( 2.), \
+  data.T[qn['\gamma_{so}'].isin(gamma_i)   & qn['\gamma_{si}'].isin(gamma_i)]  *( 2.), \
+  data.T[qn['\gamma_{so}'].isin(gamma_i)   & qn['\gamma_{si}'].isin(gamma_0i)] *(-2.), \
+  data.T[qn['\gamma_{so}'].isin(gamma_i)   & qn['\gamma_{si}'].isin(gamma_50i)]*( 2.*1j), \
+  data.T[qn['\gamma_{so}'].isin(gamma_0i)  & qn['\gamma_{si}'].isin(gamma_i)]  *( 2.), \
+  data.T[qn['\gamma_{so}'].isin(gamma_0i)  & qn['\gamma_{si}'].isin(gamma_0i)] *(-2.), \
+  data.T[qn['\gamma_{so}'].isin(gamma_0i)  & qn['\gamma_{si}'].isin(gamma_50i)]*( 2.*1j), \
+  data.T[qn['\gamma_{so}'].isin(gamma_50i) & qn['\gamma_{si}'].isin(gamma_i)]  *( 2.*1j), \
+  data.T[qn['\gamma_{so}'].isin(gamma_50i) & qn['\gamma_{si}'].isin(gamma_0i)] *(-2.*1j), \
+  data.T[qn['\gamma_{so}'].isin(gamma_50i) & qn['\gamma_{si}'].isin(gamma_50i)]*( 2.), \
   ]).sort_index().T
 
   ################################################################################
@@ -42,6 +41,8 @@ def rho_2pt(p_cm, diagram='C20', verbose=0):
   # write all operators
   store['data'] = wick
   store['qn'] = qn
+
+  store.close()
 
   print '\tfinished writing\n'
 
@@ -123,13 +124,15 @@ def rho_3pt(p_cm, diagram='C3+', verbose=0):
   data = pd.read_hdf('readdata/%s_p%1i.h5' % (diagram, p_cm), 'data')
   qn = pd.read_hdf('readdata/%s_p%1i.h5' % (diagram, p_cm), 'qn')
 
-  print data 
-
   wick = pd.concat([ \
-  data.T[qn['\gamma_{si}'].isin([(g,) for g in gamma_i[:-1]])]  *(2.), \
-  data.T[qn['\gamma_{si}'].isin([(g,) for g in gamma_0i[:-1]])] *(-2.), \
-  data.T[qn['\gamma_{si}'].isin([(g,) for g in gamma_50i[:-1]])]*(2*1j), \
+  data.T[qn['\gamma_{si}'].isin(gamma_i)]  *(2.), \
+  data.T[qn['\gamma_{si}'].isin(gamma_0i)] *(-2.), \
+  data.T[qn['\gamma_{si}'].isin(gamma_50i)]*(2*1j), \
   ]).sort_index().T
+
+#  data.T[qn['\gamma_{si}'].isin([(g,) for g in gamma_i[:-1]])]  *(2.), \
+#  data.T[qn['\gamma_{si}'].isin([(g,) for g in gamma_0i[:-1]])] *(-2.), \
+#  data.T[qn['\gamma_{si}'].isin([(g,) for g in gamma_50i[:-1]])]*(2*1j), \
 
   print data[:5], wick[:5]
 
@@ -142,6 +145,8 @@ def rho_3pt(p_cm, diagram='C3+', verbose=0):
   # write all operators
   store['data'] = wick
   store['qn'] = qn
+
+  store.close()
 
   print '\tfinished writing\n'
 
@@ -228,6 +233,8 @@ def rho_4pt(p_cm, diagrams, verbose=0):
   # write all operators
   store['data'] = wick
   store['qn'] = qn_box
+
+  store.close()
 
   print '\tfinished writing\n'
 
