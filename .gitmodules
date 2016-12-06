@@ -1,0 +1,3 @@
+[submodule "clebsch_gordan"]
+	path = clebsch_gordan
+	url = https://github.com/chjost/clebsch_gordan.git
