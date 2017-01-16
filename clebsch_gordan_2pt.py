@@ -170,4 +170,5 @@ def coefficients(irrep):
   elif irrep is 'B2':
     return B2
 
+print T1
 
