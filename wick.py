@@ -224,19 +224,24 @@ def rho_4pt(p_cm, diagrams, verbose=0):
 
   wick = (-2.)*data_box.add(data_dia, fill_value=0)
 
+  # TODO: something something rere imim. Best to try just using rere and using 
+  # rere-imim
+  data_dia.ix[
+  print data_box[:5], data_dia[:5], wick[:5]
+
   ################################################################################
   # write data to disc
 
-  utils.ensure_dir('./readdata')
-
-  store = pd.HDFStore('./readdata/%s_p%1i.h5' % ('C3', p_cm))
-  # write all operators
-  store['data'] = wick
-  store['qn'] = qn_box
-
-  store.close()
-
-  print '\tfinished writing\n'
+#  utils.ensure_dir('./readdata')
+#
+#  store = pd.HDFStore('./readdata/%s_p%1i.h5' % ('C3', p_cm))
+#  # write all operators
+#  store['data'] = wick
+#  store['qn'] = qn_box
+#
+#  store.close()
+#
+#  print '\tfinished writing\n'
 
 #def rho_4pt(p_cm, diagrams, verbose=0):
 #  wickd = []
