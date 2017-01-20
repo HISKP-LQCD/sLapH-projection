@@ -6,9 +6,6 @@ import operator
 from pandas import Series, DataFrame
 import pandas as pd
 
-import utils
-
-
 def scalar_mul(x, y):
   return sum(it.imap(operator.mul, x, y))
 
@@ -149,6 +146,10 @@ def set_lookup_qn(diagram, p_cm, p_max, gammas, verbose=0):
   lookup_qn : pd.DataFrame
       pandas DataFrame where each row is a combination of quantum numbers and
       the row index is used as identifier for it.
+
+  The quantum numbers are momenta and gamma structures at source and sink time.
+  Depending on the number of quark lines there can be tuples of quantum numbers
+  at the same lattice site
   """
 
   lookup_p = set_lookup_p(p_max, p_cm, diagram)
@@ -200,19 +201,32 @@ def set_groupname(diagram, p, g):
 ################################################################################
 # reading configurations
 
-def ensembles(sta_cnfg, end_cnfg, del_cnfg, diagram, p_cm, p_cm_max, p_max, gammas, T, directory, \
-                                                    missing_configs, verbose=0):
+def ensembles(lookup_cnfg, lookup_qn, diagram, T, directory, verbose=0):
+  """
+  Read resulting correlators from contraction code and creates a pd.DataFrame
+
+  Parameters
+  ----------
+  lookup_cnfg : list of int
+      List of the gauge configurations to read
+  lookup_qn : pd.DataFrame
+      pd.DataFrame with ever row being a set of physical quantum numbers to be 
+      read
+  diagram : string, {'C20', 'C3+', 'C4+B', 'C4+D'}
+      Diagram of wick contractions for the rho meson.
+  T : int
+      Time extent of the lattice
+  directory : string
+      Output path of contraction code
+
+  Returns
+  -------
+  data : pd.DataFrame
+      A pd.DataFrame with rows (cnfg x T x re/im) and columns i where i are 
+      the row numbers of `lookup_qn` 
+  """
   
-  print 'reading data for %s, p=%i' % (diagram, p_cm)
-
-  lookup_cnfg = set_lookup_cnfg(sta_cnfg, end_cnfg, del_cnfg, \
-                                                       missing_configs, verbose)
-
-  # set up lookup table for quantum numbers
-  if p_cm == 0:
-    p_max = 2
-
-  lookup_qn = set_lookup_qn(diagram, p_cm, p_max, gammas, verbose)
+  print 'reading data for %s' % (diagram)
 
   data = []
 
@@ -244,18 +258,9 @@ def ensembles(sta_cnfg, end_cnfg, del_cnfg, diagram, p_cm, p_cm_max, p_max, gamm
   data = pd.concat(data, keys=lookup_cnfg, axis=0)
  
   print '\tfinished reading'
-  
-  ################################################################################
-  # write data to disc
-  
-  utils.ensure_dir('./readdata')
 
-  store = pd.HDFStore('./readdata/%s_p%1i.h5' % (diagram, p_cm))
-  # write all operators
-  store['data'] = data
-  store['qn'] = lookup_qn
-
-  store.close()
+  return data
   
-  print '\tfinished writing'
+  ##############################################################################
+
 

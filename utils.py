@@ -12,21 +12,19 @@ def ensure_dir(f):
 
 def read_hdf5_correlators(path):
   """
-  Helper function to read correlators in the temporary format of the subduction
-  code
+  Read correlators in the format used by subduction code routines
 
   Parameters
-  ---------
+  ----------
   path : string
-    Path to the hdf5 file
+      Path to the hdf5 file
 
   Returns
   -------
-
-  pd.DataFrame
-    The correlator data contained in the hdf5 file
-  pd.DataFrame
-    The physical quantum number associated to the data above
+  data : pd.DataFrame
+      The correlator data contained in the hdf5 file
+  qn : pd.DataFrame
+      The physical quantum number associated to the data above
   """
 
   data = pd.read_hdf(path, 'data')
@@ -34,4 +32,28 @@ def read_hdf5_correlators(path):
   qn = pd.read_hdf(path, 'qn')
 
   return data, qn
+
+  
+def write_hdf5_correlators(path, data, lookup_qn):
+  """
+  write pd.DataFrame of correlation functions as hdf5 file
+
+  Parameters
+  ----------
+  path : string
+      Path to store the hdf5 file
+  data : pd.DataFrame
+      The correlator data contained in the hdf5 file
+  lookup_qn : pd.DataFrame
+      The physical quantum number associated to the data above
+  """
+
+  store = pd.HDFStore(path)
+  # write all operators
+  store['data'] = data
+  store['qn'] = lookup_qn
+
+  store.close()
+  
+  print '\tfinished writing'
 
