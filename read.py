@@ -15,6 +15,42 @@ def scalar_mul(x, y):
 def abs2(x):
   return scalar_mul(x, x)
 
+# TODO: nb_cnfg is spurious, can just use len(lookup_cnfg)
+def set_lookup_cnfg(sta_cnfg, end_cnfg, del_cnfg, missing_configs, verbose=0):
+  """
+  Get a list of all gauge configurations contractions where performed on
+
+  Parameters
+  ----------
+  sta_cnfg : int
+      Number of first gauge configuration.
+  end_cnfg : int
+      Number of last gauge configuration.
+  del_cnfg : int
+      Step size chosen between following gauge configurations.
+  missing_configs : list of int
+      List of configurations to be omitted because the contractions were not
+      performed
+
+  Returns
+  -------
+  lookup_cnfg : list of int
+      List of the configurations to read
+  """
+
+  # calculate number of configurations
+  nb_cnfg = 0
+  lookup_cnfg = []
+  for cnfg in range(sta_cnfg, end_cnfg+1, del_cnfg):
+    if cnfg in missing_configs:
+      continue
+    lookup_cnfg.append(cnfg)
+  if(verbose):
+    print 'number of configurations: %i' % len(lookup_cnfg)
+
+  return lookup_cnfg
+
+
 def set_lookup_p(p_max, p_cm, diagram):
 
   # create lookup table for all possible 3-momenta that can appear in our 
@@ -91,6 +127,46 @@ def set_lookup_g(gammas, diagram):
   lookup_g = it.product(lookup_so, lookup_si)
   return list(lookup_g)
 
+def set_lookup_qn(diagram, p_cm, p_max, gammas, verbose=0):
+  """
+  Calculates a data frame with physical quantum numbers
+
+  Parameters
+  ----------
+  diagram : string, {'C20', 'C3+', 'C4+B', 'C4+D'}
+      Diagram of wick contractions for the rho meson.
+  p_cm : int, {0, 1, 2, 3, 4}
+      Center of mass momentum.
+  p_max : int
+      Maximum entry of momentum vectors.
+  gammas : list of list of ints and string
+      A list which for each gamma structure coupling to the rho meson contains
+      a list with the integer indices used in the contraction code and a 
+      latex-style name for plotting labels.
+
+  Returns
+  -------
+  lookup_qn : pd.DataFrame
+      pandas DataFrame where each row is a combination of quantum numbers and
+      the row index is used as identifier for it.
+  """
+
+  lookup_p = set_lookup_p(p_max, p_cm, diagram)
+  lookup_g = set_lookup_g(gammas, diagram)
+
+  # TODO: A more elegant solution for combining lookup_p and lookup_g is welcome
+  # maybe Multiindex.from_product()
+  tmp = it.product(lookup_p, lookup_g)
+  lookup_qn = []
+  for t in tmp:
+    lookup_qn.append(t[0]+t[1])
+  lookup_qn = DataFrame(lookup_qn, columns=['p_{so}', 'p_{si}', '\gamma_{so}', '\gamma_{si}'])
+#  lookup_qn['p_{so}'] = qn['p_{so}'].apply(np.array)
+#  lookup_qn['p_{si}'] = qn['p_{si}'].apply(np.array)
+  
+  return lookup_qn
+
+
 def set_groupname(diagram, p, g):
   # sets groupname the desired correlator in the hdf5 output of the cntrv0.1-code.
   # TODO: displacement hardcoded
@@ -129,30 +205,14 @@ def ensembles(sta_cnfg, end_cnfg, del_cnfg, diagram, p_cm, p_cm_max, p_max, gamm
   
   print 'reading data for %s, p=%i' % (diagram, p_cm)
 
-  # calculate number of configurations
-  nb_cnfg = 0
-  lookup_cnfg = []
-  for cnfg in range(sta_cnfg, end_cnfg+1, del_cnfg):
-    if cnfg in missing_configs:
-      continue
-    lookup_cnfg.append(cnfg)
-  if(verbose):
-    print 'number of configurations: %i' % len(lookup_cnfg)
+  lookup_cnfg = set_lookup_cnfg(sta_cnfg, end_cnfg, del_cnfg, \
+                                                       missing_configs, verbose)
 
   # set up lookup table for quantum numbers
   if p_cm == 0:
     p_max = 2
-  lookup_p = set_lookup_p(p_max, p_cm, diagram)
-  lookup_g = set_lookup_g(gammas, diagram)
 
-  # TODO: A more elegant solution for combining lookup_p and lookup_g is welcome
-  tmp = it.product(lookup_p, lookup_g)
-  lookup_qn = []
-  for t in tmp:
-    lookup_qn.append(t[0]+t[1])
-  lookup_qn = DataFrame(lookup_qn, columns=['p_{so}', 'p_{si}', '\gamma_{so}', '\gamma_{si}'])
-#  lookup_qn['p_{so}'] = qn['p_{so}'].apply(np.array)
-#  lookup_qn['p_{si}'] = qn['p_{si}'].apply(np.array)
+  lookup_qn = set_lookup_qn(diagram, p_cm, p_max, gammas, verbose)
 
   data = []
 

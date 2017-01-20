@@ -3,7 +3,7 @@ First configuration =     714
 Last configuration =      730
 Configuration Stepping =  2
 # expects ,-seperated integers
-Missing configurations =  1282, 1032 
+Missing configurations =  1282
 
 [ensemble parameters]
 T = 48

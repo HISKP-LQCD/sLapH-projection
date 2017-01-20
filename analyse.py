@@ -94,12 +94,13 @@ if verbose:
 
 def main():
 
-  for p_cm in p:
-    for diagram, directory in zip(diagrams, directories):
-      read.ensembles(sta_cnfg, end_cnfg, del_cnfg, diagram, p_cm, p_cm_max, \
-                     p_max, gammas, T, directory, missing_configs, verbose)
-    for diagram in diagrams_for_wick:
-      wick.rho_2pt(p_cm, diagram, verbose)
+
+#  for p_cm in p:
+  for diagram, directory in zip(diagrams, directories):
+    read.ensembles(sta_cnfg, end_cnfg, del_cnfg, diagram, p_cm, p_cm_max, \
+                   p_max, gammas, T, directory, missing_configs, verbose)
+#    for diagram in diagrams_for_wick:
+#      wick.rho_2pt(p_cm, diagram, verbose)
 
 #    for diagram, directory in zip(diagrams, directories):
 #      subduce.ensembles()
