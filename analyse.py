@@ -72,8 +72,8 @@ def main():
   }
   
   p_max = config.getint('gevp parameters', 'p_max')
-  p_cm = config.getint('gevp parameters', 'p_cm')
-  p_cm_max = np.asarray([4,5,6,7,4], dtype=int)[p_cm]
+  p = config.get('gevp parameters', 'p_cm')
+  p = [int(k) for k in p.split(',')]
   gamma_input = config.get('gevp parameters', 'Dirac structure')
   # translates list of names for gamma structures to indices used in contraction 
   # code
@@ -82,39 +82,41 @@ def main():
   
   if verbose:
     print p_max
-    print p_cm
-    print p_cm_max
+    print p
     print gamma_input
   
   diagrams = config.get('contraction details', 'diagram')
   diagrams = diagrams.replace(" ", "").split(',')
   directories = config.get('contraction details', 'directory')
-  directories = directories.replace(" ", "").split(',')
+  directories = directories.replace(" ", "").replace("\n", "")
+  directories = directories.split(',')
   
   if verbose:
     print diagrams
     print directories 
 
 
-#  for p_cm in p:
-  for diagram, directory in zip(diagrams, directories):
-    lookup_cnfg = read.set_lookup_cnfg(sta_cnfg, end_cnfg, del_cnfg, \
-                                                       missing_configs, verbose)
-    # set up lookup table for quantum numbers
-    if p_cm == 0:
-      p_max = 2
+  for p_cm in p:
+    print 'p_cm = ', p_cm
+    for diagram, directory in zip(diagrams, directories):
+      lookup_cnfg = read.set_lookup_cnfg(sta_cnfg, end_cnfg, del_cnfg, \
+                                                         missing_configs, verbose)
+      # set up lookup table for quantum numbers
+      if p_cm == 0:
+        p_max = 2
+      # TODO: I don't now what this was good for
+#      p_cm_max = np.asarray([4,5,6,7,4], dtype=int)[p_cm]
+      lookup_qn = read.set_lookup_qn(diagram, p_cm, p_max, gammas, verbose)
   
-    lookup_qn = read.set_lookup_qn(diagram, p_cm, p_max, gammas, verbose)
-
-
-    data = read.ensembles(lookup_cnfg, lookup_qn, diagram, T, directory, 
-                                                                        verbose)
-    # write data
-    path = './readdata/%s_p%1i.h5' % (diagram, p_cm)
-    utils.ensure_dir('./readdata')
-    utils.write_hdf5_correlators(path, data, lookup_qn)
-#    for diagram in diagrams_for_wick:
-#      wick.rho_2pt(p_cm, diagram, verbose)
+  
+      data = read.ensembles(lookup_cnfg, lookup_qn, diagram, T, directory, 
+                                                                          verbose)
+      # write data
+      path = './readdata/%s_p%1i.h5' % (diagram, p_cm)
+      utils.ensure_dir('./readdata')
+      utils.write_hdf5_correlators(path, data, lookup_qn)
+  
+    wick.rho(p_cm, diagrams, verbose)
 
 #    for diagram, directory in zip(diagrams, directories):
 #      subduce.ensembles()
