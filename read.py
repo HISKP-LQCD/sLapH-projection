@@ -210,7 +210,7 @@ def ensembles(lookup_cnfg, lookup_qn, diagram, T, directory, verbose=0):
   lookup_cnfg : list of int
       List of the gauge configurations to read
   lookup_qn : pd.DataFrame
-      pd.DataFrame with ever row being a set of physical quantum numbers to be 
+      pd.DataFrame with every row being a set of physical quantum numbers to be 
       read
   diagram : string, {'C20', 'C3+', 'C4+B', 'C4+D'}
       Diagram of wick contractions for the rho meson.
@@ -248,11 +248,15 @@ def ensembles(lookup_cnfg, lookup_qn, diagram, T, directory, verbose=0):
     for op in lookup_qn.index:
       p = lookup_qn.ix[op, ['p_{so}', 'p_{si}']]
       g = lookup_qn.ix[op, ['\gamma_{so}', '\gamma_{si}']]
+      # TODO: catch when a groupname does not exist
       groupname = set_groupname(diagram, p, g)
       if verbose:
         print groupname
-      # TODO: catch when a groupname does not exist
 
+      # TODO: real and imaginay part are treated seperately through the whole
+      # program. It might be easiert to combine them already at read-in or 
+      # even better after wick contraction because of different structure for
+      # C4+D
       data_qn[op] = pd.read_hdf(filename, key=groupname).stack()
     data.append(data_qn)
   data = pd.concat(data, keys=lookup_cnfg, axis=0)
