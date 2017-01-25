@@ -15,11 +15,33 @@ import clebsch_gordan_4pt as cg_4pt
 import utils
 
 
-p_max = 4
+def set_lookup_irreps(p_cm):
+  """
+  Calculate list of irreducible representations contributing to the appropriate 
+  little group of rotational symmetry
 
-verbose = 0
+  Parameters
+  ----------
+  p_cm : int, {0,1,2,3,4}
+      Center of mass momentum of the lattice. Used to specify the appropriate
+      little group of rotational symmetry
 
-diagram = 'C3'
+  Returns
+  -------
+  irreps : list of strings
+      List with the namees of all contributing irreducible representations
+  """
+  if p_cm in [0]:
+    irreps = ['T1']
+  elif p_cm in [1,3,4]:
+    irreps = ['A1', 'E2']
+  elif p_cm in [2]:
+    irreps = ['A1', 'B1', 'B2']
+  else:
+    # nothing to do here
+    irreps = []
+  return irreps
+
 
 # TODO: should be a more elegant solution for get_gevp_gamma and 
 def get_gevp_single_gamma(g):
@@ -106,7 +128,7 @@ def get_clebsch_gordans(diagram, p_cm, irrep):
       left_index=True, right_index=True, suffixes=['_{so}', '_{si}']) 
   return cg_table
 
-def get_qn_irrep(qn, diagram, p_cm, irrep):
+def set_lookup_qn_irrep(qn, diagram, p_cm, irrep, verbose):
   """
   Read table with required lattice Clebsch-Gordan coefficients
 
@@ -139,8 +161,6 @@ def get_qn_irrep(qn, diagram, p_cm, irrep):
   # and irreducible representation given by diagram, p_cm and irrep
   cg_table = get_clebsch_gordans(diagram, p_cm, irrep)
 
-  print cg_table
-  
   # associate clebsch-gordan coefficients with the correct qn index
   qn_irrep = pd.merge(cg_table.reset_index(), qn.reset_index())
 
@@ -160,36 +180,17 @@ def get_qn_irrep(qn, diagram, p_cm, irrep):
                               astype(tuple).astype(str) \
                           + ' \gamma = ' + \
                             qn_irrep['\gamma_{si}'].apply(get_gevp_gamma).astype(str)
+  if verbose:
+    print "qn_irrep:"
+
   return qn_irrep
 
 
-def ensembles(p_cm, diagram, p_max, verbose):
+# TODO: should be possible to omit p_cm and diagram as parameters
+def ensembles(data, qn_irrep, p_cm, diagram, p_max, irrep, verbose):
 
   print 'subducing p = %i' % p_cm
 
-  ################################################################################
-  # read original data 
-  data = pd.read_hdf('readdata/%s_p%1i.h5' % (diagram, p_cm), 'data')
-  data.columns.name = 'index'
-  qn = pd.read_hdf('readdata/%s_p%1i.h5' % (diagram, p_cm), 'qn')
-
-  if p_cm in [0]:
-    irreps = ['T1']
-  elif p_cm in [1,3,4]:
-    irreps = ['A1', 'E2']
-  elif p_cm in [2]:
-    irreps = ['A1', 'B1', 'B2']
-  else:
-    # nothing to do here
-    irreps = []
-
-  irrep = 'T1'
-  qn_irrep = get_qn_irrep(qn, diagram, p_cm, irrep)
-
-  if verbose:
-    print "qn_irrep:"
-    print qn_irrep
-  
   # actual subduction step. sum cg_so * conj(cg_si) * corr
   subduced = pd.merge(qn_irrep, data.T, how='left', left_on=['index'], 
                                                                right_index=True)
@@ -209,29 +210,29 @@ def ensembles(p_cm, diagram, p_max, verbose):
   subduced = subduced.xs('re', level=2, axis=1) + \
                                        (1j) * subduced.xs('im', level=2, axis=1)
 
+  ##############################################################################
+  # write data to disc
+  # TODO: look for more elegant solution than passing None. Can python 
+  # functions be overloaded?
+  # TODO: path must depend on irrep
+  path = './readdata/%s_p%1i_subduced.h5' % (diagram, p_cm)
+  utils.ensure_dir('./readdata')
+  utils.write_hdf5_correlators(path, subduced, None)
+
+  ##############################################################################
   # sum over gamma structures. 
   # Only real part is physically relevant at that point
   subduced = subduced.apply(np.real).sum(level=[0,1,2,3,5])
   # sum over equivalent momenta
-  subduced_sum_mom = subduced.sum(level=[0,1,2])
+  subduced = subduced.sum(level=[0,1,2])
   # average over rows
-  subduced_sum_mom_avg_row = subduced_sum_mom.mean(level=[0,1])
+  subduced = subduced.mean(level=[0,1])
 
   ##############################################################################
   # write data to disc
-
+  path = './readdata/%s_p%1i_subduced_and_averaged.h5' % (diagram, p_cm)
   utils.ensure_dir('./readdata')
-  utils.ensure_dir('./readdata/p%1i/' % p_cm)
-
-  store = pd.HDFStore('./readdata/%s_p%1i_subduced.h5' % (diagram, p_cm))
-  # write all operators
-  store['data'] = subduced_sum_mom_avg_row
-  store['single correlators'] = subduced
-
-  store.close()
+  utils.write_hdf5_correlators(path, subduced, None)
   
-  print '\tfinished writing'
- 
-  return subduced_sum_mom_avg_row
-#for p_cm in range(2):
-#  ensembles(p_cm, diagram, p_max, verbose)
+  return subduced
+

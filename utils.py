@@ -10,7 +10,7 @@ def ensure_dir(f):
   if not os.path.exists(f):
     os.makedirs(f)
 
-def read_hdf5_correlators(path):
+def read_hdf5_correlators(path, read_qn=True):
   """
   Read correlators in the format used by subduction code routines
 
@@ -29,10 +29,12 @@ def read_hdf5_correlators(path):
 
   data = pd.read_hdf(path, 'data')
   data.columns.name = 'index'
-  qn = pd.read_hdf(path, 'qn')
+  if read_qn:
+    qn = pd.read_hdf(path, 'qn')
 
-  return data, qn
-
+    return data, qn
+  else:
+    return data
   
 def write_hdf5_correlators(path, data, lookup_qn):
   """
@@ -51,7 +53,8 @@ def write_hdf5_correlators(path, data, lookup_qn):
   store = pd.HDFStore(path)
   # write all operators
   store['data'] = data
-  store['qn'] = lookup_qn
+  if lookup_qn is not None:
+    store['qn'] = lookup_qn
 
   store.close()
   

@@ -134,7 +134,10 @@ def rho(p_cm, diagrams, verbose=0):
   # loop over number of quarklines and call the appropriate wick contraction
   # for each one
   # TODO: I don't think you have to emulate c function pointers for this
+  # TODO: Refactor calculation of list correlators
+  # TODO: make wick return correlators (data and qn)
   func_map = {2 : rho_2pt, 3 : rho_3pt, 4 : rho_4pt}
+  correlators = []
   for nb_quarklines in range(2,5):
     # as a function argument give the names of all diagrams with the correct
     # number of quarklines
@@ -145,10 +148,13 @@ def rho(p_cm, diagrams, verbose=0):
     # superfluous
     if (len(diagram) == 0):
       continue
+    correlators.append("C%1d" % nb_quarklines)
     if (len(diagram) == 1):
       diagram = diagram[0]
     if verbose:
       print diagram
     # call rho_2pt, rho_3pt, rho_4pt from this loop
     func_map[nb_quarklines](p_cm, diagram, verbose)
+
+  return correlators
 
