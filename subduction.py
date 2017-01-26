@@ -215,7 +215,7 @@ def ensembles(data, qn_irrep, p_cm, diagram, p_max, irrep, verbose):
   # TODO: look for more elegant solution than passing None. Can python 
   # functions be overloaded?
   # TODO: path must depend on irrep
-  path = './readdata/%s_p%1i_subduced.h5' % (diagram, p_cm)
+  path = './readdata/%s_p%1i_%s.h5' % (diagram, p_cm, irrep)
   utils.ensure_dir('./readdata')
   utils.write_hdf5_correlators(path, subduced, None)
 
@@ -230,7 +230,7 @@ def ensembles(data, qn_irrep, p_cm, diagram, p_max, irrep, verbose):
 
   ##############################################################################
   # write data to disc
-  path = './readdata/%s_p%1i_subduced_and_averaged.h5' % (diagram, p_cm)
+  path = './readdata/%s_p%1i_%s_avg.h5' % (diagram, p_cm, irrep)
   utils.ensure_dir('./readdata')
   utils.write_hdf5_correlators(path, subduced, None)
   

@@ -8,6 +8,7 @@ import read
 import utils
 import wick
 import subduction
+import setup_gevp
 
 ################################################################################
 # Main #########################################################################
@@ -128,18 +129,21 @@ def main():
 
     ############################################################################ 
     # Subduction
-    # TODO: Instead get data, lookup_qn from wick.rho()
+    # TODO: Instead get data, lookup_qn from wick.rho() and reorder loops
     lookup_irreps = subduction.set_lookup_irreps(p_cm)
     for correlator in correlators:
       contracted_data, lookup_qn = utils.read_hdf5_correlators( \
                                      'readdata/%s_p%1i.h5' % (correlator, p_cm))
       contracted_data.columns.name = 'index'
-      print lookup_qn
       for irrep in lookup_irreps:
         lookup_qn_irrep = subduction.set_lookup_qn_irrep(lookup_qn, correlator,\
                                                            p_cm, irrep, verbose)
         subduced_data = subduction.ensembles(contracted_data, lookup_qn_irrep, \
                                         p_cm, correlator, p_max, irrep, verbose)
+    ############################################################################ 
+    # Gevp Construction
+    for irrep in lookup_irreps:
+      gevp = setup_gevp.build_gevp(p_cm, irrep, verbose)
 
 if __name__ == '__main__':
   try:

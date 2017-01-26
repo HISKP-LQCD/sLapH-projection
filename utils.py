@@ -36,6 +36,7 @@ def read_hdf5_correlators(path, read_qn=True):
   else:
     return data
   
+# TODO: us pandas to_hdf5 routines
 def write_hdf5_correlators(path, data, lookup_qn):
   """
   write pd.DataFrame of correlation functions as hdf5 file
