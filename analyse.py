@@ -49,6 +49,9 @@ def main():
   missing_configs = [int(m) for m in missing_configs.split(',')]
   
   if verbose:
+    print '################################################################################'
+    print 'Reading infile'
+
     print sta_cnfg
     print end_cnfg
     print del_cnfg
@@ -104,6 +107,9 @@ def main():
 
     ############################################################################ 
     # read diagrams
+#    if verbose:
+#      print '################################################################################'
+#      print 'Start reading correlation function diagrams'
 #    for diagram, directory in zip(diagrams, directories):
 #      lookup_cnfg = read.set_lookup_cnfg(sta_cnfg, end_cnfg, del_cnfg, \
 #                                                       missing_configs, verbose)
@@ -121,15 +127,22 @@ def main():
 #      utils.ensure_dir('./readdata')
 #      utils.write_hdf5_correlators(path, data, lookup_qn)
 #  
-#    ############################################################################ 
-#    # wick contraction
-#    # TODO: make wick contractions return data and quantum numbers as well
-#    # TODO: factor out calculation of correlators and put into correlators loop
+    ############################################################################ 
+    # wick contraction
+    # TODO: make wick contractions return data and quantum numbers as well
+    # TODO: factor out calculation of correlators and put into correlators loop
+    if verbose:
+      print '################################################################################'
+      print 'Starting Wick contractions'
     correlators = wick.rho(p_cm, diagrams, verbose)
 
     ############################################################################ 
     # Subduction
     # TODO: Instead get data, lookup_qn from wick.rho() and reorder loops
+    if verbose:
+      print '################################################################################'
+      print 'Starting Subduction'
+
     lookup_irreps = subduction.set_lookup_irreps(p_cm)
     for correlator in correlators:
       contracted_data, lookup_qn = utils.read_hdf5_correlators( \
@@ -137,13 +150,14 @@ def main():
       contracted_data.columns.name = 'index'
       for irrep in lookup_irreps:
         lookup_qn_irrep = subduction.set_lookup_qn_irrep(lookup_qn, correlator,\
-                                                           p_cm, irrep, verbose)
+                                                   gammas, p_cm, irrep, verbose)
         subduced_data = subduction.ensembles(contracted_data, lookup_qn_irrep, \
                                         p_cm, correlator, p_max, irrep, verbose)
     ############################################################################ 
     # Gevp Construction
     for irrep in lookup_irreps:
       gevp = setup_gevp.build_gevp(p_cm, irrep, verbose)
+      print gevp
 
 if __name__ == '__main__':
   try:

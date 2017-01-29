@@ -23,12 +23,21 @@ sqrt6 = np.sqrt(6.)
 #      [[(np.asarray([0, 0, 0], dtype=int),), -1j/sqrt2, -1./sqrt2, 0]]]
 #T1 = np.asarray(T1)
 
+# TODO: Do I need p?
 T1 = DataFrame({'p' : [(0,0,0)]*9, \
-                '\gamma' : [(1,), (2,), (3,)]*3, \
-                'cg-coefficient' : [ 1j/sqrt2, -1./sqrt2, 0, \
-                                     0,         0,        1j, \
-                                    -1j/sqrt2, -1./sqrt2, 0]}, \
+                '|J, M\rangle' : 
+                            ["|1,+1\rangle", "|1, 0\rangle", "|1,-1\rangle"]*3, \
+                'cg-coefficient' : [ 1, 0, 0, \
+                                     0, 1, 0, \
+                                     0, 0, 1 ]}, \
                 index=pd.Index([1]*3+[2]*3+[3]*3, name='\mu'))
+
+#T1 = DataFrame({'p' : [(0,0,0)]*9, \
+#                '\gamma' : [(1,), (2,), (3,)]*3, \
+#                'cg-coefficient' : [ 1j/sqrt2, -1./sqrt2, 0, \
+#                                     0,         0,        1j, \
+#                                    -1j/sqrt2, -1./sqrt2, 0]}, \
+#                index=pd.Index([1]*3+[2]*3+[3]*3, name='\mu'))
 
 #T1 = DataFrame({'p' : [np.array([0,0,0])]*9, \
 #                '\gamma' : [(1,), (2,), (3,)]*3, 
@@ -169,6 +178,4 @@ def coefficients(irrep):
     return B1
   elif irrep is 'B2':
     return B2
-
-print T1
 

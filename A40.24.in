@@ -12,19 +12,21 @@ T = 48
 [gevp parameters]
 p_max           = 4
 # expects ,-seperated integer(s)
-p_cm            = 0,1,2,3,4
+p_cm            = 0
+#p_cm            = 0,1,2,3,4
 # expects ,-seperated expressions 
-Dirac structure = gamma_i, gamma_0i, gamma_50i
+Dirac structure = gamma_i, gamma_50i
 
 [contraction details]
 # diagram to be analysed, may also be ,-seperated list
+#diagram = C20
 diagram = C20, C3+, C4+B, C4+D
 # path to contraction files. Either one path or a ,-seperated list of the same 
 # lenght as diagram
-#directory = /hiskp2/knippsch/Rho_Jun2016/
-directory = /hiskp2/knippsch/Rho_Jun2016/,
-               /hiskp2/knippsch/Rho_Jun2016/,
-               /hiskp2/knippsch/Rho_Jun2016/,
-               /hiskp2/knippsch/Rho_A40.24/
+directory = /hiskp2/knippsch/Rho_Jun2016/
+#directory = /hiskp2/knippsch/Rho_Jun2016/,
+#               /hiskp2/knippsch/Rho_Jun2016/,
+#               /hiskp2/knippsch/Rho_Jun2016/,
+#               /hiskp2/knippsch/Rho_A40.24/
 
 

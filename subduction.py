@@ -71,10 +71,63 @@ def get_gevp_gamma(gamma):
       result.append(get_gevp_single_gamma(g))
     return tuple(result)
 
+# TODO: properly read that from infile and pass to get_clebsch_gordan
+# TODO: actually use names to restrict basis_table to what was in the infile
+def get_basis(names, verbose):
+  """
+  Get table with chosen operators to transform as the *continuum* eigenstates
+  of the vector spin representation
+
+  Parameters
+  ----------
+  names : list of string
+      Contains the names of chosen multiplets as the set of continuum 
+      eigenstates is ambiguous and multiple choices might be wanted for a gevp.
+
+  Returns
+  -------
+  basis_table : pd.DataFrame
+      Table with linear coefficients to contruct a spin 1 eigenstate from 
+      operators. Rows are hierarchical containing the `name` of a multiplet and 
+      the eigenstates it contains. There one column for each linearlz 
+      independent Lorentz structure.
+  """
+
+  # hardcode ladder operators J_+, J_3 and J_-
+  sqrt2 = np.sqrt(2.)
+  ladder_operators = [[ 1j/sqrt2, -1./sqrt2, 0], 
+                      [ 0,         0,        1j], 
+                      [-1j/sqrt2, -1./sqrt2, 0]]
+  basis = np.array([m + [0]*3 for m in ladder_operators] + \
+                                  [[0]*3+m for m in ladder_operators]).flatten()
+  # hardcode basis operators for \gamma_i and \gamma_5\gamma_0\gamma_i
+  # TODO: replace first list in MultiIndex.from_product by names (or some kind 
+  # of latex(names)
+  basis_table = DataFrame(basis, \
+            index=pd.MultiIndex.from_product( \
+                [["gamma_i  ", "gamma_50i"], \
+                 ["|1,+1\rangle", "|1, 0\rangle", "|1,-1\rangle"], \
+                                     [(1,), (2,), (3,), (13,), (14,), (15,)]], \
+                names=["gevp", '|J, M\rangle', '\gamma']), \
+            columns=['subduction-coefficient'], dtype=complex).sort_index()
+  # conatenate basis chosen for two-pion operator. Trivial, because just a 
+  # singlet state.
+  basis_table = pd.concat([basis_table, DataFrame([1], \
+            index=pd.MultiIndex.from_product( \
+                [["(gamma_5, gamma_5)"], ["|0, 0\rangle"], [(5,5)]], \
+                names=["gevp", '|J, M\rangle', '\gamma']), \
+            columns=['subduction-coefficient'], dtype=complex).sort_index()])
+
+  if verbose:
+    print 'basis_table'
+    print basis_table
+
+  return basis_table[basis_table['subduction-coefficient'] != 0]
+
 
 # TODO: change p_cm to string symmetry_group in get_clebsch_gordans
 # TODO: find a better name for diagram after Wick contraction
-def get_clebsch_gordans(diagram, p_cm, irrep):
+def get_clebsch_gordans(diagram, gammas, p_cm, irrep, verbose):
   """
   Read table with required lattice Clebsch-Gordan coefficients
 
@@ -83,6 +136,9 @@ def get_clebsch_gordans(diagram, p_cm, irrep):
   diagram : string, {'C2', 'C3', 'C4'}
       Type of correlation function contributing to gevp. The number is the 
       number of quarklines
+  gammas : list of string
+      Contains the names of chosen multiplets as the set of continuum 
+      eigenstates is ambiguous and multiple choices might be wanted for a gevp.
   p_cm : int
       Center of mass momentum of the lattice. Used to specify the appropriate
       little group of rotational symmetry
@@ -106,29 +162,51 @@ def get_clebsch_gordans(diagram, p_cm, irrep):
   """
 
   if diagram == 'C2':
-    cg_one_operators = cg_2pt.coefficients(irrep)
-    cg_table_so, cg_table_si = cg_one_operators, cg_one_operators
+    cg_one_operator = cg_2pt.coefficients(irrep)
+    cg_table_so, cg_table_si = cg_one_operator, cg_one_operator
   elif diagram == 'C3':
     # get factors for the desired irreps
-    cg_one_operators = cg_2pt.coefficients(irrep)
+    cg_one_operator = cg_2pt.coefficients(irrep)
     cg_two_operators = cg_4pt.coefficients(irrep)
-    if len(cg_two_operators) != len(cg_one_operators):
-      print 'in get_clebsch_gordans: irrep for 2pt and 4pt functions contain ' \
-            'different number of rows'
     # for 3pt function we have pipi operator at source and rho operator at sink
-    cg_table_so, cg_table_si = cg_two_operators, cg_one_operators
+    cg_table_so, cg_table_si = cg_two_operators, cg_one_operator
   elif diagram == 'C4':
     cg_two_operators = cg_4pt.coefficients(irrep)
     cg_table_so, cg_table_si = cg_two_operators, cg_two_operators
   else:
     print 'in get_clebsch_gordans: diagram unknown! Quantum numbers corrupted.'
     return
+
+  # express basis states for all Lorentz structures in `gammas` in terms of 
+  # physical Dirac operators
+  basis_table = get_basis(gammas, verbose)
+
+  # express the subduced eigenstates in terms of Dirac operators.
+  cg_table_so = pd.merge(cg_table_so.reset_index(), basis_table.reset_index()).\
+                                                   set_index('\mu').sort_index()   
+  cg_table_si = pd.merge(cg_table_si.reset_index(), basis_table.reset_index()).\
+                                                   set_index('\mu').sort_index()  
+  # Munging the result: Delete rows with coefficient 0, combine coefficients 
+  # and clean columns no longer needed.
+  cg_table_so = cg_table_so[cg_table_so['cg-coefficient'] != 0]
+  cg_table_so['coefficient'] = \
+           cg_table_so['cg-coefficient'] * cg_table_so['subduction-coefficient']
+  del cg_table_so['|J, M\rangle']
+  del cg_table_so['cg-coefficient']
+  del cg_table_so['subduction-coefficient']
+  cg_table_si = cg_table_si[cg_table_si['cg-coefficient'] != 0]
+  cg_table_si['coefficient'] = \
+           cg_table_si['cg-coefficient'] * cg_table_si['subduction-coefficient']
+  del cg_table_si['|J, M\rangle']
+  del cg_table_si['cg-coefficient']
+  del cg_table_si['subduction-coefficient']
+
   # combine clebsch-gordan coefficients for source and sink into one DataFrame
   cg_table = pd.merge(cg_table_so, cg_table_si, how='inner', \
       left_index=True, right_index=True, suffixes=['_{so}', '_{si}']) 
   return cg_table
 
-def set_lookup_qn_irrep(qn, diagram, p_cm, irrep, verbose):
+def set_lookup_qn_irrep(qn, diagram, gammas, p_cm, irrep, verbose):
   """
   Read table with required lattice Clebsch-Gordan coefficients
 
@@ -157,31 +235,34 @@ def set_lookup_qn_irrep(qn, diagram, p_cm, irrep, verbose):
           cg-coefficient_{si} p_{si} index gevp_row gevp_col
   """
 
+
   # read Clebsch-Gordan coefficients for correlation function, little group
   # and irreducible representation given by diagram, p_cm and irrep
-  cg_table = get_clebsch_gordans(diagram, p_cm, irrep)
+  cg_table = get_clebsch_gordans(diagram, gammas, p_cm, irrep, verbose)
 
   # associate clebsch-gordan coefficients with the correct qn index
   qn_irrep = pd.merge(cg_table.reset_index(), qn.reset_index())
 
   # Add two additional columns with the same string if the quantum numbers 
-  # describe equivalent physical constellations
-  # TODO: check whether that works for 4pt function
-                              #apply(lambda x: tuple(list(x))).astype(tuple).astype(str) \
+  # describe equivalent physical constellations: gevp_row and gevp_col
   qn_irrep['gevp_row'] = 'p = ' + \
                             qn_irrep['p_{so}'].apply(np.array).apply(np.square).\
                               apply(functools.partial(np.sum, axis=-1)).\
                               astype(tuple).astype(str) \
                          + ' \gamma = ' + \
-                            qn_irrep['\gamma_{so}'].apply(get_gevp_gamma).astype(str) 
+                            qn_irrep['gevp_{so}']
   qn_irrep['gevp_col'] = 'p = ' + \
                             qn_irrep['p_{si}'].apply(np.array).apply(np.square).\
                               apply(functools.partial(np.sum, axis=-1)).\
                               astype(tuple).astype(str) \
                           + ' \gamma = ' + \
-                            qn_irrep['\gamma_{si}'].apply(get_gevp_gamma).astype(str)
+                            qn_irrep['gevp_{si}']
+  del(qn_irrep['gevp_{so}'])
+  del(qn_irrep['gevp_{si}'])
+
   if verbose:
     print "qn_irrep:"
+    print qn_irrep
 
   return qn_irrep
 
@@ -200,8 +281,8 @@ def ensembles(data, qn_irrep, p_cm, diagram, p_max, irrep, verbose):
   # over rows and reference gevp elements
   subduced = subduced.set_index(['gevp_row', 'gevp_col', '\mu', \
                       'p_{so}', '\gamma_{so}', 'p_{si}', '\gamma_{si}'])
-  subduced = subduced.ix[:,2:].multiply(subduced['cg-coefficient_{so}']*
-                               np.conj(subduced['cg-coefficient_{si}']), axis=0)
+  subduced = subduced.ix[:,2:].multiply(subduced['coefficient_{so}']*
+                               np.conj(subduced['coefficient_{si}']), axis=0)
   subduced.columns=pd.MultiIndex.from_tuples(subduced.columns)
   subduced.sort_index()
 

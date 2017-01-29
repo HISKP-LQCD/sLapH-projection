@@ -63,8 +63,6 @@ def rho_3pt(p_cm, diagram='C3+', verbose=0):
   data.T[qn['\gamma_{si}'].isin(gamma_50i)]*(2*1j), \
   ]).sort_index().T
 
-  print data[:5], wick[:5]
-
   # write data
   path = './readdata/%s_p%1i.h5' % ('C3', p_cm)
   utils.ensure_dir('./readdata')
