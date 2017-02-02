@@ -28,8 +28,8 @@ def read_hdf5_correlators(path, read_qn=True):
   """
 
   data = pd.read_hdf(path, 'data')
-  data.columns.name = 'index'
   if read_qn:
+    data.index.name = 'id'
     qn = pd.read_hdf(path, 'qn')
 
     return data, qn

@@ -95,9 +95,9 @@ def get_basis(names, verbose):
 
   # hardcode ladder operators J_+, J_3 and J_-
   sqrt2 = np.sqrt(2.)
-  ladder_operators = [[ 1j/sqrt2, -1./sqrt2, 0], 
+  ladder_operators = [[-1j/sqrt2, -1./sqrt2, 0], 
                       [ 0,         0,        1j], 
-                      [-1j/sqrt2, -1./sqrt2, 0]]
+                      [ 1j/sqrt2, -1./sqrt2, 0]]
   basis = np.array([m + [0]*3 for m in ladder_operators] + \
                                   [[0]*3+m for m in ladder_operators]).flatten()
   # hardcode basis operators for \gamma_i and \gamma_5\gamma_0\gamma_i
@@ -105,7 +105,7 @@ def get_basis(names, verbose):
   # of latex(names)
   basis_table = DataFrame(basis, \
             index=pd.MultiIndex.from_product( \
-                [["gamma_i  ", "gamma_50i"], \
+                [["\gamma{_i}  ", "\gamma_{50i}"], \
                  ["|1,+1\rangle", "|1, 0\rangle", "|1,-1\rangle"], \
                                      [(1,), (2,), (3,), (13,), (14,), (15,)]], \
                 names=["gevp", '|J, M\rangle', '\gamma']), \
@@ -114,7 +114,7 @@ def get_basis(names, verbose):
   # singlet state.
   basis_table = pd.concat([basis_table, DataFrame([1], \
             index=pd.MultiIndex.from_product( \
-                [["(gamma_5, gamma_5)"], ["|0, 0\rangle"], [(5,5)]], \
+                [["(\gamma_{5}, \gamma_{5})"], ["|0, 0\rangle"], [(5,5)]], \
                 names=["gevp", '|J, M\rangle', '\gamma']), \
             columns=['subduction-coefficient'], dtype=complex).sort_index()])
 
@@ -168,10 +168,14 @@ def get_clebsch_gordans(diagram, gammas, p_cm, irrep, verbose):
     # get factors for the desired irreps
     cg_one_operator = cg_2pt.coefficients(irrep)
     cg_two_operators = cg_4pt.coefficients(irrep)
+    # Chistopher Thomas: Written down for Creation operator
+    cg_two_operators['cg-coefficient'] = np.conj(cg_two_operators['cg-coefficient'])
     # for 3pt function we have pipi operator at source and rho operator at sink
     cg_table_so, cg_table_si = cg_two_operators, cg_one_operator
   elif diagram == 'C4':
     cg_two_operators = cg_4pt.coefficients(irrep)
+    # Christopher Thomas: Written down for Creation operator
+    cg_two_operators['cg-coefficient'] = np.conj(cg_two_operators['cg-coefficient'])
     cg_table_so, cg_table_si = cg_two_operators, cg_two_operators
   else:
     print 'in get_clebsch_gordans: diagram unknown! Quantum numbers corrupted.'
@@ -191,15 +195,14 @@ def get_clebsch_gordans(diagram, gammas, p_cm, irrep, verbose):
   cg_table_so = cg_table_so[cg_table_so['cg-coefficient'] != 0]
   cg_table_so['coefficient'] = \
            cg_table_so['cg-coefficient'] * cg_table_so['subduction-coefficient']
-  del cg_table_so['|J, M\rangle']
-  del cg_table_so['cg-coefficient']
-  del cg_table_so['subduction-coefficient']
+  cg_table_so.drop(['|J, M\rangle', 'cg-coefficient', 'subduction-coefficient'], \
+                                                           axis=1, inplace=True)
   cg_table_si = cg_table_si[cg_table_si['cg-coefficient'] != 0]
   cg_table_si['coefficient'] = \
            cg_table_si['cg-coefficient'] * cg_table_si['subduction-coefficient']
-  del cg_table_si['|J, M\rangle']
-  del cg_table_si['cg-coefficient']
-  del cg_table_si['subduction-coefficient']
+
+  cg_table_si.drop(['|J, M\rangle', 'cg-coefficient', 'subduction-coefficient'], \
+                                                           axis=1, inplace=True)
 
   # combine clebsch-gordan coefficients for source and sink into one DataFrame
   cg_table = pd.merge(cg_table_so, cg_table_si, how='inner', \
@@ -249,13 +252,13 @@ def set_lookup_qn_irrep(qn, diagram, gammas, p_cm, irrep, verbose):
                             qn_irrep['p_{so}'].apply(np.array).apply(np.square).\
                               apply(functools.partial(np.sum, axis=-1)).\
                               astype(tuple).astype(str) \
-                         + ' \gamma = ' + \
+                         + ', \gamma = ' + \
                             qn_irrep['gevp_{so}']
   qn_irrep['gevp_col'] = 'p = ' + \
                             qn_irrep['p_{si}'].apply(np.array).apply(np.square).\
                               apply(functools.partial(np.sum, axis=-1)).\
                               astype(tuple).astype(str) \
-                          + ' \gamma = ' + \
+                          + ', \gamma = ' + \
                             qn_irrep['gevp_{si}']
   del(qn_irrep['gevp_{so}'])
   del(qn_irrep['gevp_{si}'])

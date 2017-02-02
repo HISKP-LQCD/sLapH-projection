@@ -46,7 +46,10 @@ def main():
   missing_configs = config.get('gauge configuration numbers', \
                                                          'Missing configurations')
   # turns missing configs into list of integers
-  missing_configs = [int(m) for m in missing_configs.split(',')]
+  if(missing_configs == ''):
+    missing_configs = []
+  else:
+    missing_configs = [int(m) for m in missing_configs.split(',')]
   
   if verbose:
     print '################################################################################'
@@ -157,7 +160,6 @@ def main():
     # Gevp Construction
     for irrep in lookup_irreps:
       gevp = setup_gevp.build_gevp(p_cm, irrep, verbose)
-      print gevp
 
 if __name__ == '__main__':
   try:

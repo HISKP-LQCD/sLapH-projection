@@ -118,16 +118,9 @@ def build_gevp(p_cm, irrep, verbose):
 
   # gevp = C2   C3
   #        C3^T C4
-
-  # reset index to merge only corresponding gevp entries
-  upper = pd.concat([subduced_2pt, subduced_3pt]).reset_index()
-  lower = pd.concat([subduced_3pt_T, subduced_4pt]).reset_index()
-
-  # merge on gevp entries and configuration number, timeslice. Reset gevp_entry
-  # as index afterwards
-  # TODO merge or is a simple concat(axis=0) also enought?
-  gevp = pd.merge(upper, lower, how='outer').\
-                                set_index(['gevp_row', 'gevp_col']).sort_index() 
+  upper = pd.concat([subduced_2pt, subduced_3pt])
+  lower = pd.concat([subduced_3pt_T, subduced_4pt])
+  gevp = pd.concat([upper, lower]).sort_index()
 
   assert np.all(gevp.notnull()), 'Gevp contains null entires'
   assert gmpy.is_square(len(gevp.index)), 'Gevp is not a square matrix'

@@ -91,6 +91,7 @@ def rho_4pt(p_cm, diagrams, verbose=0):
                                                          sort_index(level=[0,1])
 
   wick = ((-2.)*data_box).add(data_dia, fill_value=0)
+  print wick[:3]
 
   # write data
   path = './readdata/%s_p%1i.h5' % ('C4', p_cm)
