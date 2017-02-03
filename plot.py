@@ -16,21 +16,46 @@ import utils
 
 # TODO: Symmetrization and Antisymmetrization. Take negative eigenvalues under 
 # time reversal into account
-def bootstrap(X, bootstrapsize):
+#def bootstrap(X, bootstrapsize):
+#  """
+#  bootstrapping
+#  """
+#  np.random.seed(1227)
+#  boot = np.empty(bootstrapsize, dtype=float)
+#  # writing the mean value in the first sample
+#  boot[0] = np.mean(X)
+#  # doing all other samples
+#  for i in range(1, bootstrapsize):
+#    rnd = np.random.random_integers(0, high=len(X)-1, size=len(X))
+#    boot_dummy = 0.0 
+#    for j in range(0, len(X)):
+#      boot_dummy += X[rnd[j]]  
+#    boot[i] = boot_dummy/len(X)
+#  return boot
+
+# TODO: Symmetrization and Antisymmetrization. Take negative eigenvalues under 
+# time reversal into account
+# TODO: this does not work if I work with the column indices directly rather 
+# than the config numbers. Using np.random.randint and iloc should be 
+# considerably faster
+
+def bootstrap(df, bootstrapsize):
   """
   bootstrapping
   """
   np.random.seed(1227)
-  boot = np.empty(bootstrapsize, dtype=float)
+  idx = pd.IndexSlice
+
+  # list of all configuration numbers
+  cnfgs = df.columns.levels[0].values
+  rnd_samples = np.array([np.random.choice(cnfgs, len(cnfgs)*bootstrapsize)]).\
+                                            reshape((bootstrapsize, len(cnfgs)))
   # writing the mean value in the first sample
-  boot[0] = np.mean(X)
-  # doing all other samples
-  for i in range(1, bootstrapsize):
-    rnd = np.random.random_integers(0, high=len(X)-1, size=len(X))
-    boot_dummy = 0.0 
-    for j in range(0, len(X)):
-      boot_dummy += X[rnd[j]]  
-    boot[i] = boot_dummy/len(X)
+  rnd_samples[0] = cnfgs
+
+  # Also I have to use a list comprehension rather than rnd directly...
+  boot =  pd.concat([df.loc[:,idx[[r for r in rnd]]].mean(axis=1, level=1) for rnd in rnd_samples], axis=1, keys=range(bootstrapsize))
+
   return boot
 
 def mean_and_std(df):
@@ -56,7 +81,8 @@ def mean_and_std(df):
   breaks pandas.
   """
 
-  return pd.concat([df.mean(axis=1, level=1), df.std(axis=1, level=1)], axis=1, keys=['mean', 'std'])
+
+  return pd.concat([df.mean(axis=1, level=1), bootstrap(df, 20).std(axis=1, level=1)], axis=1, keys=['mean', 'std'])
 
 def plot_gevp(gevp_data, pdfplot):
 
