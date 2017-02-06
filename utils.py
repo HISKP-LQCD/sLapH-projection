@@ -37,7 +37,7 @@ def read_hdf5_correlators(path, read_qn=True):
     return data
   
 # TODO: us pandas to_hdf5 routines
-def write_hdf5_correlators(path, data, lookup_qn):
+def write_hdf5_correlators(path, filename, data, lookup_qn, verbose=False):
   """
   write pd.DataFrame of correlation functions as hdf5 file
 
@@ -45,13 +45,16 @@ def write_hdf5_correlators(path, data, lookup_qn):
   ----------
   path : string
       Path to store the hdf5 file
+  filename : string
+      Name to save the hdf5 file as
   data : pd.DataFrame
       The correlator data contained in the hdf5 file
   lookup_qn : pd.DataFrame
       The physical quantum number associated to the data above
   """
 
-  store = pd.HDFStore(path)
+  ensure_dir(path)
+  store = pd.HDFStore(path+filename)
   # write all operators
   store['data'] = data
   if lookup_qn is not None:
@@ -59,5 +62,6 @@ def write_hdf5_correlators(path, data, lookup_qn):
 
   store.close()
   
-  print '\tfinished writing'
+  if verbose:
+    print '\tfinished writing', filename
 

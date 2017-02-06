@@ -78,17 +78,6 @@ def rho_4pt(p_cm, diagrams, verbose=0):
   qn_dia = pd.read_hdf('readdata/%s_p%1i.h5' % (diagrams[1], p_cm), 'qn')
 
 
-  # C4+D (data_dia) is the diagram calculated as product of two traces. To 
-  # suppress noise, real and imaginary parts are seperated. Combine them 
-  # according to (a+ib)*(c+id) = (ac-bd) +i(bc+ad)
-  # to leave out noise contribution bd, just use
-#                [data_dia.xs('rere', level=2), \
-  # as real part.
-  data_dia = pd.concat( \
-                [data_dia.xs('rere', level=2) - data_dia.xs('imim', level=2), \
-                 data_dia.xs('reim', level=2) - data_dia.xs('imre', level=2)], \
-                                    keys=['re', 'im']).reorder_levels([1,2,0]).\
-                                                         sort_index(level=[0,1])
 
   wick = ((-2.)*data_box).add(data_dia, fill_value=0)
   print wick[:3]

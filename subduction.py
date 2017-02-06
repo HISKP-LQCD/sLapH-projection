@@ -22,14 +22,14 @@ def set_lookup_irreps(p_cm):
 
   Parameters
   ----------
-  p_cm : int, {0,1,2,3,4}
-      Center of mass momentum of the lattice. Used to specify the appropriate
-      little group of rotational symmetry
+    p_cm : int, {0,1,2,3,4}
+        Center of mass momentum of the lattice. Used to specify the appropriate
+        little group of rotational symmetry
 
   Returns
   -------
-  irreps : list of strings
-      List with the namees of all contributing irreducible representations
+    irreps : list of strings
+        List with the namees of all contributing irreducible representations
   """
   if p_cm in [0]:
     irreps = ['T1']
@@ -288,11 +288,6 @@ def ensembles(data, qn_irrep, p_cm, diagram, p_max, irrep, verbose):
                                np.conj(subduced['coefficient_{si}']), axis=0)
   subduced.columns=pd.MultiIndex.from_tuples(subduced.columns)
   subduced.sort_index()
-
-  # create full correlators as real + 1j * imag and save real and imaginary 
-  # part seperately
-  subduced = subduced.xs('re', level=2, axis=1) + \
-                                       (1j) * subduced.xs('im', level=2, axis=1)
 
   ##############################################################################
   # write data to disc

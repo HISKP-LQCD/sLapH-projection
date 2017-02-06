@@ -1,3 +1,5 @@
+# functions for munging and cleaning correlators
+
 import h5py
 import numpy as np
 import itertools as it
@@ -6,11 +8,11 @@ import operator
 from pandas import Series, DataFrame
 import pandas as pd
 
-def scalar_mul(x, y):
+def _scalar_mul(x, y):
   return sum(it.imap(operator.mul, x, y))
 
-def abs2(x):
-  return scalar_mul(x, x)
+def _abs2(x):
+  return _scalar_mul(x, x)
 
 # TODO: nb_cnfg is spurious, can just use len(lookup_cnfg)
 def set_lookup_cnfg(sta_cnfg, end_cnfg, del_cnfg, missing_configs, verbose=0):
@@ -48,42 +50,57 @@ def set_lookup_cnfg(sta_cnfg, end_cnfg, del_cnfg, missing_configs, verbose=0):
   return lookup_cnfg
 
 
+# TODO: write wrapper function that calculates lookup_p3 and make that a 
+# parameter itself
+# TODO: generalize lookup_p construction by writing a function that can get 
+# either a momentum or a tuple made of two
+# TODO: 4pt function is incosistent for box and direct diagram
 def set_lookup_p(p_max, p_cm, diagram):
+  """
+  create lookup table for all possible 3-momenta that can appear on the lattice
+  below a given cutoff
 
-  # create lookup table for all possible 3-momenta that can appear in our 
-  # contractions
-  # depending on chosen diagram create allowed momenta or combinations of two
-  # momenta at source/sink and then combine them demanding momentum conservation
+  Parameters
+  ----------
+  p_max : int
+      Cut-off. Do not consider momenta with a higher absolute value than this
+  p_cm : int
+      Absolute value of sum of all momenta at source or sink. Must be equal at
+      both due to momentum conservation
+  diagram : string, {'C20', 'C3+', 'C4*'}
+      The number of momenta is equal to the number of quarks in a chosen 
+      diagram. It is encoded in the second char of the diagram name
 
-  # still need to cutoff at momentum 2 for p_cm==0 and check whether the additional
-  # momenta for p_cm==4 can be used
+  Returns
+  -------
+  list of tuples (of tuples)
+      List that contains tuples for source and sink with tuples for the momenta.
+      For every possible momentum combination, there is one list entry
+  """
 
-  # TODO: write wrapper function that calculates lookup_p3 and make that a parameter itself
-  # TODO: generalize lookup_p construction by writing a function that can get either a momentum
-  # or a tuple made of two
-  lookup_p3 = list(it.ifilter(lambda x: abs2(x) <= p_max, \
+  lookup_p3 = list(it.ifilter(lambda x: _abs2(x) <= p_max, \
                                   it.product(range(-p_max, p_max+1), repeat=3)))
   lookup_p3_reduced = [(0,0,0), (0,0,1), (0,1,1), (1,1,1), (0,0,2)]
   
   if diagram == 'C20':
-    lookup_so = it.ifilter(lambda x : abs2(x) == p_cm, lookup_p3)
+    lookup_so = it.ifilter(lambda x : _abs2(x) == p_cm, lookup_p3)
     lookup_so, lookup_si = it.tee(lookup_so, 2)
     lookup_p = it.ifilter(lambda (x,y): \
                             tuple(x) == tuple(it.imap(operator.neg, y)), \
                                                it.product(lookup_so, lookup_si))
   elif diagram == 'C3+':
     lookup_so = it.ifilter(lambda (x,y): \
-                             abs2(list(it.imap(operator.add, x, y))) == p_cm and \
+                             _abs2(list(it.imap(operator.add, x, y))) == p_cm and \
                              not (p_cm == 0 and (tuple(x) == tuple(y))), \
                                                 it.product(lookup_p3, repeat=2))
-    lookup_si = it.ifilter(lambda x : abs2(x) == p_cm, lookup_p3)
+    lookup_si = it.ifilter(lambda x : _abs2(x) == p_cm, lookup_p3)
     lookup_p = it.ifilter(lambda ((w,x),y): \
                             tuple(it.imap(operator.add, w, x)) == tuple(it.imap(operator.neg, y)), \
                                                it.product(lookup_so, lookup_si))
 
   elif diagram.startswith('C4'):
     lookup_so = it.ifilter(lambda (x,y): \
-#                             abs2(list(it.imap(operator.add, x, y))) == p_cm and \
+#                             _abs2(list(it.imap(operator.add, x, y))) == p_cm and \
                              (tuple(it.imap(operator.add, x, y)) == lookup_p3_reduced[p_cm]) and \
                              not (p_cm == 0 and (tuple(x) == tuple(y))), \
                                                 it.product(lookup_p3, repeat=2))
@@ -99,11 +116,33 @@ def set_lookup_p(p_max, p_cm, diagram):
     print 'in set_lookup_p: diagram unknown! Quantum numbers corrupted.'
   return list(lookup_p)
 
+# TODO: currently calculates all combinations, but only g1 with g01 etc. is wanted,
+# not eg. g1 with g02
+# TODO: gamma_5 is hardcoded. That should be generelized in the future
+# TODO: combine set_lookup_p and set_lookup_g (and set_lookup_d) to possible set_lookup_qn?
 def set_lookup_g(gammas, diagram):
-  # TODO: currently calculates all combinations, but only g1 with g01 etc. is wanted,
-  # not eg. g1 with g02
-  # TODO: gamma_5 is hardcoded. That should be generelized in the future
-  # TODO: combine set_lookup_p and set_lookup_g (and set_lookup_d) to possible set_lookup_qn?
+  """
+  create lookup table for all combinations of Dirac operators that can appear 
+  in the gevp of a chosen operator basis
+
+  Parameters
+  ----------
+  gammas : list of list of ints and string
+      A list which for each gamma structure coupling to the rho meson contains
+      a list with the integer indices used in the contraction code and a 
+      latex-style name for plotting labels.
+  diagram : string, {'C20', 'C3+', 'C4*'}
+      If one- and two-meson operators contribute, the appearing Dirac operators
+      change because the mesons in a two-meson operator can couple to different
+      quantum numbers individually
+
+  Returns
+  -------
+  list of tuples (of tuples)
+      List that contains tuples for source and sink with tuples for the Dirac
+      operators. They are referenced by their id in the cntrv0.1-code. For
+      every possible operators combination, there is one list entry
+  """
 
   if diagram == 'C20':
     lookup_so = it.product([g for gamma in gammas for g in gamma[:-1]])
@@ -167,10 +206,29 @@ def set_lookup_qn(diagram, p_cm, p_max, gammas, verbose=0):
   
   return lookup_qn
 
-
+# TODO: displacement hardcoded
 def set_groupname(diagram, p, g):
-  # sets groupname the desired correlator in the hdf5 output of the cntrv0.1-code.
-  # TODO: displacement hardcoded
+  """
+  Creates string with filename of the desired diagram calculated by the 
+  cntrv0.1-code.
+
+  Parameters
+  ----------
+  diagram : string, {'C20', 'C3+', 'C4+B', 'C4+D'}
+      Diagram of wick contractions for the rho meson.
+  p : tuple (of tuple) of tuple of int
+      Tuple of momentum (or tuple of tuple of momenta in case of two-meson 
+      operators) at source and sink. Momenta are given as tuple of int. 
+  g : tuple (of tuple) of int
+      Tuple of Dirac operators (or tuple of tuple of Dirac operators) at source
+      and sink. Dirac operators are referred toby their id in the cntrv0.1-code.
+      For every possible operators combination, there is one list entry.
+
+  Returns
+  -------
+  groupname : string
+      Filename of contracted perambulators for the given parameters
+  """
   if diagram == 'C20':
     groupname = diagram + '_uu_p%1i%1i%1i.d000.g%i' % \
                                              (p[0][0], p[0][1], p[0][2], g[0][0]) \
@@ -198,10 +256,42 @@ def set_groupname(diagram, p, g):
 
   return groupname
 
+def multiply_trtr_diagram(data):
+  """
+  Multiply factors of the tr()*tr() like diagram C4+D
+
+  Parameters
+  ----------
+  data : pd.DataFrame
+      A dataframe with rows cnfg x T x {rere, reim, imre, imim}. 
+
+  Returns
+  -------
+  data : pd.DataFrame
+      A dataframe with rows cnfg x T x {re, im} appropriately multiplied out.
+
+  Notes
+  -----
+  C4+D is the diagram factorizing into a product of two traces. The imaginary 
+  part of the individual traces is 0 in the isosping limit. To suppress noise, 
+  The real part of C4+D are calculated as product of real parts of the single 
+  traces:
+  (a+ib)*(c+id) ~= (ac) +i(bc+ad)
+  because b, d are noise
+  """
+
+  names = data.index.names
+  data = pd.concat([ data.xs('rere', level=2), \
+                     data.xs('reim', level=2) + data.xs('imre', level=2)], \
+                   keys=['re', 'im']).reorder_levels([1,2,0]).\
+                                                         sort_index(level=[0,1])
+  data.index.names = names
+  return data
+
 ################################################################################
 # reading configurations
 
-def ensembles(lookup_cnfg, lookup_qn, diagram, T, directory, verbose=0):
+def read(lookup_cnfg, lookup_qn, diagram, T, directory, verbose=0):
   """
   Read resulting correlators from contraction code and creates a pd.DataFrame
 
@@ -225,17 +315,12 @@ def ensembles(lookup_cnfg, lookup_qn, diagram, T, directory, verbose=0):
       A pd.DataFrame with rows (cnfg x T x re/im) and columns i where i are 
       the row numbers of `lookup_qn` 
   """
-  
-  print 'reading data for %s' % (diagram)
 
   data = []
 
   for cnfg in lookup_cnfg:
     # filename and path
     filename = directory + 'cnfg%i/' % cnfg + diagram + '_cnfg%i' % cnfg + '.h5'
-
-    if verbose:
-      print filename
 
     # to achieve hirarchical indexing for quantum numbers build DataFrame for
     # each loop seperately
@@ -259,9 +344,17 @@ def ensembles(lookup_cnfg, lookup_qn, diagram, T, directory, verbose=0):
       # C4+D
       data_qn[op] = pd.read_hdf(filename, key=groupname).stack()
     data.append(data_qn)
-  data = pd.concat(data, keys=lookup_cnfg, axis=0)
- 
-  print '\tfinished reading'
+  data = pd.concat(data, keys=lookup_cnfg, axis=0, names=['cnfg', 'T', 're/im'])
+
+  # in case diagram is C4+D perform last mutliplication of factorizing traces
+  if diagram == 'C4+D':
+    data = multiply_trtr_diagram(data)
+
+  # create full correlators as real + 1j * imag
+  data = data.xs('re', level='re/im') + (1j) * data.xs('im', level='re/im')
+
+  if verbose:
+    print '\tfinished reading'
 
   return data
   
