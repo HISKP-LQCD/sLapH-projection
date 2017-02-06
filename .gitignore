@@ -23,4 +23,11 @@ pion_mass/
 3pt/clebsch_gordan_4pt_nozweig.py
 4pt/clebsch_gordan_+1.py
 4pt/clebsch_gordan_-1.py
+2016_08_10-readdata/
+2016_09_26-readdata/
+calc_cg_coefficients.py
+clebsch_gordan_2pt_numpy.py
+clebsch_gordan_4pt_numpy.py
+test_read.py
+
 
