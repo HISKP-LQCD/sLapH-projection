@@ -6,7 +6,10 @@
 *.dat
 *.npy
 *.out
+*.h5
 3pt/test
+# swap files
+*.swp
 
 # untracked files
 3pt_non_hermitian/
@@ -20,3 +23,4 @@ pion_mass/
 3pt/clebsch_gordan_4pt_nozweig.py
 4pt/clebsch_gordan_+1.py
 4pt/clebsch_gordan_-1.py
+
