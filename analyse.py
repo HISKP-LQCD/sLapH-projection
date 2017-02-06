@@ -52,7 +52,8 @@ def main():
     missing_configs = [int(m) for m in missing_configs.split(',')]
   
   if verbose:
-    print '################################################################################'
+    print '#################################################################'\
+                                                               '###############'
     print 'Reading infile'
 
     print sta_cnfg
@@ -112,19 +113,23 @@ def main():
 
   if verbose:
     print outpath
+
   ############################################################################## 
   # Main
   for p_cm in p:
-    print 'p_cm = ', p_cm
+    if verbose:
+      print '################################################################'\
+                                                              '################'
+      print 'p_cm = ', p_cm
 
     ############################################################################ 
     # read diagrams
-    if verbose:
-      print '################################################################################'
-      print 'Start reading correlation function diagrams'
+    data = {}
+    lookup_qn = {}
     for diagram, directory in zip(diagrams, directories):
 
-      print 'reading data for %s' % (diagram)
+      if verbose:
+        print '\treading data for %s' % (diagram)
       lookup_cnfg = raw_data.set_lookup_cnfg(sta_cnfg, end_cnfg, del_cnfg, \
                                                        missing_configs, verbose)
       # set up lookup table for quantum numbers
@@ -135,42 +140,67 @@ def main():
       # value. Modify the cutoff accordingly.
 #      p_cm_max = np.asarray([4,5,6,7,4], dtype=int)[p_cm]
       # TODO: that needs to be refactored when going to a larger operator basis
-      lookup_qn = raw_data.set_lookup_qn(diagram, p_cm, p_max, gammas, verbose)
+      lookup_qn[diagram] = raw_data.set_lookup_qn(diagram, p_cm, p_max, 
+                                                                gammas, verbose)
   
-      data = raw_data.read(lookup_cnfg, lookup_qn, diagram, T, directory, 
-                                                                        verbose)
+      data[diagram] = raw_data.read(lookup_cnfg, lookup_qn, diagram, T, 
+                                                             directory, verbose)
       # write data
       path = '%s/%s/0_raw-data/' % (outpath, ensemble)
       filename = '%s_p%1i.h5' % (diagram, p_cm)
-#      utils.ensure_dir('./readdata')
-      utils.write_hdf5_correlators(path, filename, data, lookup_qn, verbose)
-  
-#    ############################################################################ 
-#    # wick contraction
-#    # TODO: make wick contractions return data and quantum numbers as well
-#    # TODO: factor out calculation of correlators and put into correlators loop
-#    if verbose:
-#      print '################################################################################'
-#      print 'Starting Wick contractions'
-#    correlators = wick.rho(p_cm, diagrams, verbose)
+      utils.write_hdf5_correlators(path, filename, data, 'data', verbose)
+      utils.write_hdf5_correlators(path, filename, lookup_qn, 'qn', verbose)
+ 
+    ############################################################################
+    # Subduction
+
+    lookup_irreps = subduction.set_lookup_irreps(p_cm)
+
+    subduced_data = {}
+    lookup_qn_irrep = {}
+    for diagram in diagrams:
+
+      print 'subducing data for %s' % diagram
+      for irrep in lookup_irreps:
+
+        print '\tsubducing into %s' % irrep
+
+        lookup_qn_irrep[(diagram, irrep)] = subduction.set_lookup_qn_irrep( \
+                                              lookup_qn[diagram], diagram, \
+                                                   gammas, p_cm, irrep, verbose)
+        subduced_data[(diagram, irrep)] = subduction.ensembles(data[diagram], \
+                                                       lookup_qn_irrep[diagram])
+        # write data to disc
+        path = '%s/%s/1_subduced-data/' % (outpath, ensemble)
+        filename = '/%s_p%1i_%s.h5' % (diagram, p_cm, irrep)
+        utils.write_hdf5_correlators(path, filename, subduced_data, 'data', \
+                                                                        verbose)
+
+#        ########################################################################
+#        # sum over gamma structures. 
+#        # Only real part is physically relevant at that point
+#        subduced = subduced.apply(np.real).sum(level=[0,1,2,3,5])
+#        # sum over equivalent momenta
+#        subduced = subduced.sum(level=[0,1,2])
+#        # average over rows
+#        subduced = subduced.mean(level=[0,1])
 #
-#    ############################################################################ 
-#    # Subduction
-#    # TODO: Instead get data, lookup_qn from wick.rho() and reorder loops
-#    if verbose:
-#      print '################################################################################'
-#      print 'Starting Subduction'
-#
-#    lookup_irreps = subduction.set_lookup_irreps(p_cm)
-#    for correlator in correlators:
-#      contracted_data, lookup_qn = utils.read_hdf5_correlators( \
-#                                     'readdata/%s_p%1i.h5' % (correlator, p_cm))
-#      contracted_data.columns.name = 'index'
-#      for irrep in lookup_irreps:
-#        lookup_qn_irrep = subduction.set_lookup_qn_irrep(lookup_qn, correlator,\
-#                                                   gammas, p_cm, irrep, verbose)
-#        subduced_data = subduction.ensembles(contracted_data, lookup_qn_irrep, \
-#                                        p_cm, correlator, p_max, irrep, verbose)
+#        ##############################################################################
+#        # write data to disc
+#        path = './readdata/%s_p%1i_%s_avg.h5' % (diagram, p_cm, irrep)
+#        utils.ensure_dir('./readdata')
+#        utils.write_hdf5_correlators(path, subduced, None)
+
+    ############################################################################ 
+    # wick contraction
+    # TODO: make wick contractions return data and quantum numbers as well
+    # TODO: factor out calculation of correlators and put into correlators loop
+
+    wick.set_lookup_correlators()
+    for irrep in lookup_irreps:
+
+       correlators = wick.rho(p_cm, diagrams, verbose)
+
 #    ############################################################################ 
 #    # Gevp Construction
 #    for irrep in lookup_irreps:

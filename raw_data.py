@@ -45,7 +45,7 @@ def set_lookup_cnfg(sta_cnfg, end_cnfg, del_cnfg, missing_configs, verbose=0):
       continue
     lookup_cnfg.append(cnfg)
   if(verbose):
-    print 'number of configurations: %i' % len(lookup_cnfg)
+    print '\t\tNumber of configurations: %i' % len(lookup_cnfg)
 
   return lookup_cnfg
 
@@ -335,8 +335,6 @@ def read(lookup_cnfg, lookup_qn, diagram, T, directory, verbose=0):
       g = lookup_qn.ix[op, ['\gamma_{so}', '\gamma_{si}']]
       # TODO: catch when a groupname does not exist
       groupname = set_groupname(diagram, p, g)
-      if verbose:
-        print groupname
 
       # TODO: real and imaginay part are treated seperately through the whole
       # program. It might be easiert to combine them already at read-in or 

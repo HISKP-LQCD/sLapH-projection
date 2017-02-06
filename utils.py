@@ -1,3 +1,7 @@
+# Helper functions for IO to store intermediate results of subduction code on
+# hard disk
+# TODO: could be restructured as table format to access individual files and 
+# allow appending, but speed is uncritical
 import os
 
 import pandas as pd
@@ -6,40 +10,34 @@ from pandas import Series, DataFrame
 ################################################################################
 # checks if the directory where the file will be written does exist
 def ensure_dir(f):
-#  d = os.path.dirname(f)
+  """Helper function to create a directory if it does not exis"""
   if not os.path.exists(f):
     os.makedirs(f)
 
-def read_hdf5_correlators(path, read_qn=True):
+def read_hdf5_correlators(path, key):
   """
-  Read correlators in the format used by subduction code routines
+  Read pd.DataFrame from hdf5 file
 
   Parameters
   ----------
   path : string
       Path to the hdf5 file
+  key : string
+      The hdf5 groupname to access the given data under. 
 
   Returns
   -------
   data : pd.DataFrame
-      The correlator data contained in the hdf5 file
-  qn : pd.DataFrame
-      The physical quantum number associated to the data above
+      The data contained in the hdf5 file under the given key
   """
 
-  data = pd.read_hdf(path, 'data')
-  if read_qn:
-    data.index.name = 'id'
-    qn = pd.read_hdf(path, 'qn')
-
-    return data, qn
-  else:
-    return data
+  data = pd.read_hdf(path, key)
   
-# TODO: us pandas to_hdf5 routines
-def write_hdf5_correlators(path, filename, data, lookup_qn, verbose=False):
+  return data
+  
+def write_hdf5_correlators(path, filename, data, key, verbose=False):
   """
-  write pd.DataFrame of correlation functions as hdf5 file
+  write pd.DataFrame as hdf5 file
 
   Parameters
   ----------
@@ -48,20 +46,15 @@ def write_hdf5_correlators(path, filename, data, lookup_qn, verbose=False):
   filename : string
       Name to save the hdf5 file as
   data : pd.DataFrame
-      The correlator data contained in the hdf5 file
-  lookup_qn : pd.DataFrame
-      The physical quantum number associated to the data above
+      The data to write
+  key : string
+      The hdf5 groupname to access the given data under. Specifying multiple 
+      keys, different data can be written to the same file
   """
 
   ensure_dir(path)
-  store = pd.HDFStore(path+filename)
-  # write all operators
-  store['data'] = data
-  if lookup_qn is not None:
-    store['qn'] = lookup_qn
-
-  store.close()
-  
+  data.to_hdf(path+filename, key, mode='w')
+ 
   if verbose:
     print '\tfinished writing', filename
 

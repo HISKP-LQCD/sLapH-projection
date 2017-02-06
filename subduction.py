@@ -42,35 +42,6 @@ def set_lookup_irreps(p_cm):
     irreps = []
   return irreps
 
-
-# TODO: should be a more elegant solution for get_gevp_gamma and 
-def get_gevp_single_gamma(g):
-
-  # Operators entering the Gevp. Last entry must contain the name in LaTeX 
-  # compatible notation for plot labels
-  gamma_i =   [1, 2, 3, 'gi']
-  gamma_0i =  [10, 11, 12, 'g0gi']
-  gamma_50i = [13, 14, 15, 'g5g0gi']
-  gamma_5 = [5, 'g5']
-
-  if g in gamma_i:
-    return '\gamma_i'
-  elif g in gamma_0i:
-    return '\gamma_0i'
-  elif g in gamma_50i:
-    return '\gamma_50i'
-  elif g in gamma_5:
-    return '\gamma_5'
-
-def get_gevp_gamma(gamma):
-  if (len(gamma) == 1):
-    return get_gevp_single_gamma(gamma[0])
-  else:
-    result = []
-    for g in gamma:
-      result.append(get_gevp_single_gamma(g))
-    return tuple(result)
-
 # TODO: properly read that from infile and pass to get_clebsch_gordan
 # TODO: actually use names to restrict basis_table to what was in the infile
 def get_basis(names, verbose):
@@ -118,10 +89,6 @@ def get_basis(names, verbose):
                 names=["gevp", '|J, M\rangle', '\gamma']), \
             columns=['subduction-coefficient'], dtype=complex).sort_index()])
 
-  if verbose:
-    print 'basis_table'
-    print basis_table
-
   return basis_table[basis_table['subduction-coefficient'] != 0]
 
 
@@ -161,10 +128,10 @@ def get_clebsch_gordans(diagram, gammas, p_cm, irrep, verbose):
   dynamically generated in the clebsch_gordan submodule
   """
 
-  if diagram == 'C2':
+  if diagram.startswith('C2'):
     cg_one_operator = cg_2pt.coefficients(irrep)
     cg_table_so, cg_table_si = cg_one_operator, cg_one_operator
-  elif diagram == 'C3':
+  elif diagram.startswith('C3'):
     # get factors for the desired irreps
     cg_one_operator = cg_2pt.coefficients(irrep)
     cg_two_operators = cg_4pt.coefficients(irrep)
@@ -172,7 +139,7 @@ def get_clebsch_gordans(diagram, gammas, p_cm, irrep, verbose):
     cg_two_operators['cg-coefficient'] = np.conj(cg_two_operators['cg-coefficient'])
     # for 3pt function we have pipi operator at source and rho operator at sink
     cg_table_so, cg_table_si = cg_two_operators, cg_one_operator
-  elif diagram == 'C4':
+  elif diagram.startswith('C4'):
     cg_two_operators = cg_4pt.coefficients(irrep)
     # Christopher Thomas: Written down for Creation operator
     cg_two_operators['cg-coefficient'] = np.conj(cg_two_operators['cg-coefficient'])
@@ -263,19 +230,46 @@ def set_lookup_qn_irrep(qn, diagram, gammas, p_cm, irrep, verbose):
   del(qn_irrep['gevp_{so}'])
   del(qn_irrep['gevp_{si}'])
 
-  if verbose:
-    print "qn_irrep:"
-    print qn_irrep
-
   return qn_irrep
 
 
-# TODO: should be possible to omit p_cm and diagram as parameters
-def ensembles(data, qn_irrep, p_cm, diagram, p_max, irrep, verbose):
+def ensembles(data, qn_irrep):
+  """
+  Combine physical operators to transform like a given irreducible 
+  representation and combine equivalent physical quantum numbers
 
-  print 'subducing p = %i' % p_cm
+  Parameters
+  ----------
+  data : pd.DataFrame
+      Cleaned und munged raw output of the cntr-v.0.1 code
+  qn_irrep : pd.Series
+      Series with a column for each quantum number at source and sink, the
+      Clebsch-Gordan coefficients at source and sink and a column decoding
+      the row and column of the gevp these quantum numbers enter into:
+      \mu \gamma_{so} cg-coefficient_{so} p_{so} \gamma_{si} \
+          cg-coefficient_{si} p_{si} index gevp_row gevp_col
 
+  Returns
+  -------
+  subduced : pd.DataFrame
+      Table with physical quantum numbers as rows and gauge configuration and 
+      lattice time as columns.
+      Contains the linear combinations of correlation functions transforming
+      like what the parameters qn_irrep was created with
+  """
+
+  print 'data'
+  print data.T
+
+
+  print 'qn'
+  print qn_irrep[:5]
+  
   # actual subduction step. sum cg_so * conj(cg_si) * corr
+  # TODO: This generates a warning 
+  # /hadron/werner/.local/lib/python2.7/site-packages/pandas/tools/merge.py:480: UserWarning: merging between different levels can give an unintended result (1 levels on the left, 2 on the right)
+  #  warnings.warn(msg, UserWarning)
+  # But the merging is on one level only.
   subduced = pd.merge(qn_irrep, data.T, how='left', left_on=['index'], 
                                                                right_index=True)
   # not needed after index was merged on
@@ -288,30 +282,6 @@ def ensembles(data, qn_irrep, p_cm, diagram, p_max, irrep, verbose):
                                np.conj(subduced['coefficient_{si}']), axis=0)
   subduced.columns=pd.MultiIndex.from_tuples(subduced.columns)
   subduced.sort_index()
-
-  ##############################################################################
-  # write data to disc
-  # TODO: look for more elegant solution than passing None. Can python 
-  # functions be overloaded?
-  # TODO: path must depend on irrep
-  path = './readdata/%s_p%1i_%s.h5' % (diagram, p_cm, irrep)
-  utils.ensure_dir('./readdata')
-  utils.write_hdf5_correlators(path, subduced, None)
-
-  ##############################################################################
-  # sum over gamma structures. 
-  # Only real part is physically relevant at that point
-  subduced = subduced.apply(np.real).sum(level=[0,1,2,3,5])
-  # sum over equivalent momenta
-  subduced = subduced.sum(level=[0,1,2])
-  # average over rows
-  subduced = subduced.mean(level=[0,1])
-
-  ##############################################################################
-  # write data to disc
-  path = './readdata/%s_p%1i_%s_avg.h5' % (diagram, p_cm, irrep)
-  utils.ensure_dir('./readdata')
-  utils.write_hdf5_correlators(path, subduced, None)
-  
+ 
   return subduced
 
