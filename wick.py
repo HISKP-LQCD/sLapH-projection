@@ -5,7 +5,7 @@ from pandas import Series, DataFrame
 
 import utils
 
-def rho_2pt(p_cm, diagram='C20', verbose=0):
+def rho_2pt(data, irrep, verbose=0):
 
   # TODO: change the gamma structures
   gamma_i =   [1, 2, 3, 'gi']
@@ -19,29 +19,37 @@ def rho_2pt(p_cm, diagram='C20', verbose=0):
   gamma_50i = [(g,) for g in gamma_50i[:-1]]
 
 
-  data = pd.read_hdf('readdata/%s_p%1i.h5' % (diagram, p_cm), 'data')
-  qn = pd.read_hdf('readdata/%s_p%1i.h5' % (diagram, p_cm), 'qn')
+  wick = data[('C20',irrep)]
 
-  wick = pd.concat([ \
-  data.T[qn['\gamma_{so}'].isin(gamma_i)   & qn['\gamma_{si}'].isin(gamma_i)]  *( 2.), \
-  data.T[qn['\gamma_{so}'].isin(gamma_i)   & qn['\gamma_{si}'].isin(gamma_0i)] *(-2.), \
-  data.T[qn['\gamma_{so}'].isin(gamma_i)   & qn['\gamma_{si}'].isin(gamma_50i)]*( 2.*1j), \
-  data.T[qn['\gamma_{so}'].isin(gamma_0i)  & qn['\gamma_{si}'].isin(gamma_i)]  *( 2.), \
-  data.T[qn['\gamma_{so}'].isin(gamma_0i)  & qn['\gamma_{si}'].isin(gamma_0i)] *(-2.), \
-  data.T[qn['\gamma_{so}'].isin(gamma_0i)  & qn['\gamma_{si}'].isin(gamma_50i)]*( 2.*1j), \
-  data.T[qn['\gamma_{so}'].isin(gamma_50i) & qn['\gamma_{si}'].isin(gamma_i)]  *( 2.*1j), \
-  data.T[qn['\gamma_{so}'].isin(gamma_50i) & qn['\gamma_{si}'].isin(gamma_0i)] *(-2.*1j), \
-  data.T[qn['\gamma_{so}'].isin(gamma_50i) & qn['\gamma_{si}'].isin(gamma_50i)]*( 2.), \
-  ]).sort_index().T
+  idx = pd.IndexSclice
 
-  # write data
-  path = './readdata/%s_p%1i.h5' % ('C2', p_cm)
-  utils.ensure_dir('./readdata')
-  utils.write_hdf5_correlators(path, wick, qn)
+  wick.loc[idx[:,:,:,:,gamma_i,  :,gamma_i],  :] *= ( 2.)
+  wick.loc[idx[:,:,:,:,gamma_i,  :,gamma_0i], :] *= (-2.)
+  wick.loc[idx[:,:,:,:,gamma_i,  :,gamma_50i],:] *= ( 2.*1j)
+  wick.loc[idx[:,:,:,:,gamma_0i, :,gamma_i],  :] *= ( 2.)
+  wick.loc[idx[:,:,:,:,gamma_0i, :,gamma_0i], :] *= (-2.)
+  wick.loc[idx[:,:,:,:,gamma_0i, :,gamma_50i],:] *= ( 2.*1j)
+  wick.loc[idx[:,:,:,:,gamma_50i,:,gamma_i],  :] *= ( 2.*1j)
+  wick.loc[idx[:,:,:,:,gamma_50i,:,gamma_0i], :] *= (-2.*1j)
+  wick.loc[idx[:,:,:,:,gamma_50i,:,gamma_50i],:] *= ( 2.)
+
+#  wick = pd.concat([ \
+#  data.T[qn['\gamma_{so}'].isin(gamma_i)   & qn['\gamma_{si}'].isin(gamma_i)]  *( 2.), \
+#  data.T[qn['\gamma_{so}'].isin(gamma_i)   & qn['\gamma_{si}'].isin(gamma_0i)] *(-2.), \
+#  data.T[qn['\gamma_{so}'].isin(gamma_i)   & qn['\gamma_{si}'].isin(gamma_50i)]*( 2.*1j), \
+#  data.T[qn['\gamma_{so}'].isin(gamma_0i)  & qn['\gamma_{si}'].isin(gamma_i)]  *( 2.), \
+#  data.T[qn['\gamma_{so}'].isin(gamma_0i)  & qn['\gamma_{si}'].isin(gamma_0i)] *(-2.), \
+#  data.T[qn['\gamma_{so}'].isin(gamma_0i)  & qn['\gamma_{si}'].isin(gamma_50i)]*( 2.*1j), \
+#  data.T[qn['\gamma_{so}'].isin(gamma_50i) & qn['\gamma_{si}'].isin(gamma_i)]  *( 2.*1j), \
+#  data.T[qn['\gamma_{so}'].isin(gamma_50i) & qn['\gamma_{si}'].isin(gamma_0i)] *(-2.*1j), \
+#  data.T[qn['\gamma_{so}'].isin(gamma_50i) & qn['\gamma_{si}'].isin(gamma_50i)]*( 2.), \
+#  ]).sort_index().T
+
+  return wick
 
 ################################################################################
 
-def rho_3pt(p_cm, diagram='C3+', verbose=0):
+def rho_3pt(data, irrep, verbose=0):
 
   # TODO: change the gamma structures
   gamma_i =   [1, 2, 3, 'gi']
@@ -54,53 +62,93 @@ def rho_3pt(p_cm, diagram='C3+', verbose=0):
   gamma_0i = [(g,) for g in gamma_0i[:-1]]
   gamma_50i = [(g,) for g in gamma_50i[:-1]]
 
-  data = pd.read_hdf('readdata/%s_p%1i.h5' % (diagram, p_cm), 'data')
-  qn = pd.read_hdf('readdata/%s_p%1i.h5' % (diagram, p_cm), 'qn')
+  wick = data[('C3+',irrep)]
 
-  wick = pd.concat([ \
-  data.T[qn['\gamma_{si}'].isin(gamma_i)]  *(2.), \
-  data.T[qn['\gamma_{si}'].isin(gamma_0i)] *(-2.), \
-  data.T[qn['\gamma_{si}'].isin(gamma_50i)]*(2*1j), \
-  ]).sort_index().T
+  wick.loc[idx[:,:,:,:,:,:,gamma_i],  :] *= ( 2.)
+  wick.loc[idx[:,:,:,:,:,:,gamma_0i], :] *= (-2.)
+  wick.loc[idx[:,:,:,:,:,:,gamma_50i],:] *= ( 2.*1j)
 
-  # write data
-  path = './readdata/%s_p%1i.h5' % ('C3', p_cm)
-  utils.ensure_dir('./readdata')
-  utils.write_hdf5_correlators(path, wick, qn)
+#  wick = pd.concat([ \
+#  data.T[qn['\gamma_{si}'].isin(gamma_i)]  *(2.), \
+#  data.T[qn['\gamma_{si}'].isin(gamma_0i)] *(-2.), \
+#  data.T[qn['\gamma_{si}'].isin(gamma_50i)]*(2*1j), \
+#  ]).sort_index().T
+
+  return wick
 
 ################################################################################
 
-def rho_4pt(p_cm, diagrams, verbose=0):
+# TODO: catch if keys were not found
+# TODO: having to pass irrep is anoying, but the keys should vanish anyway when
+# this is rewritten as member function
+def rho_4pt(data, irrep, verbose=0):
 
-  data_box = pd.read_hdf('readdata/%s_p%1i.h5' % (diagrams[0], p_cm), 'data')
-  qn_box = pd.read_hdf('readdata/%s_p%1i.h5' % (diagrams[0], p_cm), 'qn')
-  data_dia = pd.read_hdf('readdata/%s_p%1i.h5' % (diagrams[1], p_cm), 'data')
-  qn_dia = pd.read_hdf('readdata/%s_p%1i.h5' % (diagrams[1], p_cm), 'qn')
-
-
+  data_box = data[('C4+B', irrep)]
+  data_dia = data[('C4+D', irrep)]
+  
+  # TODO: support read in if the passed data is incomplete
+#  data_box = pd.read_hdf('readdata/%s_p%1i.h5' % (diagrams[0], p_cm), 'data')
+#  data_dia = pd.read_hdf('readdata/%s_p%1i.h5' % (diagrams[1], p_cm), 'data')
 
   wick = ((-2.)*data_box).add(data_dia, fill_value=0)
-  print wick[:3]
 
-  # write data
-  path = './readdata/%s_p%1i.h5' % ('C4', p_cm)
-  utils.ensure_dir('./readdata')
-  utils.write_hdf5_correlators(path, wick, qn_box)
+  return wick
 
 ################################################################################
 
-# TODO: p_cm is only needed for filenames. Should be possible to go without it
-def rho(p_cm, diagrams, verbose=0):
+def set_lookup_correlators(diagrams):
+  """
+  Extracts the correlation functions one can construct from the given diagrams
+
+  Parameters
+  ----------
+  diagrams : list of string {'C20', 'C3+', 'C4+B', 'C4+D'}
+      Diagram of wick contractions contributing the rho meson correlation 
+      function
+
+  Returns
+  -------
+  lookup_correlators : list of string {'C2', 'C3', 'C4'}
+      Correlation functions constituted by given diagrams
+  """
+
+  lookup_correlators = []
+  for nb_quarklines in range(2,5):
+
+    # as a function argument give the names of all diagrams with the correct
+    # number of quarklines
+    mask = [d.startswith('C%1d' % nb_quarklines) for d in diagrams]
+    diagram = list(it.compress(diagrams, mask))
+
+    if (len(diagram) == 0):
+      continue
+    else:
+      lookup_correlators.append("C%1d" % nb_quarklines)
+
+  return lookup_correlators
+
+# TODO: pass path as alternative to read the data
+def rho(data, correlator, irrep, verbose=0):
   """
   Sums all diagrams with the factors they appear in the Wick contractions
 
   Parameters
   ----------
-  p_cm : int
-      The center-of-mass momentum. 
-  diagrams : list of string {'C20', 'C3+', 'C4+B', 'C4+D'}
-      The diagrams the wick contration should be performed for
-      WARNING: The order must be as above!
+  data : Dictionary of pd.DataFrame, keys in {'C20', 'C3+', 'C4+B', 'C4+d'}
+      For each diagram constituting the given `corrrelator` `data` must contain
+      an associated pd.DataFrame with its subduced lattice data
+  correlator : string {'C2', 'C3', 'C4'}
+      Correlation functions to perform the Wick contraction on
+  irrep : string, {'T1', 'A1', 'E2', 'B1', 'B2'}
+      name of the irreducible representation of the little group the operator
+      is required to transform under.
+
+
+  Returns
+  -------
+  contracted : pd.DataFrame
+      A correlation function with completely performed Wick contractions. Rows
+      and columns are unchanged compared to `data`
 
   Notes
   -----
@@ -111,38 +159,13 @@ def rho(p_cm, diagrams, verbose=0):
   4pt \langle \pi\pi(t_{so})^\dagger \pi\pi(t_si) \rangle
   In the isospin limit the first 2 only have one (linearly independent) diagram
   contributing, while the last one has two.
-
-  The code currently expects to either give none or all diagrams contributing
-  and is unsufficiently checking for erroneous calls.
-
-  The alternative (hardcoding everything) was avoided, because now it is 
-  possible to just read and contract a single gevp element.
   """
 
-  # loop over number of quarklines and call the appropriate wick contraction
-  # for each one
   # TODO: I don't think you have to emulate c function pointers for this
-  # TODO: Refactor calculation of list correlators
-  # TODO: make wick return correlators (data and qn)
-  func_map = {2 : rho_2pt, 3 : rho_3pt, 4 : rho_4pt}
-  correlators = []
-  for nb_quarklines in range(2,5):
-    # as a function argument give the names of all diagrams with the correct
-    # number of quarklines
-    mask = [d.startswith('C%1d' % nb_quarklines) for d in diagrams]
-    diagram = list(it.compress(diagrams, mask))
-    # compatibility to functions getting a single string, not a list
-    # TODO make rho_2pt and rho_3pt accecpt a string so that this becomes 
-    # superfluous
-    if (len(diagram) == 0):
-      continue
-    correlators.append("C%1d" % nb_quarklines)
-    if (len(diagram) == 1):
-      diagram = diagram[0]
-    if verbose:
-      print diagram
-    # call rho_2pt, rho_3pt, rho_4pt from this loop
-    func_map[nb_quarklines](p_cm, diagram, verbose)
+  rho = {'C2' : rho_2pt, 'C3' : rho_3pt, 'C4' : rho_4pt}
 
-  return correlators
+  # call rho_2pt, rho_3pt, rho_4pt from this loop
+  contracted = rho[correlator](data, irrep, verbose)
+
+  return contracted
 

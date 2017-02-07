@@ -258,13 +258,6 @@ def ensembles(data, qn_irrep):
       like what the parameters qn_irrep was created with
   """
 
-  print 'data'
-  print data.T
-
-
-  print 'qn'
-  print qn_irrep[:5]
-  
   # actual subduction step. sum cg_so * conj(cg_si) * corr
   # TODO: This generates a warning 
   # /hadron/werner/.local/lib/python2.7/site-packages/pandas/tools/merge.py:480: UserWarning: merging between different levels can give an unintended result (1 levels on the left, 2 on the right)
@@ -281,7 +274,6 @@ def ensembles(data, qn_irrep):
   subduced = subduced.ix[:,2:].multiply(subduced['coefficient_{so}']*
                                np.conj(subduced['coefficient_{si}']), axis=0)
   subduced.columns=pd.MultiIndex.from_tuples(subduced.columns)
-  subduced.sort_index()
- 
-  return subduced
+
+  return subduced.sort_index()
 

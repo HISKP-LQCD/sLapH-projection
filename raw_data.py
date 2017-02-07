@@ -354,7 +354,7 @@ def read(lookup_cnfg, lookup_qn, diagram, T, directory, verbose=0):
   if verbose:
     print '\tfinished reading'
 
-  return data
+  return data.sort_index(level=[0,1])
   
   ##############################################################################
 

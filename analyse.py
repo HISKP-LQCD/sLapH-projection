@@ -197,9 +197,17 @@ def main():
     # TODO: factor out calculation of correlators and put into correlators loop
 
     wick.set_lookup_correlators()
-    for irrep in lookup_irreps:
 
-       correlators = wick.rho(p_cm, diagrams, verbose)
+    contracted_data = {}
+
+    for correlator in correlators:
+
+      print 'contracting data for %s' % correlator 
+      for irrep in lookup_irreps:
+
+       contracted_data[correlator] = wick.rho(subduced_data, correlator, irrep, verbose)
+       print contracted_data[:5]
+       print ' '
 
 #    ############################################################################ 
 #    # Gevp Construction
