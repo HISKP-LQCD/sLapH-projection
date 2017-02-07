@@ -1,11 +1,38 @@
 import itertools as it
-import numpy as np
 import pandas as pd
 from pandas import Series, DataFrame
 
 import utils
 
 def rho_2pt(data, irrep, verbose=0):
+  """
+  Perform Wick contraction for 2pt function
+
+  Parameters
+  ----------
+  data : Dictionary of pd.DataFrame, keys in 
+      ({'C20', 'C3+', 'C4+B', 'C4+D'}, `irrep`)
+
+      For each diagram constituting the given `corrrelator` `data` must contain
+      an associated pd.DataFrame with its subduced lattice data
+  irrep : string, {'T1', 'A1', 'E2', 'B1', 'B2'}
+
+      Name of the irreducible representation of the little group the operator
+      is required to transform under.
+
+  Returns
+  -------
+  wick : pd.DataFrame
+      pd.DataFrame with indices like `data['C20']` and Wick contractions 
+      performed.
+
+  Notes
+  -----
+  The rho 2pt function is given by the contraction.
+  C^\text{2pt} = \langle \rho(t_{so})^\dagger \rho(t_si) \rangle
+
+  The gamma strucures that can appear in \rho(t) are hardcoded
+  """
 
   # TODO: change the gamma structures
   gamma_i =   [1, 2, 3, 'gi']
@@ -21,7 +48,7 @@ def rho_2pt(data, irrep, verbose=0):
 
   wick = data[('C20',irrep)]
 
-  idx = pd.IndexSclice
+  idx = pd.IndexSlice
 
   wick.loc[idx[:,:,:,:,gamma_i,  :,gamma_i],  :] *= ( 2.)
   wick.loc[idx[:,:,:,:,gamma_i,  :,gamma_0i], :] *= (-2.)
@@ -33,23 +60,40 @@ def rho_2pt(data, irrep, verbose=0):
   wick.loc[idx[:,:,:,:,gamma_50i,:,gamma_0i], :] *= (-2.*1j)
   wick.loc[idx[:,:,:,:,gamma_50i,:,gamma_50i],:] *= ( 2.)
 
-#  wick = pd.concat([ \
-#  data.T[qn['\gamma_{so}'].isin(gamma_i)   & qn['\gamma_{si}'].isin(gamma_i)]  *( 2.), \
-#  data.T[qn['\gamma_{so}'].isin(gamma_i)   & qn['\gamma_{si}'].isin(gamma_0i)] *(-2.), \
-#  data.T[qn['\gamma_{so}'].isin(gamma_i)   & qn['\gamma_{si}'].isin(gamma_50i)]*( 2.*1j), \
-#  data.T[qn['\gamma_{so}'].isin(gamma_0i)  & qn['\gamma_{si}'].isin(gamma_i)]  *( 2.), \
-#  data.T[qn['\gamma_{so}'].isin(gamma_0i)  & qn['\gamma_{si}'].isin(gamma_0i)] *(-2.), \
-#  data.T[qn['\gamma_{so}'].isin(gamma_0i)  & qn['\gamma_{si}'].isin(gamma_50i)]*( 2.*1j), \
-#  data.T[qn['\gamma_{so}'].isin(gamma_50i) & qn['\gamma_{si}'].isin(gamma_i)]  *( 2.*1j), \
-#  data.T[qn['\gamma_{so}'].isin(gamma_50i) & qn['\gamma_{si}'].isin(gamma_0i)] *(-2.*1j), \
-#  data.T[qn['\gamma_{so}'].isin(gamma_50i) & qn['\gamma_{si}'].isin(gamma_50i)]*( 2.), \
-#  ]).sort_index().T
-
   return wick
 
 ################################################################################
 
 def rho_3pt(data, irrep, verbose=0):
+  """
+  Perform Wick contraction for 3pt function
+
+  Parameters
+  ----------
+  data : Dictionary of pd.DataFrame, keys in 
+      ({'C20', 'C3+', 'C4+B', 'C4+D'}, `irrep`)
+
+      For each diagram constituting the given `corrrelator` `data` must contain
+      an associated pd.DataFrame with its subduced lattice data
+  irrep : string, {'T1', 'A1', 'E2', 'B1', 'B2'}
+
+      Name of the irreducible representation of the little group the operator
+      is required to transform under.
+
+  Returns
+  -------
+  wick : pd.DataFrame
+
+      pd.DataFrame with indices like `data['C30']` and Wick contractions 
+      performed.
+
+  Notes
+  -----
+  The rho 3pt function is given by the contraction.
+  C^\text{2pt} = \langle \pi\pi(t_{so})^\dagger \rho(t_si) \rangle
+
+  The gamma strucures that can appear in \rho(t) are hardcoded
+  """
 
   # TODO: change the gamma structures
   gamma_i =   [1, 2, 3, 'gi']
@@ -62,17 +106,13 @@ def rho_3pt(data, irrep, verbose=0):
   gamma_0i = [(g,) for g in gamma_0i[:-1]]
   gamma_50i = [(g,) for g in gamma_50i[:-1]]
 
+  idx = pd.IndexSlice
+
   wick = data[('C3+',irrep)]
 
   wick.loc[idx[:,:,:,:,:,:,gamma_i],  :] *= ( 2.)
   wick.loc[idx[:,:,:,:,:,:,gamma_0i], :] *= (-2.)
   wick.loc[idx[:,:,:,:,:,:,gamma_50i],:] *= ( 2.*1j)
-
-#  wick = pd.concat([ \
-#  data.T[qn['\gamma_{si}'].isin(gamma_i)]  *(2.), \
-#  data.T[qn['\gamma_{si}'].isin(gamma_0i)] *(-2.), \
-#  data.T[qn['\gamma_{si}'].isin(gamma_50i)]*(2*1j), \
-#  ]).sort_index().T
 
   return wick
 
@@ -82,6 +122,35 @@ def rho_3pt(data, irrep, verbose=0):
 # TODO: having to pass irrep is anoying, but the keys should vanish anyway when
 # this is rewritten as member function
 def rho_4pt(data, irrep, verbose=0):
+  """
+  Perform Wick contraction for 4pt function
+
+  Parameters
+  ----------
+  data : Dictionary of pd.DataFrame, keys in 
+      ({'C20', 'C3+', 'C4+B', 'C4+D'}, `irrep`)
+
+      For each diagram constituting the given `corrrelator` `data` must contain
+      an associated pd.DataFrame with its subduced lattice data
+  irrep : string, {'T1', 'A1', 'E2', 'B1', 'B2'}
+
+      Name of the irreducible representation of the little group the operator
+      is required to transform under.
+
+  Returns
+  -------
+  wick : pd.DataFrame
+
+      pd.DataFrame with indices like the union of indices in `data['C4+B']` and
+      `data['C4+D']` and Wick contractions performed.
+
+  Notes
+  -----
+  The rho 3pt function is given by the contraction.
+  C^\text{2pt} = \langle \pi\pi(t_{so})^\dagger \pi\pi(t_si) \rangle
+
+  The gamma strucures that can appear in \rho(t) are hardcoded
+  """
 
   data_box = data[('C4+B', irrep)]
   data_dia = data[('C4+D', irrep)]
@@ -134,7 +203,7 @@ def rho(data, correlator, irrep, verbose=0):
 
   Parameters
   ----------
-  data : Dictionary of pd.DataFrame, keys in {'C20', 'C3+', 'C4+B', 'C4+d'}
+  data : Dictionary of pd.DataFrame, keys in {'C20', 'C3+', 'C4+B', 'C4+D'}
       For each diagram constituting the given `corrrelator` `data` must contain
       an associated pd.DataFrame with its subduced lattice data
   correlator : string {'C2', 'C3', 'C4'}
