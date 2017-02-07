@@ -20,16 +20,16 @@ Dirac structure = gamma_i, gamma_50i
 
 [contraction details]
 # diagram to be analysed, may also be ,-seperated list
-Diagram = C4+B, C4+D
-#Diagram = C20, C3+, C4+B, C4+D
+#Diagram = C4+B, C4+D
+Diagram = C20, C3+, C4+B, C4+D
 # path to contraction files. Either one path or a ,-seperated list of the same 
 # lenght as diagram
-Input Path = /hiskp2/knippsch/Rho_Jun2016/,
-               /hiskp2/knippsch/Rho_A40.24/
 #Input Path = /hiskp2/knippsch/Rho_Jun2016/,
-#               /hiskp2/knippsch/Rho_Jun2016/,
-#               /hiskp2/knippsch/Rho_Jun2016/,
 #               /hiskp2/knippsch/Rho_A40.24/
+Input Path = /hiskp2/knippsch/Rho_Jun2016/,
+               /hiskp2/knippsch/Rho_Jun2016/,
+               /hiskp2/knippsch/Rho_Jun2016/,
+               /hiskp2/knippsch/Rho_A40.24/
 
 [other parameters]
 Output Path = /hiskp2/werner/2017-lattice-conference/data

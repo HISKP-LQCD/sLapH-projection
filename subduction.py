@@ -273,7 +273,8 @@ def ensembles(data, qn_irrep):
                       'p_{so}', '\gamma_{so}', 'p_{si}', '\gamma_{si}'])
   subduced = subduced.ix[:,2:].multiply(subduced['coefficient_{so}']*
                                np.conj(subduced['coefficient_{si}']), axis=0)
-  subduced.columns=pd.MultiIndex.from_tuples(subduced.columns)
+  subduced.columns=pd.MultiIndex.from_tuples(subduced.columns, \
+                                                         names=('cnfg', 'T'))
 
   return subduced.sort_index()
 
