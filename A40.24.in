@@ -34,4 +34,11 @@ Input Path = /hiskp2/knippsch/Rho_Jun2016/,
 [other parameters]
 Output Path = /hiskp2/werner/2017-lattice-conference/data
 
+[plot details]
+Plot sep_rows_sum_mom = True 
+Plot avg_rows_sep_mom = True
+Plot avg_rows_sum_mom = True
 
+Logscale = False
+
+Number of bootstrap samples = 20

@@ -9,6 +9,10 @@ import pandas as pd
 from pandas import Series, DataFrame
 import gmpy
 
+import matplotlib
+matplotlib.use('Agg') 
+from matplotlib.backends.backend_pdf import PdfPages
+
 ################################################################################
 # checks if the directory where the file will be written does exist
 def ensure_dir(f):
@@ -144,4 +148,12 @@ def write_ascii_gevp(path, data, p_cm, irrep, verbose):
     write_data_ascii(np.asarray(pd_series_to_np_array(data.ix[counter])), \
                                                          path+filename, verbose)
 
+def create_pdfplot(path, filename):
+  """
+  Helper function to create a pdfplot object and ensure existence of the path
+  """
 
+  ensure_dir(path)
+  pdfplot = PdfPages(path+filename)
+
+  return pdfplot

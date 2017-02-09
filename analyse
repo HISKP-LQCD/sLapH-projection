@@ -9,10 +9,10 @@ import utils
 import wick
 import subduction
 import setup_gevp
+import plot
 
-################################################################################
-# Main #########################################################################
-
+# TODO: pull out irrep as outer loop and do not use it in any of the files
+# TODO: refactor towards a more objectoriented design
 def main():
 
   ################################################################################
@@ -114,6 +114,21 @@ def main():
   if verbose:
     print outpath
 
+  sep_rows_sum_mom = config.getboolean('plot details', 'Plot sep_rows_sum_mom') 
+  avg_rows_sep_mom = config.getboolean('plot details', 'Plot avg_rows_sep_mom')
+  avg_rows_sum_mom = config.getboolean('plot details', 'Plot avg_rows_sum_mom')
+
+  logscale = config.getboolean('plot details', 'Logscale')
+  
+  bootstrapsize = config.getint('plot details', 'Number of bootstrap samples')
+
+  if verbose:
+    print sep_rows_sum_mom
+    print avg_rows_sep_mom
+    print avg_rows_sum_mom
+    print logscale
+    print bootstrapsize
+
   ############################################################################## 
   # Main
   for p_cm in p:
@@ -143,13 +158,15 @@ def main():
       lookup_qn[diagram] = raw_data.set_lookup_qn(diagram, p_cm, p_max, 
                                                                 gammas, verbose)
   
-      data[diagram] = raw_data.read(lookup_cnfg, lookup_qn, diagram, T, 
+      data[diagram] = raw_data.read(lookup_cnfg, lookup_qn[diagram], diagram, T, 
                                                              directory, verbose)
       # write data
+      # TODO: Writing into same file only works in append mode
       path = '%s/%s/0_raw-data/' % (outpath, ensemble)
       filename = '%s_p%1i.h5' % (diagram, p_cm)
-      utils.write_hdf5_correlators(path, filename, data, 'data', verbose)
-      utils.write_hdf5_correlators(path, filename, lookup_qn, 'qn', verbose)
+      utils.write_hdf5_correlators(path, filename, data[diagram], 'data', verbose)
+      filename = '%s_p%1i_qn.h5' % (diagram, p_cm)
+      utils.write_hdf5_correlators(path, filename, lookup_qn[diagram], 'qn', verbose=False)
  
     ############################################################################
     # Subduction
@@ -160,60 +177,118 @@ def main():
     lookup_qn_irrep = {}
     for diagram in diagrams:
 
-      print 'subducing data for %s' % diagram
+      print '\tsubducing data for %s' % diagram
       for irrep in lookup_irreps:
 
-        print '\tsubducing into %s' % irrep
+        print '\t  subducing into %s' % irrep
 
         lookup_qn_irrep[(diagram, irrep)] = subduction.set_lookup_qn_irrep( \
                                               lookup_qn[diagram], diagram, \
                                                    gammas, p_cm, irrep, verbose)
         subduced_data[(diagram, irrep)] = subduction.ensembles(data[diagram], \
-                                                       lookup_qn_irrep[diagram])
+                                                       lookup_qn_irrep[(diagram,irrep)])
         # write data to disc
         path = '%s/%s/1_subduced-data/' % (outpath, ensemble)
         filename = '/%s_p%1i_%s.h5' % (diagram, p_cm, irrep)
-        utils.write_hdf5_correlators(path, filename, subduced_data, 'data', \
+        utils.write_hdf5_correlators(path, filename, subduced_data[(diagram,irrep)], 'data', \
                                                                         verbose)
 
-#        ########################################################################
-#        # sum over gamma structures. 
-#        # Only real part is physically relevant at that point
-#        subduced = subduced.apply(np.real).sum(level=[0,1,2,3,5])
-#        # sum over equivalent momenta
-#        subduced = subduced.sum(level=[0,1,2])
-#        # average over rows
-#        subduced = subduced.mean(level=[0,1])
-#
-#        ##############################################################################
-#        # write data to disc
-#        path = './readdata/%s_p%1i_%s_avg.h5' % (diagram, p_cm, irrep)
-#        utils.ensure_dir('./readdata')
-#        utils.write_hdf5_correlators(path, subduced, None)
-
     ############################################################################ 
-    # wick contraction
-    # TODO: make wick contractions return data and quantum numbers as well
-    # TODO: factor out calculation of correlators and put into correlators loop
+    # Wick contraction
 
-    wick.set_lookup_correlators()
+#    # helper function to read all subduced data from disk
+#    lookup_irreps = subduction.set_lookup_irreps(p_cm)
+#    path = '%s/%s/1_subduced-data/' % (outpath, ensemble)
+#
+#    subduced_data = {}
+#    for diagram in diagrams:
+#      for irrep in lookup_irreps:
+#        filename = '/%s_p%1i_%s.h5' % (diagram, p_cm, irrep)
+#        subduced_data[(diagram,irrep)] = \
+#                              utils.read_hdf5_correlators(path+filename, 'data')
+
+    correlators = wick.set_lookup_correlators(diagrams)
 
     contracted_data = {}
+    contracted_data_avg = {}
 
     for correlator in correlators:
 
-      print 'contracting data for %s' % correlator 
+      print '\tcontracting data for %s' % correlator 
       for irrep in lookup_irreps:
 
-       contracted_data[correlator] = wick.rho(subduced_data, correlator, irrep, verbose)
-       print contracted_data[:5]
-       print ' '
+        contracted_data[(correlator,irrep)] = wick.rho(subduced_data, \
+                                                     correlator, irrep, verbose)
+        # write data to disc
+        path = '%s/%s/2_contracted-data/' % (outpath, ensemble)
+        filename = '/%s_p%1i_%s.h5' % (correlator, p_cm, irrep)
+        utils.write_hdf5_correlators(path, filename, \
+                           contracted_data[(correlator,irrep)], 'data', verbose)
 
-#    ############################################################################ 
-#    # Gevp Construction
-#    for irrep in lookup_irreps:
-#      gevp = setup_gevp.build_gevp(p_cm, irrep, verbose)
+        # sum over gamma structures. 
+        # Only real part is physically relevant at that point
+        contracted_data_avg[(correlator,irrep)] = \
+            contracted_data[(correlator,irrep)].apply(np.real).\
+                                                          sum(level=[0,1,2,3,5])
+        # sum over equivalent momenta
+        contracted_data_avg[(correlator,irrep)] = \
+                      contracted_data_avg[(correlator,irrep)].sum(level=[0,1,2])
+        # average over rows
+        contracted_data_avg[(correlator,irrep)] = \
+                       contracted_data_avg[(correlator,irrep)].mean(level=[0,1])
 
+        # write data to disc
+        path = '%s/%s/2_contracted-data/' % (outpath, ensemble)
+        filename = '/%s_p%1i_%s_avg.h5' % (correlator, p_cm, irrep)
+        utils.write_hdf5_correlators(path, filename, \
+                       contracted_data_avg[(correlator,irrep)], 'data', verbose)
+
+    ############################################################################ 
+    # Gevp construction
+
+    print '\tcreating gevp'
+    for irrep in lookup_irreps:
+
+      gevp_data = setup_gevp.build_gevp(contracted_data_avg, irrep, verbose)
+
+      path = '%s/%s/3_gevp-data/' % (outpath, ensemble)
+      filename = 'Gevp_p%1i_%s.h5' % (p_cm, irrep)
+      utils.write_hdf5_correlators(path, filename, gevp_data, 'data', verbose)
+
+      path = '%s/%s/3_gevp-data/p%1i/%s/' % (outpath, ensemble, p_cm, irrep)
+      utils.write_ascii_gevp(path, gevp_data, p_cm, irrep, verbose)
+
+    ############################################################################ 
+    # Plotting 
+
+    for irrep in lookup_irreps:
+
+      path = '%s/%s/4_plots/p%1i/%s/' % (outpath, ensemble, p_cm, irrep)
+      for correlator in correlators:
+
+        if sep_rows_sum_mom:
+          filename = '/%s_sep_rows_sum_mom_p%1i_%s.pdf' % (correlator, p_cm, \
+                                                                          irrep)
+          pdfplot = utils.create_pdfplot(path, filename)
+          plot.sep_rows_sum_mom(contracted_data[(correlator,irrep)], \
+                          correlator, bootstrapsize, pdfplot, logscale, verbose)
+          pdfplot.close()
+
+        if avg_rows_sep_mom:
+          filename = '%s_avg_rows_sep_mom_p%1i_%s.pdf' % (correlator, p_cm, \
+                                                                          irrep)
+          pdfplot = utils.create_pdfplot(path, filename)
+          plot.avg_rows_sep_mom(contracted_data[(correlator,irrep)], \
+                          correlator, bootstrapsize, pdfplot, logscale, verbose)
+          pdfplot.close()
+
+      if avg_rows_sum_mom:
+        filename = 'Gevp_p%1i_%s.pdf' % (p_cm, irrep)
+        pdfplot = utils.create_pdfplot(path, filename)
+        plot.avg_row_sum_mom(gevp_data, bootstrapsize, pdfplot)
+        pdfplot.close()
+
+################################################################################
 if __name__ == '__main__':
   try:
     main()

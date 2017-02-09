@@ -2,12 +2,7 @@ import matplotlib
 #matplotlib.use('QT4Agg')
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
-import matplotlib.mlab as mlab
-from mpl_toolkits.axes_grid1 import host_subplot
-import mpl_toolkits.axisartist as AA
-import matplotlib.axes as ax
 
-import itertools as it
 import numpy as np
 import pandas as pd
 from pandas import Series, DataFrame
@@ -16,32 +11,26 @@ import utils
 
 # TODO: Symmetrization and Antisymmetrization. Take negative eigenvalues under 
 # time reversal into account
-#def bootstrap(X, bootstrapsize):
-#  """
-#  bootstrapping
-#  """
-#  np.random.seed(1227)
-#  boot = np.empty(bootstrapsize, dtype=float)
-#  # writing the mean value in the first sample
-#  boot[0] = np.mean(X)
-#  # doing all other samples
-#  for i in range(1, bootstrapsize):
-#    rnd = np.random.random_integers(0, high=len(X)-1, size=len(X))
-#    boot_dummy = 0.0 
-#    for j in range(0, len(X)):
-#      boot_dummy += X[rnd[j]]  
-#    boot[i] = boot_dummy/len(X)
-#  return boot
-
-# TODO: Symmetrization and Antisymmetrization. Take negative eigenvalues under 
-# time reversal into account
 # TODO: this does not work if I work with the column indices directly rather 
 # than the config numbers. Using np.random.randint and iloc should be 
 # considerably faster
-
 def bootstrap(df, bootstrapsize):
   """
-  bootstrapping
+  Apply the bootstrap method to randomly resample gauge configurations
+
+  Parameters
+  ----------
+  df : pd.DataFrame
+      Lattice data with arbitrary rows and columns cnfg x T.
+  bootstrapsize : int
+      The number of bootstrap samles being drawn from `df`
+
+  Returns
+  -------
+  boot : pd.DataFrame
+      Lattice data with rows like `df` and columns boot x T. The number of
+      level0 column entries is `bootstrapsize` and it contains the mean of
+      nb_cnfg randomly drawn configurations.
   """
   np.random.seed(1227)
   idx = pd.IndexSlice
@@ -58,7 +47,7 @@ def bootstrap(df, bootstrapsize):
 
   return boot
 
-def mean_and_std(df):
+def mean_and_std(df, bootstrapsize):
   """
   Mean and standard deviation over all configurations/bootstrap samples
 
@@ -68,6 +57,8 @@ def mean_and_std(df):
       Table with purely real entries (see Notes) and hierarchical columns where
       level 0 is the gauge configuration/bootrstrap sample number and level 1
       is the lattice time
+  bootstrapsize : int
+      The number of bootstrap samles being drawn from `df`
 
   Returns:
   --------
@@ -81,185 +72,259 @@ def mean_and_std(df):
   breaks pandas.
   """
 
+  boot = bootstrap(df, bootstrapsize)
+  mean = boot[0]
+  std = boot.std(axis=1, level=1)
 
-  return pd.concat([df.mean(axis=1, level=1), bootstrap(df, 20).std(axis=1, level=1)], axis=1, keys=['mean', 'std'])
+  return pd.concat([mean, std], axis=1, keys=['mean', 'std'])
 
-def plot_gevp(gevp_data, pdfplot):
+def plot_gevp_el(data, label_template):
+  """
+  Plot all rows of given pd.DataFrame into a single page as seperate graphs
 
-  gevp_data = mean_and_std(gevp_data)
+  data : pd.DataFrame
+      
+      Table with any quantity as rows and multicolumns where level 0 contains
+      {'mean', 'std'} and level 1 contains 'T'
+  
+  label_template : string
+
+      Format string that will be used to label the graphs. The format must fit
+      the index of `data`
+  """
+
+  symbol = ['v', '^', '<', '>', 's', 'p', '*', 'h', 'H', 'D', 'd', '8']
+    
+  rows = data.index.values
+
+  # iterrows() returns a tuple (index, series) 
+  # index is a string (the index of data must be strings for this to work). In
+  # data has a MultiIndex, index is a tuple of strings
+  # series contains the mean and std for every timeslice
+  for counter, (index, series) in enumerate(data.iterrows()):
+
+    T = series.index.levels[1].values
+    mean = series['mean'].values
+    std = series['std'].values
+
+    # prepare parameters for plot design
+    if len(rows) == 1:
+      cmap_brg=['r']
+    else:
+      cmap_brg = plt.cm.brg(np.asarray(range(len(rows))) * 256/(len(rows)-1))
+    shift = 2./5/len(rows)
+
+    label = label_template % index
+
+    # plot
+    plt.errorbar(T+shift*counter, mean, std, 
+                     fmt=symbol[counter%len(symbol)], color=cmap_brg[counter], \
+                     label=label, markersize=3, capsize=3, capthick=0.5, \
+                     elinewidth=0.5, markeredgecolor=cmap_brg[counter], \
+                                                                linewidth='0.0')
+
+
+def avg_row_sum_mom(gevp_data, bootstrapsize, pdfplot, logscale=False, \
+                                                                 verbose=False):
+  """
+  Create a multipage plot with a page for every element of the rho gevp
+
+  Parameters
+  ----------
+
+  gevp_data : pd.DataFrame
+
+      Table with a row for each gevp element (sorted by gevp column running
+      faster than gevp row) and hierarchical columns for gauge configuration 
+      number and timeslice
+
+  bootstrapsize : int
+
+      The number of bootstrap samples being drawn from `gevp_data`.
+
+  pdfplot : mpl.PdfPages object
+      
+      Plots will be written to the path `pdfplot` was created with.
+
+  See also
+  --------
+
+  utils.create_pdfplot()
+  """
+
+  gevp_data = mean_and_std(gevp_data, bootstrapsize)
 
   for gevp_el_name, gevp_el_data in gevp_data.iterrows():
 
-    plt.title(r'Gevp Element ${} - {}$'.format(gevp_el_name[0], gevp_el_name[1]))
-    plt.xlabel(r'$t/a$', fontsize=12)
-    plt.ylabel(r'$C(t/a)$', fontsize=12)
+    if verbose:
+      print '\tplotting ', gevp_el_name[0], ' - ', gevp_el_name[1]
 
-#    print gevp_el_name
-#    print series
-#    series.index.levels[1]
+    # prepare data to plot
     T = gevp_el_data.index.levels[1].astype(int)
     mean = gevp_el_data['mean'].values
     std = gevp_el_data['std'].values
 
+    # prepare parameters for plot design
+    plt.title(r'Gevp Element ${} - {}$'.format(gevp_el_name[0], gevp_el_name[1]))
+    plt.xlabel(r'$t/a$', fontsize=12)
+    plt.ylabel(r'$C(t/a)$', fontsize=12)
+
+    if logscale:
+      plt.yscale('log')
+
+    # plot
     plt.errorbar(T, mean, std, fmt='o', color='black', markersize=3, \
                  capsize=3, capthick=0.75, elinewidth=0.75, \
                                        markeredgecolor='black', linewidth='0.0')
 
-#    plt.legend(numpoints=1, loc=1, fontsize=6)
     pdfplot.savefig()
     plt.clf()
+
   return 
 
 ## does not make sence for CMF C2 because there i just one momentum
 #def plot_sep_rows_sep_mom()
 
-def plot_sep_rows_sum_mom(subduced_data, diagram, pdfplot):
+def sep_rows_sum_mom(data, diagram, bootstrapsize, pdfplot, logscale=False, \
+                                                                 verbose=False):
+  """
+  Create a multipage plot with a page for every element of the rho gevp. Each
+  page contains one graph for each row of the irrep, summed over all momenta.
 
-  symbol = ['v', '^', '<', '>', 's', 'p', '*', 'h', 'H', 'D', 'd', '8']
+  Parameters
+  ----------
 
-  subduced_data = mean_and_std(subduced_data)
-  # To plot all rows in one plot, transpose row of irrep from index to columns
-  rows = subduced_data.index.levels[2].astype(int)
-  subduced_data = pd.concat([subduced_data.xs(r, level=2) for r in rows], axis=1, keys=rows)
+  data : pd.DataFrame
 
-#  for gevp_el_name, gevp_el_data in subduced_data.iterrows():
-  # iterrows() returns a tuple (index, series) where index is a tuple with
-  # strings describing the operators for source and sink and series is the 
-  # data after mean and std where calculated
-  for gevp_el_name, gevp_el in subduced_data.iterrows():
+      Table with physical quantum numbers as rows 'gevp_row' x 'gevp_col' x \
+      '\mu' x 'p_{so}' x '\gamma_{so}' x 'p_{si}' x '\gamma_{si}' and columns
+      'cnfg' x 'T'.
+      Contains the linear combinations of correlation functions transforming
+      like what the parameters qn_irrep was created with, i.e. the subduced 
+      data
 
-    # prepare plot
-    print 'plotting ...'
-    plt.title(r'Gevp Element ${} - {}$'.format(gevp_el_name[0], gevp_el_name[1]))
-    plt.xlabel(r'$t/a$', fontsize=12)
-    plt.ylabel(r'$%s(t/a)$' % diagram, fontsize=12)
+  diagram : string
+      The diagram as it will appear in the plot labels.
 
-    # prepare data to plot
-    rows = gevp_el.index.levels[0]
-    for counter, mu in enumerate(rows):
+  bootstrapsize : int
 
-      T = np.array(gevp_el[mu].index.levels[1], dtype=int)
-      mean = gevp_el[mu]['mean'].values
-      std = gevp_el[mu]['std'].values
+      The number of bootstrap samples being drawn from `gevp_data`.
 
+  pdfplot : mpl.PdfPages object
+      
+      Plots will be written to the path `pdfplot` was created with.
 
-      # prepare parameters for plot design
-      if len(rows) == 1:
-        cmap_brg=['r']
-      else:
-        cmap_brg = plt.cm.brg(np.asarray(range(len(rows))) * 256/(len(rows)-1))
-      shift = 1./3/len(rows)
-      label = r'$\mu = %i$' % (counter)
+  See also
+  --------
 
-      # plot
-      plt.errorbar(T+shift*counter, mean, std, 
-                       fmt=symbol[counter%len(symbol)], color=cmap_brg[counter], \
-                       label=label, markersize=3, capsize=3, capthick=0.5, \
-                       elinewidth=0.5, markeredgecolor=cmap_brg[counter], \
-                                                                  linewidth='0.0')
+  utils.create_pdfplot()
+  """
 
+  # discard imaginary part (noise)
+  data = data.apply(np.real)
+  # sum over all gamma structures to get the full Dirac operator transforming 
+  # like a row of the desired irrep
+  data = data.sum(level=[0,1,2,3,5])
+  # sum over equivalent momenta
+  data = data.sum(level=[0,1,2])
 
-    # clean up for next plot
-    plt.legend(numpoints=1, loc='best', fontsize=6)
-    pdfplot.savefig()
-    plt.clf()
+  data = mean_and_std(data, bootstrapsize)
 
-def plot_avg_rows_sep_mom(subduced_data, diagram, pdfplot):
-
-  symbol = ['v', '^', '<', '>', 's', 'p', '*', 'h', 'H', 'D', 'd', '8']
-
-  subduced_data = mean_and_std(subduced_data)
-
-
-  gevp_index = list(set([(g[0],g[1]) for g in subduced_data.index.values]))
+  # create list of gevp elements to loop over
+  gevp_index = list(set([(g[0],g[1]) for g in data.index.values]))
   for gevp_el_name in gevp_index:
 
+    if verbose:
+      print '\tplotting ', gevp_el_name[0], ' - ', gevp_el_name[1]
+
     # prepare plot
-    print 'plotting ', gevp_el_name[0], ' - ', gevp_el_name[1]
     plt.title(r'Gevp Element ${} - {}$'.format(gevp_el_name[0], gevp_el_name[1]))
     plt.xlabel(r'$t/a$', fontsize=12)
     plt.ylabel(r'$%s(t/a)$' % diagram, fontsize=12)
 
+    if logscale:
+      plt.yscale('log')
+
     # prepare data to plot
-    gevp_el = subduced_data.xs(gevp_el_name, level=[0,1])
-    momenta = gevp_el.index.values
+    gevp_el = data.xs(gevp_el_name, level=[0,1])
 
-    # iterrows() returns a tuple (index, series) where index is a tuple with
-    # strings describing the operators for source and sink and series is the 
-    # data after mean and std where calculated
-    for counter, (p, gevp_el_p) in enumerate(gevp_el.iterrows()):
-
-      T = gevp_el_p.index.levels[1].values
-      mean = gevp_el_p['mean'].values
-      std = gevp_el_p['std'].values
-
-      # prepare parameters for plot design
-      if len(momenta) == 1:
-        cmap_brg=['r']
-      else:
-        cmap_brg = plt.cm.brg(np.asarray(range(len(momenta))) * 256/(len(momenta)-1))
-      shift = 1./3/len(momenta)
-      p_so = p[0]
-      p_si = p[1]
-      label = r'$p_{so} = %s - p_{si} = %s$' % (p_so, p_si)
-
-      # plot
-      plt.errorbar(T+shift*counter, mean, std, 
-                       fmt=symbol[counter%len(symbol)], color=cmap_brg[counter], \
-                       label=label, markersize=3, capsize=3, capthick=0.5, \
-                       elinewidth=0.5, markeredgecolor=cmap_brg[counter], \
-                                                                  linewidth='0.0')
-
+    # plot
+    plot_gevp_el(gevp_el, r'$\mu = %i$')
 
     # clean up for next plot
     plt.legend(numpoints=1, loc='best', fontsize=6)
     pdfplot.savefig()
     plt.clf()
 
+def avg_rows_sep_mom(data, diagram, bootstrapsize, pdfplot, logscale=False, \
+                                                                 verbose=False):
+  """
+  Create a multipage plot with a page for every element of the rho gevp. Each
+  page contains one graph for each momentum, averaged over all rows of the 
+  irrep. 
 
-p_cm = 0
-irrep = 'T1'
+  Parameters
+  ----------
 
-for diagram in ['C2', 'C3', 'C4']:
-  path = './readdata/%s_p%1i_%s.h5' % (diagram, p_cm, irrep)
-  subduced_data = utils.read_hdf5_correlators(path, False)
+  data : pd.DataFrame
+
+      Table with physical quantum numbers as rows 'gevp_row' x 'gevp_col' x \
+      '\mu' x 'p_{so}' x '\gamma_{so}' x 'p_{si}' x '\gamma_{si}' and columns
+      'cnfg' x 'T'.
+      Contains the linear combinations of correlation functions transforming
+      like what the parameters qn_irrep was created with, i.e. the subduced 
+      data
+
+  diagram : string
+      The diagram as it will appear in the plot labels.
+
+  bootstrapsize : int
+
+      The number of bootstrap samples being drawn from `gevp_data`.
+
+  pdfplot : mpl.PdfPages object
+      
+      Plots will be written to the path `pdfplot` was created with.
+
+  See also
+  --------
+
+  utils.create_pdfplot()
+  """
+
   # discard imaginary part (noise)
-  subduced_data = subduced_data.apply(np.real)
+  data = data.apply(np.real)
   # sum over all gamma structures to get the full Dirac operator transforming 
   # like a row of the desired irrep
-  subduced_data = subduced_data.sum(level=[0,1,2,3,5])
-  # sum over equivalent momenta
-  subduced_data = subduced_data.sum(level=[0,1,2])
-  
-  utils.ensure_dir('./plots')
-  plot_path = './plots/%s_sep_rows_sum_mom_p%1i_%s.pdf' % (diagram, p_cm, irrep)
-  pdfplot = PdfPages(plot_path)
-  plot_sep_rows_sum_mom(subduced_data, diagram, pdfplot)
-  pdfplot.close()
-
-
-  path = './readdata/%s_p%1i_%s.h5' % (diagram, p_cm, irrep)
-  subduced_data = utils.read_hdf5_correlators(path, False)
-  # discard imaginary part (noise)
-  subduced_data = subduced_data.apply(np.real)
-  # sum over all gamma structures to get the full Dirac operator transforming 
-  # like a row of the desired irrep
-  subduced_data = subduced_data.sum(level=[0,1,2,3,5])
+  data = data.sum(level=[0,1,2,3,5])
   # average over rows
-  subduced_data = subduced_data.mean(level=[0,1,3,4])
-  
-  utils.ensure_dir('./plots')
-  plot_path = './plots/%s_avg_rows_sep_mom_p%1i_%s.pdf' % (diagram, p_cm, irrep)
-  pdfplot = PdfPages(plot_path)
-  plot_avg_rows_sep_mom(subduced_data, diagram, pdfplot)
-  pdfplot.close()
+  data = data.mean(level=[0,1,3,4])
+ 
+  data = mean_and_std(data, bootstrapsize)
 
-path = './readdata/Gevp_p%1i_%s.h5' % (p_cm, irrep)
-gevp_data = utils.read_hdf5_correlators(path, False)
+  gevp_index = list(set([(g[0],g[1]) for g in data.index.values]))
+  for gevp_el_name in gevp_index:
 
-utils.ensure_dir('./plots')
-plot_path = './plots/Gevp_p%1i_%s.pdf' % (p_cm, irrep)
-pdfplot = PdfPages(plot_path)
-plot_gevp(gevp_data, pdfplot)
-pdfplot.close()
+    if verbose:
+      print 'plotting ', gevp_el_name[0], ' - ', gevp_el_name[1]
+
+    # prepare plot
+    plt.title(r'Gevp Element ${} - {}$'.format(gevp_el_name[0], gevp_el_name[1]))
+    plt.xlabel(r'$t/a$', fontsize=12)
+    plt.ylabel(r'$%s(t/a)$' % diagram, fontsize=12)
+
+    if logscale:
+      plt.yscale('log')
+
+    # prepare data to plot
+    gevp_el = data.xs(gevp_el_name, level=[0,1])
+
+    # plot
+    plot_gevp_el(gevp_el, r'$p_{so} = %s - p_{si} = %s$')
+
+    # clean up for next plot
+    plt.legend(numpoints=1, loc='best', fontsize=6)
+    pdfplot.savefig()
+    plt.clf()
+
 
