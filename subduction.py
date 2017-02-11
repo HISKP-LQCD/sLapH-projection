@@ -64,11 +64,18 @@ def get_basis(names, verbose):
       independent Lorentz structure.
   """
 
-  # hardcode ladder operators J_+, J_3 and J_-
-  sqrt2 = np.sqrt(2.)
-  ladder_operators = [[-1j/sqrt2, -1./sqrt2, 0], 
-                      [ 0,         0,        1j], 
-                      [ 1j/sqrt2, -1./sqrt2, 0]]
+#  # hardcode ladder operators J_+, J_3 and J_-
+#  # Dudek helicity basis
+#  sqrt2 = np.sqrt(2.)
+#  ladder_operators = [[-1j/sqrt2, -1./sqrt2, 0], 
+#                      [ 0,         0,        1j], 
+#                      [ 1j/sqrt2, -1./sqrt2, 0]]
+  # implement trivial orthogonal basis as it is taken account for in 
+  # cg coefficients
+  ladder_operators = [[1, 0, 0], 
+                      [0, 1, 0], 
+                      [0, 0, 1]]
+
   basis = np.array([m + [0]*3 for m in ladder_operators] + \
                                   [[0]*3+m for m in ladder_operators]).flatten()
   # hardcode basis operators for \gamma_i and \gamma_5\gamma_0\gamma_i
@@ -129,11 +136,11 @@ def get_clebsch_gordans(diagram, gammas, p_cm, irrep, verbose):
   """
 
   if diagram.startswith('C2'):
-    cg_one_operator = cg_2pt.coefficients(irrep)
+    cg_one_operator = cg_2pt.coefficients(p_cm, irrep)
     cg_table_so, cg_table_si = cg_one_operator, cg_one_operator
   elif diagram.startswith('C3'):
     # get factors for the desired irreps
-    cg_one_operator = cg_2pt.coefficients(irrep)
+    cg_one_operator = cg_2pt.coefficients(p_cm, irrep)
     cg_two_operators = cg_4pt.coefficients(irrep)
     # Chistopher Thomas: Written down for Creation operator
     cg_two_operators['cg-coefficient'] = np.conj(cg_two_operators['cg-coefficient'])

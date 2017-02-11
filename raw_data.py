@@ -320,7 +320,7 @@ def read(lookup_cnfg, lookup_qn, diagram, T, directory, verbose=0):
 
   for cnfg in lookup_cnfg:
     # filename and path
-    filename = directory + 'cnfg%i/' % cnfg + diagram + '_cnfg%i' % cnfg + '.h5'
+    filename = directory + '/' + diagram + '_cnfg%i' % cnfg + '.h5'
 
     # to achieve hirarchical indexing for quantum numbers build DataFrame for
     # each loop seperately

@@ -139,37 +139,48 @@ def main():
 
     ############################################################################ 
     # read diagrams
-    data = {}
-    lookup_qn = {}
-    for diagram, directory in zip(diagrams, directories):
-
-      if verbose:
-        print '\treading data for %s' % (diagram)
-      lookup_cnfg = raw_data.set_lookup_cnfg(sta_cnfg, end_cnfg, del_cnfg, \
-                                                       missing_configs, verbose)
-      # set up lookup table for quantum numbers
-      if p_cm == 0:
-        p_max = 2
-      # for moving frames, sum of individual component's absolute value (i.e.
-      # total kindetic energy) might be larger than center of mass absolute 
-      # value. Modify the cutoff accordingly.
-#      p_cm_max = np.asarray([4,5,6,7,4], dtype=int)[p_cm]
-      # TODO: that needs to be refactored when going to a larger operator basis
-      lookup_qn[diagram] = raw_data.set_lookup_qn(diagram, p_cm, p_max, 
-                                                                gammas, verbose)
-  
-      data[diagram] = raw_data.read(lookup_cnfg, lookup_qn[diagram], diagram, T, 
-                                                             directory, verbose)
-      # write data
-      # TODO: Writing into same file only works in append mode
-      path = '%s/%s/0_raw-data/' % (outpath, ensemble)
-      filename = '%s_p%1i.h5' % (diagram, p_cm)
-      utils.write_hdf5_correlators(path, filename, data[diagram], 'data', verbose)
-      filename = '%s_p%1i_qn.h5' % (diagram, p_cm)
-      utils.write_hdf5_correlators(path, filename, lookup_qn[diagram], 'qn', verbose=False)
+#    data = {}
+#    lookup_qn = {}
+#    for diagram, directory in zip(diagrams, directories):
+#
+#      if verbose:
+#        print '\treading data for %s' % (diagram)
+#      lookup_cnfg = raw_data.set_lookup_cnfg(sta_cnfg, end_cnfg, del_cnfg, \
+#                                                       missing_configs, verbose)
+#      # set up lookup table for quantum numbers
+#      if p_cm == 0:
+#        p_max = 2
+#      # for moving frames, sum of individual component's absolute value (i.e.
+#      # total kindetic energy) might be larger than center of mass absolute 
+#      # value. Modify the cutoff accordingly.
+##      p_cm_max = np.asarray([4,5,6,7,4], dtype=int)[p_cm]
+#      # TODO: that needs to be refactored when going to a larger operator basis
+#      lookup_qn[diagram] = raw_data.set_lookup_qn(diagram, p_cm, p_max, 
+#                                                                gammas, verbose)
+#  
+#      data[diagram] = raw_data.read(lookup_cnfg, lookup_qn[diagram], diagram, T, 
+#                                                             directory, verbose)
+#      # write data
+#      # TODO: Writing into same file only works in append mode
+#      path = '%s/%s/0_raw-data/' % (outpath, ensemble)
+#      filename = '%s_p%1i.h5' % (diagram, p_cm)
+#      utils.write_hdf5_correlators(path, filename, data[diagram], 'data', verbose)
+#      filename = '%s_p%1i_qn.h5' % (diagram, p_cm)
+#      utils.write_hdf5_correlators(path, filename, lookup_qn[diagram], 'qn', verbose=False)
  
     ############################################################################
     # Subduction
+
+    # helper function to read all raw data from disk
+    path = '%s/%s/0_raw-data/' % (outpath, ensemble)
+
+    data = {}
+    lookup_qn = {}
+    for diagram in diagrams:
+      filename = '%s_p%1i.h5' % (diagram, p_cm)
+      data[(diagram)] = utils.read_hdf5_correlators(path+filename, 'data')
+      filename = '%s_p%1i_qn.h5' % (diagram, p_cm)
+      lookup_qn[(diagram)] = utils.read_hdf5_correlators(path+filename, 'qn')
 
     lookup_irreps = subduction.set_lookup_irreps(p_cm)
 
@@ -246,17 +257,17 @@ def main():
     ############################################################################ 
     # Gevp construction
 
-    print '\tcreating gevp'
-    for irrep in lookup_irreps:
-
-      gevp_data = setup_gevp.build_gevp(contracted_data_avg, irrep, verbose)
-
-      path = '%s/%s/3_gevp-data/' % (outpath, ensemble)
-      filename = 'Gevp_p%1i_%s.h5' % (p_cm, irrep)
-      utils.write_hdf5_correlators(path, filename, gevp_data, 'data', verbose)
-
-      path = '%s/%s/3_gevp-data/p%1i/%s/' % (outpath, ensemble, p_cm, irrep)
-      utils.write_ascii_gevp(path, gevp_data, p_cm, irrep, verbose)
+#    print '\tcreating gevp'
+#    for irrep in lookup_irreps:
+#
+#      gevp_data = setup_gevp.build_gevp(contracted_data_avg, irrep, verbose)
+#
+#      path = '%s/%s/3_gevp-data/' % (outpath, ensemble)
+#      filename = 'Gevp_p%1i_%s.h5' % (p_cm, irrep)
+#      utils.write_hdf5_correlators(path, filename, gevp_data, 'data', verbose)
+#
+#      path = '%s/%s/3_gevp-data/p%1i/%s/' % (outpath, ensemble, p_cm, irrep)
+#      utils.write_ascii_gevp(path, gevp_data, p_cm, irrep, verbose)
 
     ############################################################################ 
     # Plotting 
