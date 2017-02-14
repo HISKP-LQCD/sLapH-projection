@@ -66,15 +66,16 @@ def get_basis(names, verbose):
 
 #  # hardcode ladder operators J_+, J_3 and J_-
 #  # Dudek helicity basis
-#  sqrt2 = np.sqrt(2.)
-#  ladder_operators = [[-1j/sqrt2, -1./sqrt2, 0], 
-#                      [ 0,         0,        1j], 
-#                      [ 1j/sqrt2, -1./sqrt2, 0]]
+  sqrt2 = np.sqrt(2.)
+  ladder_operators = [[-1j/sqrt2, -1./sqrt2, 0], 
+                      [ 0,         0,        1j], 
+                      [ 1j/sqrt2, -1./sqrt2, 0]]
+
   # implement trivial orthogonal basis as it is taken account for in 
   # cg coefficients
-  ladder_operators = [[1, 0, 0], 
-                      [0, 1, 0], 
-                      [0, 0, 1]]
+#  ladder_operators = [[1, 0, 0], 
+#                      [0, 1, 0], 
+#                      [0, 0, 1]]
 
   basis = np.array([m + [0]*3 for m in ladder_operators] + \
                                   [[0]*3+m for m in ladder_operators]).flatten()
@@ -83,7 +84,7 @@ def get_basis(names, verbose):
   # of latex(names)
   basis_table = DataFrame(basis, \
             index=pd.MultiIndex.from_product( \
-                [["\gamma{_i}  ", "\gamma_{50i}"], \
+                [["\gamma_{i}  ", "\gamma_{50i}"], \
                  ["|1,+1\rangle", "|1, 0\rangle", "|1,-1\rangle"], \
                                      [(1,), (2,), (3,), (13,), (14,), (15,)]], \
                 names=["gevp", '|J, M\rangle', '\gamma']), \
@@ -283,5 +284,7 @@ def ensembles(data, qn_irrep):
   subduced.columns=pd.MultiIndex.from_tuples(subduced.columns, \
                                                          names=('cnfg', 'T'))
 
-  return subduced.sort_index()
+  # I do not know why the dtype got converted to object, but convert it back
+  # to complex
+  return subduced.apply(pd.to_numeric).sort_index()
 
