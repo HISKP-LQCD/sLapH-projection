@@ -257,17 +257,17 @@ def main():
     ############################################################################ 
     # Gevp construction
 
-#    print '\tcreating gevp'
-#    for irrep in lookup_irreps:
-#
-#      gevp_data = setup_gevp.build_gevp(contracted_data_avg, irrep, verbose)
-#
-#      path = '%s/%s/3_gevp-data/' % (outpath, ensemble)
-#      filename = 'Gevp_p%1i_%s.h5' % (p_cm, irrep)
-#      utils.write_hdf5_correlators(path, filename, gevp_data, 'data', verbose)
-#
-#      path = '%s/%s/3_gevp-data/p%1i/%s/' % (outpath, ensemble, p_cm, irrep)
-#      utils.write_ascii_gevp(path, gevp_data, p_cm, irrep, verbose)
+    print '\tcreating gevp'
+    for irrep in lookup_irreps:
+
+      gevp_data = setup_gevp.build_gevp(contracted_data_avg, irrep, verbose)
+
+      path = '%s/%s/3_gevp-data/' % (outpath, ensemble)
+      filename = 'Gevp_p%1i_%s.h5' % (p_cm, irrep)
+      utils.write_hdf5_correlators(path, filename, gevp_data, 'data', verbose)
+
+      path = '%s/%s/3_gevp-data/p%1i/%s/' % (outpath, ensemble, p_cm, irrep)
+      utils.write_ascii_gevp(path, gevp_data, p_cm, irrep, verbose)
 
     ############################################################################ 
     # Plotting 
