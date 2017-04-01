@@ -182,28 +182,38 @@ def main():
       filename = '%s_p%1i_qn.h5' % (diagram, p_cm)
       lookup_qn[(diagram)] = utils.read_hdf5_correlators(path+filename, 'qn')
 
-    lookup_irreps = subduction.set_lookup_irreps(p_cm)
+    basis = subduction.get_lattice_basis(p_cm)
+
+    # List with the names of all contributing irreducible representations and 
+    # their multiplicity
+    lookup_irreps = basis[['Irrep', 'mult']].apply(tuple, axis=1).unique()
+
+    print lookup_irreps
 
     subduced_data = {}
     lookup_qn_irrep = {}
     for diagram in diagrams:
 
       print '\tsubducing data for %s' % diagram
-      for irrep in lookup_irreps:
+      for irrep, multiplicity in lookup_irreps:
 
         print '\t  subducing into %s' % irrep
-
+        # read coefficients for correlation function, little group and irreducible 
+        # representation given by diagram, p_cm irrep and mult
+        coefficients_irrep = subduction.get_coefficients(diagram, gammas, p_cm, 
+            irrep, multiplicity, basis, verbose)
         lookup_qn_irrep[(diagram, irrep)] = subduction.set_lookup_qn_irrep( \
-                                              lookup_qn[diagram], diagram, \
-                                                   gammas, p_cm, irrep, verbose)
+                                              coefficients_irrep, \
+                                              lookup_qn[diagram], verbose)
         subduced_data[(diagram, irrep)] = subduction.ensembles(data[diagram], \
-                                                       lookup_qn_irrep[(diagram,irrep)])
+                                               lookup_qn_irrep[(diagram,irrep)])
         # write data to disc
         path = '%s/%s/1_subduced-data/' % (outpath, ensemble)
         filename = '/%s_p%1i_%s.h5' % (diagram, p_cm, irrep)
-        utils.write_hdf5_correlators(path, filename, subduced_data[(diagram,irrep)], 'data', \
-                                                                        verbose)
+        utils.write_hdf5_correlators(path, filename, 
+                                subduced_data[(diagram,irrep)], 'data', verbose)
 
+    return
     ############################################################################ 
     # Wick contraction
 

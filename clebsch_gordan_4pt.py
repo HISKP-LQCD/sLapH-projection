@@ -112,6 +112,7 @@ T1 = DataFrame({'p' : [( (( 1,  0,  0), (-1,  0,  0)) ), \
                                       -1./4]}, \
                 index=pd.Index([1]*18+[2]*18+[3]*18, name='\mu'))
 
+print T1
 #T1 = [[[(np.asarray([ 1,  0,  0], dtype=int), np.asarray([-1,  0,  0], dtype=int)), -1./2], \
 #       [(np.asarray([ 0,  1,  0], dtype=int), np.asarray([ 0, -1,  0], dtype=int)),      -1j/2], \
 #       [(np.asarray([ 0,  0,  1], dtype=int), np.asarray([ 0,  0, -1], dtype=int)),  0.], \
