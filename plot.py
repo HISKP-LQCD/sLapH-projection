@@ -182,8 +182,43 @@ def avg_row_sum_mom(gevp_data, bootstrapsize, pdfplot, logscale=False, \
 
   return 
 
-## does not make sence for CMF C2 because there i just one momentum
-#def plot_sep_rows_sep_mom()
+# does not make sence for CMF C2 because there i just one momentum
+def sep_rows_sep_mom(data, diagram, bootstrapsize, pdfplot, logscale=False, \
+                                                                 verbose=False):
+  # discard imaginary part (noise)
+  data = data.apply(np.imag)
+  # sum over all gamma structures to get the full Dirac operator transforming 
+  # like a row of the desired irrep
+  data = data.sum(level=[0,1,2,3,5])
+
+  data = mean_and_std(data, bootstrapsize)
+
+  # create list of gevp elements to loop over
+  gevp_index = list(set([(g[0],g[1]) for g in data.index.values]))
+  for gevp_el_name in gevp_index:
+
+    if verbose:
+      print '\tplotting ', gevp_el_name[0], ' - ', gevp_el_name[1]
+
+    # prepare plot
+    plt.title(r'Gevp Element ${} - {}$'.format(gevp_el_name[0], gevp_el_name[1]))
+    plt.xlabel(r'$t/a$', fontsize=12)
+    plt.ylabel(r'$%s(t/a)$' % diagram, fontsize=12)
+
+    if logscale:
+      plt.yscale('log')
+
+    # prepare data to plot
+    gevp_el = data.xs(gevp_el_name, level=[0,1])
+
+    # plot
+    plot_gevp_el(gevp_el, r'$\mu = %i, p_{so} = %s - p_{si} = %s$')
+
+    # clean up for next plot
+    plt.legend(numpoints=1, loc='best', fontsize=6)
+    pdfplot.savefig()
+    plt.clf()
+
 
 def sep_rows_sum_mom(data, diagram, bootstrapsize, pdfplot, logscale=False, \
                                                                  verbose=False):

@@ -48,6 +48,8 @@ def select_irrep_mult(df, irrep, mult):
     get_lattice_basis()
   """
 
+  print df
+
   df = df[df['Irrep'] == irrep]
   df = df[df['mult'] == mult]
   df.drop(['Irrep', 'mult'], axis=1, inplace=True)
@@ -55,7 +57,7 @@ def select_irrep_mult(df, irrep, mult):
   return df
 
 # TODO: path for groups is hardcoded here. Shift that into clebsch-gordan module
-def return_cg(irrep, mult):
+def return_cg(p_cm, irrep, mult):
   """
   Creates table with eigenstates of an irreducible representation created from
   a Clebsch-Gordan decomposition of two pseudoscalar particles with momenta 
@@ -64,6 +66,10 @@ def return_cg(irrep, mult):
   Parameters
   ----------
 
+    p_cm : int, {0,1,2,3,4}
+        Center of mass momentum of the lattice. Used to specify the appropriate
+        little group of rotational symmetry. Absolute value of an integer 
+        3-vector
     irrep : string
         Specifying the irreducible representation operators should transform 
         under
@@ -87,8 +93,8 @@ def return_cg(irrep, mult):
   """
 
 
-  prefs = [[0.,0.,0.], [0.,0.,1.], [1.,1.,0.], [1.,1.,1.], [0.,0.,2.], \
-           [0.,1.,2.], [1.,1.,2.]]
+  prefs = [[0.,0.,0.], [0.,0.,1.], [0.,1.,1.], [1.,1.,1.], [0.,0.,2.]]
+#           [0.,1.,2.], [1.,1.,2.]]
   p2max = len(prefs)
 
   # initialize groups
@@ -103,15 +109,36 @@ def return_cg(irrep, mult):
 
   # calc coefficients
   df = DataFrame()
-  for p in range(p2max):
+  for i, j in it.product(range(p2max), repeat=2):
     try:
-      cgs = group.TOhCG(0, p, p, groups)
+
+#      #hardcoded from cntr.v0.1: Cutoffs for single momenta
+      # not really needed. Makes cg-calculation more efficient, but merging 
+      # takes care of superfluous coefficients anyway
+#      if p_cm == 0:
+#        if p > 3:
+#          continue
+#      elif p_cm == 1:
+#        if p > 5:
+#          continue
+#      elif p_cm == 2:
+#        if p > 6:
+#          continue
+#      elif p_cm == 3:
+#        if p > 7:
+#          continue
+#      elif p_cm == 4:
+#        if p > 4:
+#          continue
+
+      cgs = group.TOhCG(p_cm, i, j, groups)
       #cgs = group.TOhCG(0, p, p, groups, ir1="A2g", ir2="T2g")
       #print("pandas")
       df = pd.concat([df, cgs.to_pandas()], ignore_index=True)
     except RuntimeError:
       continue
 
+  print df
   df.rename(columns={'row' : '\mu', 'multi' : 'mult', 
                                        'cg' : 'cg-coefficient'}, inplace=True)
   df['cg-coefficient'] = df['cg-coefficient'].apply(aeval)
@@ -120,8 +147,8 @@ def return_cg(irrep, mult):
   # Create new column 'p' with tuple of momenta 
   # ( (p1x, p1y, p1z), (p2x, p2y, p2z) )
   # TODO warning for imaginary parts
-  def to_tuple(list):
-      return tuple([l.real for l in list])
+  def to_tuple(list, sign=+1):
+      return tuple([int(sign*l.real) for l in list])
   df['p1'] = df['p1'].apply(to_tuple)
   df['p2'] = df['p2'].apply(to_tuple)
   df['p'] = list(zip(df['p1'], df['p2']))
@@ -132,9 +159,10 @@ def return_cg(irrep, mult):
   df['J'] = [(0,0)]*len(df.index) 
   df['M'] = [(0,0)]*len(df.index)
 
-  df = select_irrep_mult(df, irrep, mult)
+  print df[df['p'] == tuple([(0,0,0),(0,0,1)])]
+  print df['Irrep'].unique()
 
-  print df
+  df = select_irrep_mult(df, irrep, mult)
 
   return df
 
@@ -160,7 +188,7 @@ def get_lattice_basis(p_cm):
         indices
   """
 
-  prefs = [[0.,0.,0.], [0.,0.,1.], [1.,1.,0.], [1.,1.,1.]]
+  prefs = [[0.,0.,0.], [0.,0.,1.], [0.,1.,1.], [1.,1.,1.]]
 
   # initialize groups
   S = 1./np.sqrt(2.)
@@ -185,6 +213,9 @@ def get_lattice_basis(p_cm):
   # munging to have a consistent format
   df.rename(columns={'row' : '\mu', 'coeff' : 'cg-coefficient'}, inplace=True)
   df['cg-coefficient'] = df['cg-coefficient'].apply(aeval)
+  def to_tuple(list, sign=+1):
+      return tuple([sign*int(l).real for l in list])
+  df['p'] = df['p'].apply(to_tuple)
 
   return df
 
@@ -235,7 +266,8 @@ def get_continuum_basis(names, verbose):
                 names=["gevp", 'J', 'M', '\gamma']), \
             columns=['subduction-coefficient'], dtype=complex).sort_index()])
 
-  print basis_table
+  if verbose:
+    print basis_table
 
   return basis_table[basis_table['subduction-coefficient'] != 0]
 
@@ -282,16 +314,18 @@ def get_coefficients(diagram, gammas, p_cm, irrep, mult, basis, verbose):
   basis = select_irrep_mult(basis, irrep, mult)
 
   if diagram.startswith('C2'):
-    cg_one_operator = basis
-    cg_table_so, cg_table_si = cg_one_operator, cg_one_operator
+    cg_table_so = basis
+    cg_table_si = basis.copy()
+    cg_table_si['p'] = ((-1)*cg_table_si['p'].apply(np.array)).apply(tuple)
   elif diagram.startswith('C3'):
     # get factors for the desired irreps
     cg_one_operator = basis
-    cg_two_operators = return_cg(irrep, mult)
+    cg_two_operators = return_cg(p_cm, irrep, mult)
     # for 3pt function we have pipi operator at source and rho operator at sink
     cg_table_so, cg_table_si = cg_two_operators, cg_one_operator
+    cg_table_si['p'] = (cg_table_si['p'].apply(np.array)*(-1)).apply(tuple)
   elif diagram.startswith('C4'):
-    cg_two_operators = return_cg(irrep, mult)
+    cg_two_operators = return_cg(p_cm, irrep, mult)
     cg_table_so, cg_table_si = cg_two_operators, cg_two_operators
   else:
     print 'in get_coefficients: diagram unknown! Quantum numbers corrupted.'
@@ -304,7 +338,6 @@ def get_coefficients(diagram, gammas, p_cm, irrep, mult, basis, verbose):
   # express the subduced eigenstates in terms of Dirac operators.
   cg_table_so = pd.merge(cg_table_so, continuum_basis_table.reset_index()).\
                                                    set_index('\mu').sort_index()   
-  print cg_table_so
   cg_table_si = pd.merge(cg_table_si, continuum_basis_table.reset_index()).\
                                                    set_index('\mu').sort_index()  
   # Munging the result: Delete rows with coefficient 0, combine coefficients 
@@ -354,7 +387,13 @@ def set_lookup_qn_irrep(coefficients_irrep, qn, verbose):
   """
 
   # associate clebsch-gordan coefficients with the correct qn index
+
+#  print coefficients_irrep[coefficients_irrep['p_{so}'] == tuple([(2,0,0),(-1,0,0)])] 
+#  print qn[qn['p_{so}'] == tuple([(0,0,0),(0,0,1)])]
+#  return
   qn_irrep = pd.merge(coefficients_irrep.reset_index(), qn.reset_index())
+#  print 'qn_irrep'
+#  print qn_irrep[qn_irrep['p_{so}_x'] == qn_irrep['p_{so}_y']]
 
   # Add two additional columns with the same string if the quantum numbers 
   # describe equivalent physical constellations: gevp_row and gevp_col
@@ -372,6 +411,9 @@ def set_lookup_qn_irrep(coefficients_irrep, qn, verbose):
                             qn_irrep['gevp_{si}']
   del(qn_irrep['gevp_{so}'])
   del(qn_irrep['gevp_{si}'])
+
+  print 'qn_irrep'
+  print qn_irrep
 
   return qn_irrep
 
@@ -406,6 +448,7 @@ def ensembles(data, qn_irrep):
   # /hadron/werner/.local/lib/python2.7/site-packages/pandas/tools/merge.py:480: UserWarning: merging between different levels can give an unintended result (1 levels on the left, 2 on the right)
   #  warnings.warn(msg, UserWarning)
   # But the merging is on one level only.
+
   subduced = pd.merge(qn_irrep, data.T, how='left', left_on=['index'], 
                                                                right_index=True)
   # not needed after index was merged on

@@ -188,8 +188,6 @@ def main():
     # their multiplicity
     lookup_irreps = basis[['Irrep', 'mult']].apply(tuple, axis=1).unique()
 
-    print lookup_irreps
-
     subduced_data = {}
     lookup_qn_irrep = {}
     for diagram in diagrams:
@@ -213,7 +211,6 @@ def main():
         utils.write_hdf5_correlators(path, filename, 
                                 subduced_data[(diagram,irrep)], 'data', verbose)
 
-    return
     ############################################################################ 
     # Wick contraction
 
@@ -236,7 +233,7 @@ def main():
     for correlator in correlators:
 
       print '\tcontracting data for %s' % correlator 
-      for irrep in lookup_irreps:
+      for irrep, mult in lookup_irreps:
 
         contracted_data[(correlator,irrep)] = wick.rho(subduced_data, \
                                                      correlator, irrep, verbose)
@@ -267,22 +264,22 @@ def main():
     ############################################################################ 
     # Gevp construction
 
-    print '\tcreating gevp'
-    for irrep in lookup_irreps:
-
-      gevp_data = setup_gevp.build_gevp(contracted_data_avg, irrep, verbose)
-
-      path = '%s/%s/3_gevp-data/' % (outpath, ensemble)
-      filename = 'Gevp_p%1i_%s.h5' % (p_cm, irrep)
-      utils.write_hdf5_correlators(path, filename, gevp_data, 'data', verbose)
-
-      path = '%s/%s/3_gevp-data/p%1i/%s/' % (outpath, ensemble, p_cm, irrep)
-      utils.write_ascii_gevp(path, gevp_data, p_cm, irrep, verbose)
+#    print '\tcreating gevp'
+#    for irrep, mult in lookup_irreps:
+#
+#      gevp_data = setup_gevp.build_gevp(contracted_data_avg, irrep, verbose)
+#
+#      path = '%s/%s/3_gevp-data/' % (outpath, ensemble)
+#      filename = 'Gevp_p%1i_%s.h5' % (p_cm, irrep)
+#      utils.write_hdf5_correlators(path, filename, gevp_data, 'data', verbose)
+#
+#      path = '%s/%s/3_gevp-data/p%1i/%s/' % (outpath, ensemble, p_cm, irrep)
+#      utils.write_ascii_gevp(path, gevp_data, p_cm, irrep, verbose)
 
     ############################################################################ 
     # Plotting 
 
-    for irrep in lookup_irreps:
+    for irrep, mult in lookup_irreps:
 
       path = '%s/%s/4_plots/p%1i/%s/' % (outpath, ensemble, p_cm, irrep)
       for correlator in correlators:
@@ -302,6 +299,13 @@ def main():
           plot.avg_rows_sep_mom(contracted_data[(correlator,irrep)], \
                           correlator, bootstrapsize, pdfplot, logscale, verbose)
           pdfplot.close()
+
+#        filename = '%s_sep_rows_sep_mom_imag_p%1i_%s.pdf' % (correlator, p_cm, \
+#                                                                        irrep)
+#        pdfplot = utils.create_pdfplot(path, filename)
+#        plot.sep_rows_sep_mom(contracted_data[(correlator,irrep)], \
+#                        correlator, bootstrapsize, pdfplot, logscale, verbose)
+#        pdfplot.close()
 
       if avg_rows_sum_mom:
         filename = 'Gevp_p%1i_%s.pdf' % (p_cm, irrep)
