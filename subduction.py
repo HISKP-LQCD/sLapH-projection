@@ -48,8 +48,6 @@ def select_irrep_mult(df, irrep, mult):
     get_lattice_basis()
   """
 
-  print df
-
   df = df[df['Irrep'] == irrep]
   df = df[df['mult'] == mult]
   df.drop(['Irrep', 'mult'], axis=1, inplace=True)
@@ -93,7 +91,7 @@ def return_cg(p_cm, irrep, mult):
   """
 
 
-  prefs = [[0.,0.,0.], [0.,0.,1.], [0.,1.,1.], [1.,1.,1.], [0.,0.,2.]]
+  prefs = [[0.,0.,0.], [0.,0.,1.], [1.,1.,0.], [1.,1.,1.], [0.,0.,2.]]
 #           [0.,1.,2.], [1.,1.,2.]]
   p2max = len(prefs)
 
@@ -132,13 +130,14 @@ def return_cg(p_cm, irrep, mult):
 #          continue
 
       cgs = group.TOhCG(p_cm, i, j, groups)
+      # TODO: irreps explizit angeben. TOh gibt Liste der beitragenden irreps 
+      # zurück TOh.subduction_SU2(j) mit j = 2j+1
       #cgs = group.TOhCG(0, p, p, groups, ir1="A2g", ir2="T2g")
       #print("pandas")
       df = pd.concat([df, cgs.to_pandas()], ignore_index=True)
     except RuntimeError:
       continue
 
-  print df
   df.rename(columns={'row' : '\mu', 'multi' : 'mult', 
                                        'cg' : 'cg-coefficient'}, inplace=True)
   df['cg-coefficient'] = df['cg-coefficient'].apply(aeval)
@@ -159,14 +158,15 @@ def return_cg(p_cm, irrep, mult):
   df['J'] = [(0,0)]*len(df.index) 
   df['M'] = [(0,0)]*len(df.index)
 
-  print df[df['p'] == tuple([(0,0,0),(0,0,1)])]
+  print df[(df['p'] == tuple([(0,0,2),(0,0,-1)])) | (df['p'] == tuple([(0,0,-1),(0,0,2)]))]
   print df['Irrep'].unique()
+#  print df[(df['Irrep'] == 'A2g') & (df['mult'] == 3)]
 
   df = select_irrep_mult(df, irrep, mult)
 
   return df
 
-def get_lattice_basis(p_cm):
+def get_lattice_basis(p_cm, verbose=True):
   """
   Calculate basis for irreducible representations of appropriate little group 
   of rotational symmetry for lattice in a moving reference frame with 
@@ -188,7 +188,7 @@ def get_lattice_basis(p_cm):
         indices
   """
 
-  prefs = [[0.,0.,0.], [0.,0.,1.], [0.,1.,1.], [1.,1.,1.]]
+  prefs = [[0.,0.,0.], [0.,0.,1.], [1.,1.,0.], [1.,1.,1.]]
 
   # initialize groups
   S = 1./np.sqrt(2.)
@@ -216,6 +216,10 @@ def get_lattice_basis(p_cm):
   def to_tuple(list, sign=+1):
       return tuple([sign*int(l).real for l in list])
   df['p'] = df['p'].apply(to_tuple)
+
+  if verbose:
+    print 'lattice_basis'
+    print df
 
   return df
 
@@ -246,6 +250,10 @@ def get_continuum_basis(names, verbose):
   ladder_operators = [[1, 0, 0], 
                       [0, 1, 0], 
                       [0, 0, 1]]
+#  sqrt2 = np.sqrt(2)
+#  ladder_operators = [[1./sqrt2, -1j/sqrt2, 0], 
+#                      [0,         0,        1], 
+#                      [1./sqrt2, +1j/sqrt2, 0]]
 
   basis = np.array([m + [0]*3 for m in ladder_operators] + \
                                   [[0]*3+m for m in ladder_operators]).flatten()
@@ -267,6 +275,7 @@ def get_continuum_basis(names, verbose):
             columns=['subduction-coefficient'], dtype=complex).sort_index()])
 
   if verbose:
+    print 'basis_table'
     print basis_table
 
   return basis_table[basis_table['subduction-coefficient'] != 0]
@@ -312,6 +321,9 @@ def get_coefficients(diagram, gammas, p_cm, irrep, mult, basis, verbose):
   """
 
   basis = select_irrep_mult(basis, irrep, mult)
+#  if irrep == 'A1g':
+#    irrep = 'A2g'
+#    mult = 3
 
   if diagram.startswith('C2'):
     cg_table_so = basis
@@ -325,8 +337,12 @@ def get_coefficients(diagram, gammas, p_cm, irrep, mult, basis, verbose):
     cg_table_so, cg_table_si = cg_two_operators, cg_one_operator
     cg_table_si['p'] = (cg_table_si['p'].apply(np.array)*(-1)).apply(tuple)
   elif diagram.startswith('C4'):
-    cg_two_operators = return_cg(p_cm, irrep, mult)
-    cg_table_so, cg_table_si = cg_two_operators, cg_two_operators
+    cg_table_so = return_cg(p_cm, irrep, mult)
+    cg_table_si = cg_table_so.copy()
+    def to_tuple(list):
+      return tuple([tuple(l) for l in list])
+    cg_table_si['p'] = (cg_table_si['p'].apply(np.array)*(-1)).apply(to_tuple)
+
   else:
     print 'in get_coefficients: diagram unknown! Quantum numbers corrupted.'
     return
@@ -357,6 +373,11 @@ def get_coefficients(diagram, gammas, p_cm, irrep, mult, basis, verbose):
   # combine clebsch-gordan coefficients for source and sink into one DataFrame
   coefficients_irrep = pd.merge(cg_table_so, cg_table_si, how='inner', \
       left_index=True, right_index=True, suffixes=['_{so}', '_{si}']) 
+
+  if verbose:
+    print 'coefficients_irrep'
+    print coefficients_irrep
+
   return coefficients_irrep
 
 def set_lookup_qn_irrep(coefficients_irrep, qn, verbose):
@@ -412,8 +433,9 @@ def set_lookup_qn_irrep(coefficients_irrep, qn, verbose):
   del(qn_irrep['gevp_{so}'])
   del(qn_irrep['gevp_{si}'])
 
-  print 'qn_irrep'
-  print qn_irrep
+  if verbose:
+    print 'qn_irrep'
+    print qn_irrep
 
   return qn_irrep
 

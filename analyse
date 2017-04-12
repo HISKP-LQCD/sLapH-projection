@@ -182,11 +182,12 @@ def main():
       filename = '%s_p%1i_qn.h5' % (diagram, p_cm)
       lookup_qn[(diagram)] = utils.read_hdf5_correlators(path+filename, 'qn')
 
-    basis = subduction.get_lattice_basis(p_cm)
+    basis = subduction.get_lattice_basis(p_cm, verbose)
 
     # List with the names of all contributing irreducible representations and 
     # their multiplicity
     lookup_irreps = basis[['Irrep', 'mult']].apply(tuple, axis=1).unique()
+    lookup_irreps = [('A1g', 1)]
 
     subduced_data = {}
     lookup_qn_irrep = {}
