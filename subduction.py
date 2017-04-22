@@ -88,10 +88,15 @@ def return_cg(p_cm, irrep, mult):
 
     J, M are both hardcoded to (0,0) referring to scattering of two 
     (pseudo)scalars
+
+  See
+  ---
+
+    clebsch_gordan.example_cg
   """
 
 
-  prefs = [[0.,0.,0.], [0.,0.,1.], [1.,1.,0.], [1.,1.,1.], [0.,0.,2.]]
+  prefs = [[0.,0.,0.], [0.,0.,1.], [0.,1.,1.], [1.,1.,1.], [0.,0.,2.]]
 #           [0.,1.,2.], [1.,1.,2.]]
   p2max = len(prefs)
 
@@ -105,38 +110,46 @@ def return_cg(p_cm, irrep, mult):
   groups = group.init_groups(prefs=prefs, p2max=p2max, U2=U2, U3=U3,
           path=path)
 
+  # define the particles to combine
+  j1 = 0 # J quantum number of particle 1
+  j2 = 0 # J quantum number of particle 2
+  ir1 = [ g.subduction_SU2(int(j1*2+1)) for g in groups]
+  ir2 = [ g.subduction_SU2(int(j2*2+1)) for g in groups]
+
   # calc coefficients
   df = DataFrame()
-  for i, j in it.product(range(p2max), repeat=2):
-    try:
+  for (i, i1), (j, i2) in it.product(zip(range(p2max), ir1), zip(range(p2max), ir2)):
+    for _i1, _i2 in it.product(i1, i2):
+      try:
 
-#      #hardcoded from cntr.v0.1: Cutoffs for single momenta
-      # not really needed. Makes cg-calculation more efficient, but merging 
-      # takes care of superfluous coefficients anyway
-#      if p_cm == 0:
-#        if p > 3:
-#          continue
-#      elif p_cm == 1:
-#        if p > 5:
-#          continue
-#      elif p_cm == 2:
-#        if p > 6:
-#          continue
-#      elif p_cm == 3:
-#        if p > 7:
-#          continue
-#      elif p_cm == 4:
-#        if p > 4:
-#          continue
+#        #hardcoded from cntr.v0.1: Cutoffs for single momenta
+        # not really needed. Makes cg-calculation more efficient, but merging 
+        # takes care of superfluous coefficients anyway
+#        if p_cm == 0:
+#          if p > 3:
+#            continue
+#        elif p_cm == 1:
+#          if p > 5:
+#            continue
+#        elif p_cm == 2:
+#          if p > 6:
+#            continue
+#        elif p_cm == 3:
+#          if p > 7:
+#            continue
+#        elif p_cm == 4:
+#          if p > 4:
+#            continue
 
-      cgs = group.TOhCG(p_cm, i, j, groups)
-      # TODO: irreps explizit angeben. TOh gibt Liste der beitragenden irreps 
-      # zurück TOh.subduction_SU2(j) mit j = 2j+1
-      #cgs = group.TOhCG(0, p, p, groups, ir1="A2g", ir2="T2g")
-      #print("pandas")
-      df = pd.concat([df, cgs.to_pandas()], ignore_index=True)
-    except RuntimeError:
-      continue
+        cgs = group.TOhCG(p_cm, i, j, groups, ir1=_i1, ir2=_i2)
+
+        # TODO: irreps explizit angeben. TOh gibt Liste der beitragenden irreps 
+        # zurueck TOh.subduction_SU2(j) mit j = 2j+1
+        #cgs = group.TOhCG(0, p, p, groups, ir1="A2g", ir2="T2g")
+        #print("pandas")
+        df = pd.concat([df, cgs.to_pandas()], ignore_index=True)
+      except RuntimeError:
+        continue
 
   df.rename(columns={'row' : '\mu', 'multi' : 'mult', 
                                        'cg' : 'cg-coefficient'}, inplace=True)
@@ -188,7 +201,7 @@ def get_lattice_basis(p_cm, verbose=True):
         indices
   """
 
-  prefs = [[0.,0.,0.], [0.,0.,1.], [1.,1.,0.], [1.,1.,1.]]
+  prefs = [[0.,0.,0.], [0.,0.,1.], [0.,1.,1.], [1.,1.,1.]]
 
   # initialize groups
   S = 1./np.sqrt(2.)
@@ -196,6 +209,8 @@ def get_lattice_basis(p_cm, verbose=True):
   # tells clebsch_gordan to use cartesian basis
   U3 = np.asarray([[0,0,-1.],[1.j,0,0],[0,1,0]])
   U2 = np.asarray([[S,S],[1.j*S,-1.j*S]])
+  U3 = np.identity(3)
+  U2 = np.identity(2)
 
   try:
       groups = group.TOh.read(p2=p_cm)
