@@ -186,14 +186,16 @@ def main():
 
     # List with the names of all contributing irreducible representations and 
     # their multiplicity
-    lookup_irreps = basis[['Irrep', 'mult']].apply(tuple, axis=1).unique()
-    lookup_irreps = [('A1g', 1)]
+    lookup_irreps = basis['Irrep'].unique()
+#    lookup_irreps = basis[['Irrep', 'mult']].apply(tuple, axis=1).unique()
+#    lookup_irreps = [('A1g', 1)]
 
     subduced_data = {}
     lookup_qn_irrep = {}
     for diagram in diagrams:
 
       print '\tsubducing data for %s' % diagram
+      #for irrep, multiplicity in lookup_irreps:
       for irrep, multiplicity in lookup_irreps:
 
         print '\t  subducing into %s' % irrep
