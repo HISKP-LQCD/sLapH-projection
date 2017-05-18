@@ -21,6 +21,34 @@ import utils
 
 from clebsch_gordan import group
 
+def select_irrep(df, irrep):
+  """
+  Restrict table of basis vectors to one irreducible representation.
+
+  Parameters
+  ----------
+    df : pd.DataFrame
+        Contains subduction coefficients for going from continuum to discete
+        space. 
+    irrep : string
+        Specifying the irreducible representation operators should transform 
+        under
+
+  Returns
+  -------
+        df restricted to *irrep* and *mult*. 
+        Has columns J, M, cg-coefficient, p, \mu and unnamed indices
+
+  See
+  ---
+    get_lattice_basis()
+  """
+
+  df = df[df['Irrep'] == irrep]
+  df.drop(['Irrep'], axis=1, inplace=True)
+
+  return df
+
 
 def select_irrep_mult(df, irrep, mult):
   """
@@ -55,7 +83,7 @@ def select_irrep_mult(df, irrep, mult):
   return df
 
 # TODO: path for groups is hardcoded here. Shift that into clebsch-gordan module
-def return_cg(p_cm, irrep, mult):
+def return_cg(p_cm, irrep):
   """
   Creates table with eigenstates of an irreducible representation created from
   a Clebsch-Gordan decomposition of two pseudoscalar particles with momenta 
@@ -71,9 +99,6 @@ def return_cg(p_cm, irrep, mult):
     irrep : string
         Specifying the irreducible representation operators should transform 
         under
-    mult : int
-        The multiplicity further specifying the irreducible representation if
-        it appears multiple times in the subduction process
 
   Returns
   -------
@@ -171,11 +196,11 @@ def return_cg(p_cm, irrep, mult):
   df['J'] = [(0,0)]*len(df.index) 
   df['M'] = [(0,0)]*len(df.index)
 
-  print df[(df['p'] == tuple([(0,0,2),(0,0,-1)])) | (df['p'] == tuple([(0,0,-1),(0,0,2)]))]
-  print df['Irrep'].unique()
-#  print df[(df['Irrep'] == 'A2g') & (df['mult'] == 3)]
+#  print df[((df['p'] == tuple([(0,-1,0),(0,1,1)])) | (df['p'] == tuple([(0,1,1),(0,-1,0)])) | (df['p'] == tuple([(0,1,0),(0,-1,1)])) | (df['p'] == tuple([(0,-1,1),(0,1,0)])) | (df['p'] == tuple([(-1,0,0),(1,0,1)])) | (df['p'] == tuple([(1,0,1),(-1,0,0)])) | (df['p'] == tuple([(1,0,0),(-1,0,1)])) | (df['p'] == tuple([(-1,0,1),(1,0,0)]))) & df['cg-coefficient'] != 0]
+#  print df['Irrep'].unique()
+#  print df[(df['Irrep'] == 'Ep1g')]
 
-  df = select_irrep_mult(df, irrep, mult)
+  df = select_irrep(df, irrep)
 
   return df
 
@@ -262,13 +287,21 @@ def get_continuum_basis(names, verbose):
 
   # implement trivial cartesian basis as it is taken account for in 
   # cg coefficients
-  ladder_operators = [[1, 0, 0], 
-                      [0, 1, 0], 
-                      [0, 0, 1]]
+#  ladder_operators = [[1, 0, 0], 
+#                      [0, 1, 0], 
+#                      [0, 0, 1]]
 #  sqrt2 = np.sqrt(2)
 #  ladder_operators = [[1./sqrt2, -1j/sqrt2, 0], 
 #                      [0,         0,        1], 
 #                      [1./sqrt2, +1j/sqrt2, 0]]
+  sqrt2 = np.sqrt(2)
+  ladder_operators = [[1./sqrt2,  0, 1./sqrt2], 
+                      [0,         1, 0], 
+                      [1./sqrt2,  0, -1./sqrt2]]
+  ladder_operators = [[1, 0, 0], 
+                      [0, 0, 1], 
+                      [0, 1, 0]]
+
 
   basis = np.array([m + [0]*3 for m in ladder_operators] + \
                                   [[0]*3+m for m in ladder_operators]).flatten()
@@ -300,7 +333,7 @@ def get_continuum_basis(names, verbose):
 # TODO: find a better name for diagram after Wick contraction
 # TODO:  The information in irrep, mult and basis is redundant. return_cg() 
 #        should be changed to simplify the interface
-def get_coefficients(diagram, gammas, p_cm, irrep, mult, basis, verbose):
+def get_coefficients(diagram, gammas, p_cm, irrep, basis, verbose):
   """
   Read table with required coefficients from forming continuum basis states, 
   subduction to the lattice and Clebsch-Gordan coupling
@@ -319,9 +352,6 @@ def get_coefficients(diagram, gammas, p_cm, irrep, mult, basis, verbose):
   irrep : string, {'T1', 'A1', 'E2', 'B1', 'B2'}
       name of the irreducible representation of the little group the operator
       is required to transform under.
-  mult : int
-      The multiplicity further specifying the irreducible representation if
-      it appears multiple times in the subduction process
   basis : pd.DataFrame      
       discrete basis states restricted to *irrep* and *mult*. 
       Has columns J, M, cg-coefficient, p, \mu and unnamed indices
@@ -335,7 +365,7 @@ def get_coefficients(diagram, gammas, p_cm, irrep, mult, basis, verbose):
       numbers
   """
 
-  basis = select_irrep_mult(basis, irrep, mult)
+  basis = select_irrep(basis, irrep)
 #  if irrep == 'A1g':
 #    irrep = 'A2g'
 #    mult = 3
@@ -347,12 +377,12 @@ def get_coefficients(diagram, gammas, p_cm, irrep, mult, basis, verbose):
   elif diagram.startswith('C3'):
     # get factors for the desired irreps
     cg_one_operator = basis
-    cg_two_operators = return_cg(p_cm, irrep, mult)
+    cg_two_operators = return_cg(p_cm, irrep)
     # for 3pt function we have pipi operator at source and rho operator at sink
     cg_table_so, cg_table_si = cg_two_operators, cg_one_operator
     cg_table_si['p'] = (cg_table_si['p'].apply(np.array)*(-1)).apply(tuple)
   elif diagram.startswith('C4'):
-    cg_table_so = return_cg(p_cm, irrep, mult)
+    cg_table_so = return_cg(p_cm, irrep)
     cg_table_si = cg_table_so.copy()
     def to_tuple(list):
       return tuple([tuple(l) for l in list])
@@ -445,8 +475,11 @@ def set_lookup_qn_irrep(coefficients_irrep, qn, verbose):
                               astype(tuple).astype(str) \
                           + ', \gamma = ' + \
                             qn_irrep['gevp_{si}']
+
   del(qn_irrep['gevp_{so}'])
   del(qn_irrep['gevp_{si}'])
+#  del(qn_irrep['mult_{so}'])
+#  del(qn_irrep['mult_{si}'])
 
   if verbose:
     print 'qn_irrep'
@@ -493,12 +526,14 @@ def ensembles(data, qn_irrep):
   # construct hierarchical multiindex to be able to sum over momenta, average
   # over rows and reference gevp elements
   subduced = subduced.set_index(['gevp_row', 'gevp_col', '\mu', \
-                      'p_{so}', '\gamma_{so}', 'p_{si}', '\gamma_{si}'])
+                      'p_{so}', '\gamma_{so}', 'p_{si}', '\gamma_{si}', 'mult_{so}', 'mult_{si}'])
   subduced = subduced.ix[:,2:].multiply(subduced['coefficient_{so}']*
                                np.conj(subduced['coefficient_{si}']), axis=0)
 
   subduced.columns=pd.MultiIndex.from_tuples(subduced.columns, \
                                                          names=('cnfg', 'T'))
+
+  subduced = subduced.sort_index()
 
   # I do not know why the dtype got converted to object, but convert it back
   # to complex
