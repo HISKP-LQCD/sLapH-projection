@@ -185,8 +185,8 @@ def avg_row_sum_mom(gevp_data, bootstrapsize, pdfplot, logscale=False, \
 # does not make sence for CMF C2 because there i just one momentum
 def sep_rows_sep_mom(data, diagram, bootstrapsize, pdfplot, logscale=False, \
                                                                  verbose=False):
-  # discard imaginary part (noise)
-  data = data.apply(np.imag)
+#  # discard imaginary part (noise)
+#  data = data.apply(np.real)
   # sum over all gamma structures to get the full Dirac operator transforming 
   # like a row of the desired irrep
   data = data.sum(level=[0,1,2,3,5])

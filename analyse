@@ -38,7 +38,24 @@ def main():
   if(config.read(args.infile) == []):
     print "Error! Could not open infile: ", args.infile
     exit(-1)
+
+  flag_read        = config.getboolean('parameters', 'Read configurations') 
+  flag_subduction  = config.getboolean('parameters', 'Subduce configurations')
+  flag_contraction = config.getboolean('parameters', 'Contract configurations')
+  flag_gevp        = config.getboolean('parameters', 'Create Gevp')
+  flag_plot        = config.getboolean('parameters', 'Plot data')
   
+  if verbose:
+    print '#################################################################'\
+                                                               '###############'
+    print 'Reading infile'
+
+    print flag_read
+    print flag_subduction
+    print flag_contraction
+    print flag_gevp
+    print flag_plot
+
   sta_cnfg = config.getint('gauge configuration numbers', 'First configuration')
   end_cnfg = config.getint('gauge configuration numbers', 'Last configuration')
   del_cnfg = config.getint('gauge configuration numbers', \
@@ -52,10 +69,6 @@ def main():
     missing_configs = [int(m) for m in missing_configs.split(',')]
   
   if verbose:
-    print '#################################################################'\
-                                                               '###############'
-    print 'Reading infile'
-
     print sta_cnfg
     print end_cnfg
     print del_cnfg
@@ -114,6 +127,7 @@ def main():
   if verbose:
     print outpath
 
+  sep_rows_sep_mom = config.getboolean('plot details', 'Plot sep_rows_sep_mom') 
   sep_rows_sum_mom = config.getboolean('plot details', 'Plot sep_rows_sum_mom') 
   avg_rows_sep_mom = config.getboolean('plot details', 'Plot avg_rows_sep_mom')
   avg_rows_sum_mom = config.getboolean('plot details', 'Plot avg_rows_sum_mom')
@@ -139,35 +153,48 @@ def main():
 
     ############################################################################ 
     # read diagrams
-#    data = {}
-#    lookup_qn = {}
-#    for diagram, directory in zip(diagrams, directories):
-#
-#      if verbose:
-#        print '\treading data for %s' % (diagram)
-#      lookup_cnfg = raw_data.set_lookup_cnfg(sta_cnfg, end_cnfg, del_cnfg, \
-#                                                       missing_configs, verbose)
-#      # set up lookup table for quantum numbers
-#      if p_cm == 0:
-#        p_max = 2
-#      # for moving frames, sum of individual component's absolute value (i.e.
-#      # total kindetic energy) might be larger than center of mass absolute 
-#      # value. Modify the cutoff accordingly.
-##      p_cm_max = np.asarray([4,5,6,7,4], dtype=int)[p_cm]
-#      # TODO: that needs to be refactored when going to a larger operator basis
-#      lookup_qn[diagram] = raw_data.set_lookup_qn(diagram, p_cm, p_max, 
-#                                                                gammas, verbose)
-#  
-#      data[diagram] = raw_data.read(lookup_cnfg, lookup_qn[diagram], diagram, T, 
-#                                                             directory, verbose)
-#      # write data
-#      # TODO: Writing into same file only works in append mode
-#      path = '%s/%s/0_raw-data/' % (outpath, ensemble)
-#      filename = '%s_p%1i.h5' % (diagram, p_cm)
-#      utils.write_hdf5_correlators(path, filename, data[diagram], 'data', verbose)
-#      filename = '%s_p%1i_qn.h5' % (diagram, p_cm)
-#      utils.write_hdf5_correlators(path, filename, lookup_qn[diagram], 'qn', verbose=False)
+    if flag_read:
+      data = {}
+      lookup_qn = {}
+      for diagram, directory in zip(diagrams, directories):
+  
+        if verbose:
+          print '\treading data for %s' % (diagram)
+        lookup_cnfg = raw_data.set_lookup_cnfg(sta_cnfg, end_cnfg, del_cnfg, \
+                                                         missing_configs, verbose)
+        # set up lookup table for quantum numbers
+        if p_cm == 0:
+          p_max = 2
+        # for moving frames, sum of individual component's absolute value (i.e.
+        # total kindetic energy) might be larger than center of mass absolute 
+        # value. Modify the cutoff accordingly.
+  #      p_cm_max = np.asarray([4,5,6,7,4], dtype=int)[p_cm]
+        # TODO: that needs to be refactored when going to a larger operator basis
+        lookup_qn[diagram] = raw_data.set_lookup_qn(diagram, p_cm, p_max, 
+                                                                  gammas, verbose)
+    
+        data[diagram] = raw_data.read(lookup_cnfg, lookup_qn[diagram], diagram, T, 
+                                                               directory, verbose)
+        # write data
+        # TODO: Writing into same file only works in append mode
+        path = '%s/%s/0_raw-data/' % (outpath, ensemble)
+        filename = '%s_p%1i.h5' % (diagram, p_cm)
+        utils.write_hdf5_correlators(path, filename, data[diagram], 'data', verbose)
+        filename = '%s_p%1i_qn.h5' % (diagram, p_cm)
+        utils.write_hdf5_correlators(path, filename, lookup_qn[diagram], 'qn', verbose=False)
  
+    else:
+      # helper function to read all raw data from disk
+      path = '%s/%s/0_raw-data/' % (outpath, ensemble)
+  
+      data = {}
+      lookup_qn = {}
+      for diagram in diagrams:
+        filename = '%s_p%1i.h5' % (diagram, p_cm)
+        data[(diagram)] = utils.read_hdf5_correlators(path+filename, 'data')
+        filename = '%s_p%1i_qn.h5' % (diagram, p_cm)
+        lookup_qn[(diagram)] = utils.read_hdf5_correlators(path+filename, 'qn')
+
     ############################################################################
     # Subduction
 
@@ -182,51 +209,56 @@ def main():
       filename = '%s_p%1i_qn.h5' % (diagram, p_cm)
       lookup_qn[(diagram)] = utils.read_hdf5_correlators(path+filename, 'qn')
 
-    basis = subduction.get_lattice_basis(p_cm, verbose)
+    if flag_subduction:
+      basis = subduction.get_lattice_basis(p_cm, verbose)
+  
+      # List with the names of all contributing irreducible representations and 
+      # their multiplicity
+      lookup_irreps = basis['Irrep'].unique()
+      print lookup_irreps
+  
+      subduced_data = {}
+      lookup_qn_irrep = {}
+      for diagram in diagrams:
+  
+        print '\tsubducing data for %s' % diagram
+  #      for irrep, multiplicity in lookup_irreps:
+        for irrep in lookup_irreps:
+  
+          print '\t  subducing into %s' % irrep
+          # read coefficients for correlation function, little group and irreducible 
+          # representation given by diagram, p_cm irrep and mult
+          coefficients_irrep = subduction.get_coefficients(diagram, gammas, p_cm, 
+              irrep, basis, verbose)
+          lookup_qn_irrep[(diagram, irrep)] = subduction.set_lookup_qn_irrep( \
+                                                coefficients_irrep, \
+                                                lookup_qn[diagram], verbose)
+          subduced_data[(diagram, irrep)] = subduction.ensembles(data[diagram], \
+                                                 lookup_qn_irrep[(diagram,irrep)])
+          # write data to disc
+          path = '%s/%s/1_subduced-data/' % (outpath, ensemble)
+          filename = '/%s_p%1i_%s.h5' % (diagram, p_cm, irrep)
+          utils.write_hdf5_correlators(path, filename, 
+                                  subduced_data[(diagram,irrep)], 'data', verbose)
+    else:
+      # helper function to read all subduced data from disk
+      basis = subduction.get_lattice_basis(p_cm, verbose)
 
-    # List with the names of all contributing irreducible representations and 
-    # their multiplicity
-    lookup_irreps = basis['Irrep'].unique()
-#    lookup_irreps = basis[['Irrep', 'mult']].apply(tuple, axis=1).unique()
-#    lookup_irreps = [('A1g', 1)]
+      # List with the names of all contributing irreducible representations and 
+      # their multiplicity
+      lookup_irreps = basis['Irrep'].unique()
 
-    subduced_data = {}
-    lookup_qn_irrep = {}
-    for diagram in diagrams:
-
-      print '\tsubducing data for %s' % diagram
-      #for irrep, multiplicity in lookup_irreps:
-      for irrep, multiplicity in lookup_irreps:
-
-        print '\t  subducing into %s' % irrep
-        # read coefficients for correlation function, little group and irreducible 
-        # representation given by diagram, p_cm irrep and mult
-        coefficients_irrep = subduction.get_coefficients(diagram, gammas, p_cm, 
-            irrep, multiplicity, basis, verbose)
-        lookup_qn_irrep[(diagram, irrep)] = subduction.set_lookup_qn_irrep( \
-                                              coefficients_irrep, \
-                                              lookup_qn[diagram], verbose)
-        subduced_data[(diagram, irrep)] = subduction.ensembles(data[diagram], \
-                                               lookup_qn_irrep[(diagram,irrep)])
-        # write data to disc
-        path = '%s/%s/1_subduced-data/' % (outpath, ensemble)
-        filename = '/%s_p%1i_%s.h5' % (diagram, p_cm, irrep)
-        utils.write_hdf5_correlators(path, filename, 
-                                subduced_data[(diagram,irrep)], 'data', verbose)
+      path = '%s/%s/1_subduced-data/' % (outpath, ensemble)
+  
+      subduced_data = {}
+      for diagram in diagrams:
+        for irrep in lookup_irreps:
+          filename = '/%s_p%1i_%s.h5' % (diagram, p_cm, irrep)
+          subduced_data[(diagram,irrep)] = \
+                                utils.read_hdf5_correlators(path+filename, 'data')
 
     ############################################################################ 
     # Wick contraction
-
-#    # helper function to read all subduced data from disk
-#    lookup_irreps = subduction.set_lookup_irreps(p_cm)
-#    path = '%s/%s/1_subduced-data/' % (outpath, ensemble)
-#
-#    subduced_data = {}
-#    for diagram in diagrams:
-#      for irrep in lookup_irreps:
-#        filename = '/%s_p%1i_%s.h5' % (diagram, p_cm, irrep)
-#        subduced_data[(diagram,irrep)] = \
-#                              utils.read_hdf5_correlators(path+filename, 'data')
 
     correlators = wick.set_lookup_correlators(diagrams)
 
@@ -236,7 +268,7 @@ def main():
     for correlator in correlators:
 
       print '\tcontracting data for %s' % correlator 
-      for irrep, mult in lookup_irreps:
+      for irrep in lookup_irreps:
 
         contracted_data[(correlator,irrep)] = wick.rho(subduced_data, \
                                                      correlator, irrep, verbose)
@@ -267,54 +299,68 @@ def main():
     ############################################################################ 
     # Gevp construction
 
-#    print '\tcreating gevp'
-#    for irrep, mult in lookup_irreps:
-#
-#      gevp_data = setup_gevp.build_gevp(contracted_data_avg, irrep, verbose)
-#
-#      path = '%s/%s/3_gevp-data/' % (outpath, ensemble)
-#      filename = 'Gevp_p%1i_%s.h5' % (p_cm, irrep)
-#      utils.write_hdf5_correlators(path, filename, gevp_data, 'data', verbose)
-#
-#      path = '%s/%s/3_gevp-data/p%1i/%s/' % (outpath, ensemble, p_cm, irrep)
-#      utils.write_ascii_gevp(path, gevp_data, p_cm, irrep, verbose)
+    if flag_gevp:
+      print '\tcreating gevp'
+      for irrep in lookup_irreps:
+  
+        gevp_data = setup_gevp.build_gevp(contracted_data_avg, irrep, verbose)
+  
+        path = '%s/%s/3_gevp-data/' % (outpath, ensemble)
+        filename = 'Gevp_p%1i_%s.h5' % (p_cm, irrep)
+        utils.write_hdf5_correlators(path, filename, gevp_data, 'data', verbose)
+  
+        path = '%s/%s/3_gevp-data/p%1i/%s/' % (outpath, ensemble, p_cm, irrep)
+        utils.write_ascii_gevp(path, gevp_data, p_cm, irrep, verbose)
 
     ############################################################################ 
     # Plotting 
 
-    for irrep, mult in lookup_irreps:
+    if flag_plot:
+      for irrep in lookup_irreps:
+  
+        path = '%s/%s/4_plots/p%1i/%s/' % (outpath, ensemble, p_cm, irrep)
+        for correlator in correlators:
+  
+          if sep_rows_sum_mom:
+            filename = '/%s_sep_rows_sum_mom_p%1i_%s.pdf' % (correlator, p_cm, \
+                                                                            irrep)
+            pdfplot = utils.create_pdfplot(path, filename)
+            plot.sep_rows_sum_mom(contracted_data[(correlator,irrep)], \
+                            correlator, bootstrapsize, pdfplot, logscale, verbose)
+            pdfplot.close()
+  
+          if avg_rows_sep_mom:
+            filename = '%s_avg_rows_sep_mom_p%1i_%s.pdf' % (correlator, p_cm, \
+                                                                            irrep)
+            pdfplot = utils.create_pdfplot(path, filename)
+            plot.avg_rows_sep_mom(contracted_data[(correlator,irrep)], \
+                            correlator, bootstrapsize, pdfplot, logscale, verbose)
+            pdfplot.close()
+  
+          if sep_rows_sep_mom:
+            filename = '%s_sep_rows_sep_mom_real_p%1i_%s.pdf' % (correlator, p_cm, \
+                                                                            irrep)
+            pdfplot = utils.create_pdfplot(path, filename)
+            plot.sep_rows_sep_mom(contracted_data[(correlator,irrep)].apply(np.real), \
+                            correlator, bootstrapsize, pdfplot, logscale, verbose)
+            pdfplot.close()
 
-      path = '%s/%s/4_plots/p%1i/%s/' % (outpath, ensemble, p_cm, irrep)
-      for correlator in correlators:
+            filename = '%s_sep_rows_sep_mom_imag_p%1i_%s.pdf' % (correlator, p_cm, \
+                                                                            irrep)
+            pdfplot = utils.create_pdfplot(path, filename)
+            plot.sep_rows_sep_mom(contracted_data[(correlator,irrep)].apply(np.imag), \
+                            correlator, bootstrapsize, pdfplot, logscale, verbose)
+            pdfplot.close()
+  
+        if flag_gevp:
+          if avg_rows_sum_mom:
+            filename = 'Gevp_p%1i_%s.pdf' % (p_cm, irrep)
+            pdfplot = utils.create_pdfplot(path, filename)
+            plot.avg_row_sum_mom(gevp_data, bootstrapsize, pdfplot)
+            pdfplot.close()
+        else:
+          print 'Warning: skipped avg_rows_sum_mom because gevp is incomplete'
 
-        if sep_rows_sum_mom:
-          filename = '/%s_sep_rows_sum_mom_p%1i_%s.pdf' % (correlator, p_cm, \
-                                                                          irrep)
-          pdfplot = utils.create_pdfplot(path, filename)
-          plot.sep_rows_sum_mom(contracted_data[(correlator,irrep)], \
-                          correlator, bootstrapsize, pdfplot, logscale, verbose)
-          pdfplot.close()
-
-        if avg_rows_sep_mom:
-          filename = '%s_avg_rows_sep_mom_p%1i_%s.pdf' % (correlator, p_cm, \
-                                                                          irrep)
-          pdfplot = utils.create_pdfplot(path, filename)
-          plot.avg_rows_sep_mom(contracted_data[(correlator,irrep)], \
-                          correlator, bootstrapsize, pdfplot, logscale, verbose)
-          pdfplot.close()
-
-#        filename = '%s_sep_rows_sep_mom_imag_p%1i_%s.pdf' % (correlator, p_cm, \
-#                                                                        irrep)
-#        pdfplot = utils.create_pdfplot(path, filename)
-#        plot.sep_rows_sep_mom(contracted_data[(correlator,irrep)], \
-#                        correlator, bootstrapsize, pdfplot, logscale, verbose)
-#        pdfplot.close()
-
-      if avg_rows_sum_mom:
-        filename = 'Gevp_p%1i_%s.pdf' % (p_cm, irrep)
-        pdfplot = utils.create_pdfplot(path, filename)
-        plot.avg_row_sum_mom(gevp_data, bootstrapsize, pdfplot)
-        pdfplot.close()
 
 ################################################################################
 if __name__ == '__main__':

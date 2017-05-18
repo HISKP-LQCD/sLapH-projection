@@ -1,3 +1,10 @@
+[parameters]
+Read configurations     = False
+Subduce configurations  = True
+Contract configurations = True
+Create Gevp             = False
+Plot data               = True
+
 [gauge configuration numbers]
 First configuration =     714
 Last configuration =      730
@@ -13,26 +20,27 @@ T = 48
 [gevp parameters]
 p_max           = 4
 # expects ,-seperated integer(s)
-p_cm            = 1
+p_cm            = 0,1
 #p_cm            = 0,1,2,3,4
 # expects ,-seperated expressions 
 Dirac structure = gamma_i, gamma_50i
 
 [contraction details]
 # diagram to be analysed, may also be ,-seperated list
-#Diagram = C20
+#Diagram = C3+
 Diagram = C20, C3+, C4+B, C4+D
 # path to contraction files. Either one path or a ,-seperated list of the same 
 # lenght as diagram
-Input Path = /hiskp2/correlators/pipi_I1-raw_data/lattice_2016/A40.24/
+Input Path = /Users/maow/Work/
 
 [other parameters]
-Output Path = /hiskp2/werner/2017-lattice-conference/data
+Output Path = /Users/maow/Work/
 
 [plot details]
-Plot sep_rows_sum_mom = YES 
-Plot avg_rows_sep_mom = YES 
-Plot avg_rows_sum_mom = YES 
+Plot sep_rows_sep_mom = True 
+Plot sep_rows_sum_mom = True 
+Plot avg_rows_sep_mom = True
+Plot avg_rows_sum_mom = True
 
 Logscale = False
 
