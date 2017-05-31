@@ -234,8 +234,8 @@ def get_lattice_basis(p_cm, verbose=True):
   # tells clebsch_gordan to use cartesian basis
   U3 = np.asarray([[0,0,-1.],[1.j,0,0],[0,1,0]])
   U2 = np.asarray([[S,S],[1.j*S,-1.j*S]])
-  U3 = np.identity(3)
-  U2 = np.identity(2)
+#  U3 = np.identity(3)
+#  U2 = np.identity(2)
 
   try:
       groups = group.TOh.read(p2=p_cm)
@@ -265,7 +265,7 @@ def get_lattice_basis(p_cm, verbose=True):
 
 # TODO: properly read that from infile and pass to get_clebsch_gordan
 # TODO: actually use names to restrict basis_table to what was in the infile
-def get_continuum_basis(names, verbose):
+def get_continuum_basis(names, basis_type, verbose):
   """
   Get table with chosen operators to transform as the *continuum* eigenstates
   of the vector spin representation
@@ -275,6 +275,7 @@ def get_continuum_basis(names, verbose):
   names : list of string
       Contains the names of chosen multiplets as the set of continuum 
       eigenstates is ambiguous and multiple choices might be wanted for a gevp.
+  basis_type : string {cartesian, cyclic, cartesian-xzy, cyclic-xzy}
 
   Returns
   -------
@@ -287,31 +288,74 @@ def get_continuum_basis(names, verbose):
 
   # implement trivial cartesian basis as it is taken account for in 
   # cg coefficients
-#  ladder_operators = [[1, 0, 0], 
-#                      [0, 1, 0], 
-#                      [0, 0, 1]]
-#  sqrt2 = np.sqrt(2)
-#  ladder_operators = [[1./sqrt2, -1j/sqrt2, 0], 
-#                      [0,         0,        1], 
-#                      [1./sqrt2, +1j/sqrt2, 0]]
+  # TODO: Swithc case for the different basis types chosen for p=0,1,...
   sqrt2 = np.sqrt(2)
-  ladder_operators = [[1./sqrt2,  0, 1./sqrt2], 
-                      [0,         1, 0], 
-                      [1./sqrt2,  0, -1./sqrt2]]
-  ladder_operators = [[1, 0, 0], 
-                      [0, 0, 1], 
-                      [0, 1, 0]]
+  sqrt3 = np.sqrt(3)
+  sqrt6 = np.sqrt(6)
+  if basis_type == "cartesian":
+    ladder_operators = [[1, 0, 0], 
+                        [0, 1, 0], 
+                        [0, 0, 1]]
+  elif basis_type == "cyclic":
+    ladder_operators = [[1./sqrt2, -1j/sqrt2, 0], 
+                        [0,         0,        1], 
+                        [1./sqrt2, +1j/sqrt2, 0]]
+  elif basis_type == "cyclic-christian":
+    ladder_operators = [[1./sqrt2, -1j/sqrt2, 0], 
+                        [0,         0,        -1.], 
+                        [-1./sqrt2, -1j/sqrt2, 0]]
+  elif basis_type == "cyclic-i":
+    ladder_operators = [[1./sqrt2,  -1j/sqrt2, 0], 
+                        [0,         0,        -1j], 
+                        [-1./sqrt2, -1j/sqrt2, 0]]
+  elif basis_type == "cartesian-xzy":
+    ladder_operators = [[1, 0, 0], 
+                        [0, 0, 1], 
+                        [0, -1, 0]]
+  elif basis_type == "cartesian-yzx":
+    ladder_operators = [[0, 1, 0], 
+                        [0, 0, 1], 
+                        [1, 0, 0]]
+  elif basis_type == "cyclic-xzy":
+    ladder_operators = [[1./sqrt2,  0, 1./sqrt2], 
+                        [0,         1, 0], 
+                        [1./sqrt2,  0, -1./sqrt2]]
+#  elif basis_type == "p2":
+#    ladder_operators = [[(1./2+sqrt2),  1., 1./2], 
+#                        [-1j/sqrt2,     0., -1j/sqrt2], 
+#                        [(1./2-sqrt2),  1., 1./2]]
+  elif basis_type == "p2":
+    ladder_operators = [[ sqrt2,  1./2,     1./2], 
+                        [    0.,  1j/sqrt2, -1j/sqrt2], 
+                        [-sqrt2,  1./2,     1./2]]
+  elif basis_type == "p3":
+    ladder_operators = [[+1./2+sqrt3/6, 1./2+sqrt3/6, 1./sqrt3],
+                        [-1./sqrt6*(1+1j), 1./sqrt6*(1+1j), -1./sqrt6*(1+1j)], 
+                        [-(-1./2-sqrt3/6)*1j, (1./2-sqrt3/6)*1j, -1j/sqrt3]]
+  elif basis_type == "ssh":
+    ladder_operators = [[0, -1./sqrt2, 0], 
+                        [0, 0, 1j], 
+                        [-1j/sqrt2, 0, 0]]
+  else:
+    print "In get_continuum_basis: continuum_basis type ", basis_type, " not known!"
+    return
 
-
-  basis = np.array([m + [0]*3 for m in ladder_operators] + \
-                                  [[0]*3+m for m in ladder_operators]).flatten()
+  basis = np.array(ladder_operators).flatten()
+#  basis = np.array([m + [0]*3 for m in ladder_operators] + \
+#                                  [[0]*3+m for m in ladder_operators]).flatten()
   # hardcode basis operators for \gamma_i and \gamma_5\gamma_0\gamma_i
   # TODO: replace first list in MultiIndex.from_product by names (or some kind 
   # of latex(names)
+#  basis_table = DataFrame(basis, \
+#            index=pd.MultiIndex.from_product( \
+#                [["\gamma_{i}  ", "\gamma_{50i}"], [1], [-1,0,1], \
+#                                     [(1,), (2,), (3,), (13,), (14,), (15,)]], \
+#                names=["gevp", 'J', 'M', '\gamma']), \
+#            columns=['subduction-coefficient'], dtype=complex).sort_index()
   basis_table = DataFrame(basis, \
             index=pd.MultiIndex.from_product( \
-                [["\gamma_{i}  ", "\gamma_{50i}"], [1], [-1,0,1], \
-                                     [(1,), (2,), (3,), (13,), (14,), (15,)]], \
+                [["\gamma_{i}  "], [1], [-1,0,1], \
+                                     [(1,), (2,), (3,)]], \
                 names=["gevp", 'J', 'M', '\gamma']), \
             columns=['subduction-coefficient'], dtype=complex).sort_index()
   # conatenate basis chosen for two-pion operator. Trivial, because just two
@@ -333,7 +377,8 @@ def get_continuum_basis(names, verbose):
 # TODO: find a better name for diagram after Wick contraction
 # TODO:  The information in irrep, mult and basis is redundant. return_cg() 
 #        should be changed to simplify the interface
-def get_coefficients(diagram, gammas, p_cm, irrep, basis, verbose):
+def get_coefficients(diagram, gammas, p_cm, irrep, basis, continuum_basis, \
+                                                                       verbose):
   """
   Read table with required coefficients from forming continuum basis states, 
   subduction to the lattice and Clebsch-Gordan coupling
@@ -355,6 +400,8 @@ def get_coefficients(diagram, gammas, p_cm, irrep, basis, verbose):
   basis : pd.DataFrame      
       discrete basis states restricted to *irrep* and *mult*. 
       Has columns J, M, cg-coefficient, p, \mu and unnamed indices
+  continuum_basis : string
+      String specifying the continuum basis to be chosen. 
 
   Returns
   ------- 
@@ -394,7 +441,7 @@ def get_coefficients(diagram, gammas, p_cm, irrep, basis, verbose):
 
   # express basis states for all Lorentz structures in `gammas` in terms of 
   # physical Dirac operators
-  continuum_basis_table = get_continuum_basis(gammas, verbose)
+  continuum_basis_table = get_continuum_basis(gammas, continuum_basis, verbose)
 
   # express the subduced eigenstates in terms of Dirac operators.
   cg_table_so = pd.merge(cg_table_so, continuum_basis_table.reset_index()).\
@@ -484,6 +531,7 @@ def set_lookup_qn_irrep(coefficients_irrep, qn, verbose):
   if verbose:
     print 'qn_irrep'
     print qn_irrep
+    utils.write_hdf5_correlators('./', 'qn_irrep.h5', qn_irrep, 'data', verbose=False)
 
   return qn_irrep
 

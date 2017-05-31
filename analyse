@@ -27,8 +27,14 @@ def main():
   # verbosity is also parsed
   parser.add_argument("-v", "--verbose", action="store_true", \
                                                  help="increase output verbosity")
+  # TODO: Only allow certain options, specify standard behavior, etc.
+  parser.add_argument("-b", "--basis", choices=['cartesian', 'cyclic', \
+                        'cyclic-i', 'cyclic-christian', 'cartesian-xzy', 'cyclic-xzy', 'cartesian-yzx', 'p2', 'p3', 'ssh'], \
+                        default='cartesian',
+                        help="continuum basis to be used in the program")
   args = parser.parse_args()
   verbose = args.verbose
+  continuum_basis = args.basis
   
   ################################################################################
   # Reading infile ###############################################################
@@ -218,7 +224,7 @@ def main():
           # read coefficients for correlation function, little group and irreducible 
           # representation given by diagram, p_cm irrep and mult
           coefficients_irrep = subduction.get_coefficients(diagram, gammas, p_cm, 
-              irrep, basis, verbose)
+              irrep, basis, continuum_basis, verbose)
           lookup_qn_irrep[(diagram, irrep)] = subduction.set_lookup_qn_irrep( \
                                                 coefficients_irrep, \
                                                 lookup_qn[diagram], verbose)
@@ -312,8 +318,8 @@ def main():
         for correlator in correlators:
   
           if sep_rows_sum_mom:
-            filename = '/%s_sep_rows_sum_mom_p%1i_%s.pdf' % (correlator, p_cm, \
-                                                                            irrep)
+            filename = '/%s_sep_rows_sum_mom_p%1i_%s_%s.pdf' % (correlator, p_cm, \
+                                                                            irrep, continuum_basis)
             pdfplot = utils.create_pdfplot(path, filename)
             plot.sep_rows_sum_mom(contracted_data[(correlator,irrep)], \
                             correlator, bootstrapsize, pdfplot, logscale, verbose)
