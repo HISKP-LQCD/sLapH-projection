@@ -126,7 +126,21 @@ def pd_series_to_np_array(series):
 
   return np.asarray(series.values).reshape(series.unstack().shape)
 
-def write_ascii_correlator(data, filename, verbose):
+def write_ascii_correlators(path, filename, data, verbose):
+  """
+  write pd.DataFrame as ascii file in Liuming's format
+
+  Parameters
+  ----------
+  path : string
+      Path to store the hdf5 file
+  filename : string
+      Name to save the hdf5 file as
+  data : pd.DataFrame
+      The data to write
+  """
+
+  ensure_dir(path)
   write_data_ascii(np.asarray(pd_series_to_np_array(data)), filename, verbose)
 
 def write_ascii_gevp(path, data, p_cm, irrep, verbose):

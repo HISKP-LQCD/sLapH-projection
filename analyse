@@ -161,7 +161,8 @@ def main():
 
       path = '%s/%s/3_gevp-data/' % (outpath, ensemble)
       filename = 'Pion_p%1i.dat' % (p_cm)
-      utils.write_ascii_correlator(pion_data.mean(axis=1).apply(np.real), path+filename, verbose)
+      utils.write_ascii_correlators(path, filename, 
+                                 pion_data.mean(axis=1).apply(np.real), verbose)
 
     else:
       # helper function to read all raw data from disk
