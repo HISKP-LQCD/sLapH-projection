@@ -67,7 +67,7 @@ def set_lookup_p(p_max, p_cm, diagram):
   p_cm : int
       Absolute value of sum of all momenta at source or sink. Must be equal at
       both due to momentum conservation
-  diagram : string, {'C20', 'C3+', 'C4*'}
+  diagram : string, {'C20', 'C2+', 'C3+', 'C4*'}
       The number of momenta is equal to the number of quarks in a chosen 
       diagram. It is encoded in the second char of the diagram name
 
@@ -78,11 +78,15 @@ def set_lookup_p(p_max, p_cm, diagram):
       For every possible momentum combination, there is one list entry
   """
 
+  # for the center-of-mass frame p_max was restricted to (1,1,0)
+  if p_cm == 0:
+    p_max = 2
+
   lookup_p3 = list(it.ifilter(lambda x: _abs2(x) <= p_max, \
                                   it.product(range(-p_max, p_max+1), repeat=3)))
   lookup_p3_reduced = [(0,0,0), (0,0,1), (0,1,1), (1,1,1), (0,0,2)]
   
-  if diagram == 'C20':
+  if diagram == 'C20' or diagram == 'C2+':
     lookup_so = it.ifilter(lambda x : _abs2(x) == p_cm, lookup_p3)
     lookup_so, lookup_si = it.tee(lookup_so, 2)
     lookup_p = it.ifilter(lambda (x,y): \
@@ -131,7 +135,7 @@ def set_lookup_g(gammas, diagram):
       A list which for each gamma structure coupling to the rho meson contains
       a list with the integer indices used in the contraction code and a 
       latex-style name for plotting labels.
-  diagram : string, {'C20', 'C3+', 'C4*'}
+  diagram : string, {'C20', 'C2+', 'C3+', 'C4*'}
       If one- and two-meson operators contribute, the appearing Dirac operators
       change because the mesons in a two-meson operator can couple to different
       quantum numbers individually
@@ -146,6 +150,9 @@ def set_lookup_g(gammas, diagram):
 
   if diagram == 'C20':
     lookup_so = it.product([g for gamma in gammas for g in gamma[:-1]])
+    lookup_so, lookup_si = it.tee(lookup_so, 2)
+  elif diagram == 'C2+':
+    lookup_so = it.product([5])
     lookup_so, lookup_si = it.tee(lookup_so, 2)
   elif diagram == 'C3+':
     lookup_so = it.product([5], [5]) 
@@ -169,7 +176,7 @@ def set_lookup_qn(diagram, p_cm, p_max, gammas, verbose=0):
 
   Parameters
   ----------
-  diagram : string, {'C20', 'C3+', 'C4+B', 'C4+D'}
+  diagram : string, {'C20', 'C2+', 'C3+', 'C4+B', 'C4+D'}
       Diagram of wick contractions for the rho meson.
   p_cm : int, {0, 1, 2, 3, 4}
       Center of mass momentum.
@@ -214,7 +221,7 @@ def set_groupname(diagram, p, g):
 
   Parameters
   ----------
-  diagram : string, {'C20', 'C3+', 'C4+B', 'C4+D'}
+  diagram : string, {'C20', 'C2+', 'C3+', 'C4+B', 'C4+D'}
       Diagram of wick contractions for the rho meson.
   p : tuple (of tuple) of tuple of int
       Tuple of momentum (or tuple of tuple of momenta in case of two-meson 
@@ -229,7 +236,7 @@ def set_groupname(diagram, p, g):
   groupname : string
       Filename of contracted perambulators for the given parameters
   """
-  if diagram == 'C20':
+  if diagram == 'C20' or diagram == 'C2+':
     groupname = diagram + '_uu_p%1i%1i%1i.d000.g%i' % \
                                              (p[0][0], p[0][1], p[0][2], g[0][0]) \
                     + '_p%1i%1i%1i.d000.g%i' % (p[1][0], p[1][1], p[1][2], g[1][0])
@@ -302,7 +309,7 @@ def read(lookup_cnfg, lookup_qn, diagram, T, directory, verbose=0):
   lookup_qn : pd.DataFrame
       pd.DataFrame with every row being a set of physical quantum numbers to be 
       read
-  diagram : string, {'C20', 'C3+', 'C4+B', 'C4+D'}
+  diagram : string, {'C20', 'C2+', 'C3+', 'C4+B', 'C4+D'}
       Diagram of wick contractions for the rho meson.
   T : int
       Time extent of the lattice

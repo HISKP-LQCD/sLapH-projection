@@ -265,6 +265,7 @@ def get_lattice_basis(p_cm, verbose=True):
 
 # TODO: properly read that from infile and pass to get_clebsch_gordan
 # TODO: actually use names to restrict basis_table to what was in the infile
+# Bug: flag for wanted gamma structures is not used
 def get_continuum_basis(names, basis_type, verbose):
   """
   Get table with chosen operators to transform as the *continuum* eigenstates
@@ -308,41 +309,14 @@ def get_continuum_basis(names, basis_type, verbose):
     ladder_operators = [[1./sqrt2,  -1j/sqrt2, 0], 
                         [0,         0,        -1j], 
                         [-1./sqrt2, -1j/sqrt2, 0]]
-  elif basis_type == "cartesian-xzy":
-    ladder_operators = [[1, 0, 0], 
-                        [0, 0, 1], 
-                        [0, -1, 0]]
-  elif basis_type == "cartesian-yzx":
-    ladder_operators = [[0, 1, 0], 
-                        [0, 0, 1], 
-                        [1, 0, 0]]
-  elif basis_type == "cyclic-xzy":
-    ladder_operators = [[1./sqrt2,  0, 1./sqrt2], 
-                        [0,         1, 0], 
-                        [1./sqrt2,  0, -1./sqrt2]]
-#  elif basis_type == "p2":
-#    ladder_operators = [[(1./2+sqrt2),  1., 1./2], 
-#                        [-1j/sqrt2,     0., -1j/sqrt2], 
-#                        [(1./2-sqrt2),  1., 1./2]]
-  elif basis_type == "p2":
-    ladder_operators = [[ sqrt2,  1./2,     1./2], 
-                        [    0.,  1j/sqrt2, -1j/sqrt2], 
-                        [-sqrt2,  1./2,     1./2]]
-  elif basis_type == "p3":
-    ladder_operators = [[+1./2+sqrt3/6, 1./2+sqrt3/6, 1./sqrt3],
-                        [-1./sqrt6*(1+1j), 1./sqrt6*(1+1j), -1./sqrt6*(1+1j)], 
-                        [-(-1./2-sqrt3/6)*1j, (1./2-sqrt3/6)*1j, -1j/sqrt3]]
-  elif basis_type == "ssh":
-    ladder_operators = [[0, -1./sqrt2, 0], 
-                        [0, 0, 1j], 
-                        [-1j/sqrt2, 0, 0]]
   else:
     print "In get_continuum_basis: continuum_basis type ", basis_type, " not known!"
-    return
+    exit()
 
   basis = np.array(ladder_operators).flatten()
 #  basis = np.array([m + [0]*3 for m in ladder_operators] + \
 #                                  [[0]*3+m for m in ladder_operators]).flatten()
+
   # hardcode basis operators for \gamma_i and \gamma_5\gamma_0\gamma_i
   # TODO: replace first list in MultiIndex.from_product by names (or some kind 
   # of latex(names)

@@ -1,9 +1,7 @@
 #!/hiskp2/werner/libraries/Python-2.7.12/python
-import argparse
-import ConfigParser
-
 import numpy as np
 
+import infile_handler
 import raw_data
 import utils
 import wick
@@ -17,37 +15,16 @@ def main():
 
   ################################################################################
   # Parameters ###################################################################
-  
-  ################################################################################
-  # Argument parsing ############################################################# 
-  
-  parser = argparse.ArgumentParser()
-  # parse the name of the infile and load its contents into the parser
-  parser.add_argument("infile", help="name of input file")
-  # verbosity is also parsed
-  parser.add_argument("-v", "--verbose", action="store_true", \
-                                                 help="increase output verbosity")
-  # TODO: Only allow certain options, specify standard behavior, etc.
-  parser.add_argument("-b", "--basis", choices=['cartesian', 'cyclic', \
-                        'cyclic-i', 'cyclic-christian', 'cartesian-xzy', 'cyclic-xzy', 'cartesian-yzx', 'p2', 'p3', 'ssh'], \
-                        default='cartesian',
-                        help="continuum basis to be used in the program")
-  args = parser.parse_args()
+
+  args, config = infile_handler.get_parameters()
+
   verbose = args.verbose
   continuum_basis = args.basis
-  
-  ################################################################################
-  # Reading infile ###############################################################
-  
-  config = ConfigParser.RawConfigParser()
-  
-  if(config.read(args.infile) == []):
-    print "Error! Could not open infile: ", args.infile
-    exit(-1)
 
-  flag_read        = config.getboolean('parameters', 'Read configurations') 
-  flag_subduction  = config.getboolean('parameters', 'Subduce configurations')
-  flag_contraction = config.getboolean('parameters', 'Contract configurations')
+  flag_pion        = config.getboolean('parameters', 'Read pion') 
+  flag_read        = config.getboolean('parameters', 'Read rho') 
+  flag_subduction  = config.getboolean('parameters', 'Subduce')
+  flag_contraction = config.getboolean('parameters', 'Contract')
   flag_gevp        = config.getboolean('parameters', 'Create Gevp')
   flag_plot        = config.getboolean('parameters', 'Plot data')
   
@@ -55,13 +32,14 @@ def main():
     print '#################################################################'\
                                                                '###############'
     print 'Reading infile'
-
+  
+    print flag_pion
     print flag_read
     print flag_subduction
     print flag_contraction
     print flag_gevp
     print flag_plot
-
+  
   sta_cnfg = config.getint('gauge configuration numbers', 'First configuration')
   end_cnfg = config.getint('gauge configuration numbers', 'Last configuration')
   del_cnfg = config.getint('gauge configuration numbers', \
@@ -127,28 +105,28 @@ def main():
   if verbose:
     print diagrams
     print directories 
-
+  
   outpath = config.get('other parameters', 'Output Path')
-
+  
   if verbose:
     print outpath
-
+  
   sep_rows_sep_mom = config.getboolean('plot details', 'Plot sep_rows_sep_mom') 
   sep_rows_sum_mom = config.getboolean('plot details', 'Plot sep_rows_sum_mom') 
   avg_rows_sep_mom = config.getboolean('plot details', 'Plot avg_rows_sep_mom')
   avg_rows_sum_mom = config.getboolean('plot details', 'Plot avg_rows_sum_mom')
-
+  
   logscale = config.getboolean('plot details', 'Logscale')
   
   bootstrapsize = config.getint('plot details', 'Number of bootstrap samples')
-
+  
   if verbose:
     print sep_rows_sum_mom
     print avg_rows_sep_mom
     print avg_rows_sum_mom
     print logscale
     print bootstrapsize
-
+ 
   ############################################################################## 
   # Main
   for p_cm in p:
@@ -158,7 +136,44 @@ def main():
       print 'p_cm = ', p_cm
 
     ############################################################################ 
-    # read diagrams
+    # read data for pion
+    if flag_pion:
+      diagram = 'C2+'
+      directory = directories[0]
+
+      lookup_cnfg = raw_data.set_lookup_cnfg(sta_cnfg, end_cnfg, del_cnfg, \
+                                                       missing_configs, verbose)
+      pion_qn = raw_data.set_lookup_qn(diagram, p_cm, p_max, gammas, verbose)
+    
+      pion_data = raw_data.read(lookup_cnfg, pion_qn, diagram, T, 
+                                                             directory, verbose)
+      if verbose:
+        print 'Pion mass for p_cm = %1d' % (p_cm)
+        print pion_qn
+        print pion_data.mean(axis=1).apply(np.real)
+
+      # write data
+      path = '%s/%s/0_raw-data/' % (outpath, ensemble)
+      filename = '%s_p%1i.h5' % ('pion', p_cm)
+      utils.write_hdf5_correlators(path, filename, pion_data, 'data', verbose)
+      filename = '%s_p%1i_qn.h5' % ('pion', p_cm)
+      utils.write_hdf5_correlators(path, filename, pion_qn, 'qn', verbose=False)
+
+      path = '%s/%s/3_gevp-data/' % (outpath, ensemble)
+      filename = 'Pion_p%1i.dat' % (p_cm)
+      utils.write_ascii_correlator(pion_data.mean(axis=1).apply(np.real), path+filename, verbose)
+
+    else:
+      # helper function to read all raw data from disk
+      path = '%s/%s/0_raw-data/' % (outpath, ensemble)
+  
+      filename = '%s_p%1i.h5' % ('C2+', p_cm)
+      pion_data = utils.read_hdf5_correlators(path+filename, 'data')
+      filename = '%s_p%1i_qn.h5' % ('C2+', p_cm)
+      pion_qn = utils.read_hdf5_correlators(path+filename, 'qn')
+
+    ############################################################################ 
+    # read diagrams for correlators contributing to rho
     if flag_read:
       data = {}
       lookup_qn = {}
@@ -168,9 +183,7 @@ def main():
           print '\treading data for %s' % (diagram)
         lookup_cnfg = raw_data.set_lookup_cnfg(sta_cnfg, end_cnfg, del_cnfg, \
                                                          missing_configs, verbose)
-        # set up lookup table for quantum numbers
-        if p_cm == 0:
-          p_max = 2
+
         # for moving frames, sum of individual component's absolute value (i.e.
         # total kindetic energy) might be larger than center of mass absolute 
         # value. Modify the cutoff accordingly.
@@ -203,17 +216,6 @@ def main():
 
     ############################################################################
     # Subduction
-
-    # helper function to read all raw data from disk
-    path = '%s/%s/0_raw-data/' % (outpath, ensemble)
-
-    data = {}
-    lookup_qn = {}
-    for diagram in diagrams:
-      filename = '%s_p%1i.h5' % (diagram, p_cm)
-      data[(diagram)] = utils.read_hdf5_correlators(path+filename, 'data')
-      filename = '%s_p%1i_qn.h5' % (diagram, p_cm)
-      lookup_qn[(diagram)] = utils.read_hdf5_correlators(path+filename, 'qn')
 
     if flag_subduction:
       basis = subduction.get_lattice_basis(p_cm, verbose)
@@ -266,41 +268,42 @@ def main():
     ############################################################################ 
     # Wick contraction
 
-    correlators = wick.set_lookup_correlators(diagrams)
+    if flag_contraction:
+      correlators = wick.set_lookup_correlators(diagrams)
 
-    contracted_data = {}
-    contracted_data_avg = {}
+      contracted_data = {}
+      contracted_data_avg = {}
 
-    for correlator in correlators:
+      for correlator in correlators:
 
-      print '\tcontracting data for %s' % correlator 
-      for irrep in lookup_irreps:
+        print '\tcontracting data for %s' % correlator 
+        for irrep in lookup_irreps:
 
-        contracted_data[(correlator,irrep)] = wick.rho(subduced_data, \
-                                                     correlator, irrep, verbose)
-        # write data to disc
-        path = '%s/%s/2_contracted-data/' % (outpath, ensemble)
-        filename = '/%s_p%1i_%s.h5' % (correlator, p_cm, irrep)
-        utils.write_hdf5_correlators(path, filename, \
-                           contracted_data[(correlator,irrep)], 'data', verbose)
+          contracted_data[(correlator,irrep)] = wick.rho(subduced_data, \
+                                                       correlator, irrep, verbose)
+          # write data to disc
+          path = '%s/%s/2_contracted-data/' % (outpath, ensemble)
+          filename = '/%s_p%1i_%s.h5' % (correlator, p_cm, irrep)
+          utils.write_hdf5_correlators(path, filename, \
+                             contracted_data[(correlator,irrep)], 'data', verbose)
 
-        # sum over gamma structures. 
-        # Only real part is physically relevant at that point
-        contracted_data_avg[(correlator,irrep)] = \
-            contracted_data[(correlator,irrep)].apply(np.real).\
-                                                          sum(level=[0,1,2,3,5])
-        # sum over equivalent momenta
-        contracted_data_avg[(correlator,irrep)] = \
-                      contracted_data_avg[(correlator,irrep)].sum(level=[0,1,2])
-        # average over rows
-        contracted_data_avg[(correlator,irrep)] = \
-                       contracted_data_avg[(correlator,irrep)].mean(level=[0,1])
+          # sum over gamma structures. 
+          # Only real part is physically relevant at that point
+          contracted_data_avg[(correlator,irrep)] = \
+              contracted_data[(correlator,irrep)].apply(np.real).\
+                                                            sum(level=[0,1,2,3,5])
+          # sum over equivalent momenta
+          contracted_data_avg[(correlator,irrep)] = \
+                        contracted_data_avg[(correlator,irrep)].sum(level=[0,1,2])
+          # average over rows
+          contracted_data_avg[(correlator,irrep)] = \
+                         contracted_data_avg[(correlator,irrep)].mean(level=[0,1])
 
-        # write data to disc
-        path = '%s/%s/2_contracted-data/' % (outpath, ensemble)
-        filename = '/%s_p%1i_%s_avg.h5' % (correlator, p_cm, irrep)
-        utils.write_hdf5_correlators(path, filename, \
-                       contracted_data_avg[(correlator,irrep)], 'data', verbose)
+          # write data to disc
+          path = '%s/%s/2_contracted-data/' % (outpath, ensemble)
+          filename = '/%s_p%1i_%s_avg.h5' % (correlator, p_cm, irrep)
+          utils.write_hdf5_correlators(path, filename, \
+                         contracted_data_avg[(correlator,irrep)], 'data', verbose)
 
     ############################################################################ 
     # Gevp construction

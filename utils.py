@@ -126,6 +126,8 @@ def pd_series_to_np_array(series):
 
   return np.asarray(series.values).reshape(series.unstack().shape)
 
+def write_ascii_correlator(data, filename, verbose):
+  write_data_ascii(np.asarray(pd_series_to_np_array(data)), filename, verbose)
 
 def write_ascii_gevp(path, data, p_cm, irrep, verbose):
 
@@ -145,8 +147,7 @@ def write_ascii_gevp(path, data, p_cm, irrep, verbose):
 
     # TODO: with to_csv this becomes a onliner but Liumings head format will 
     # be annoying. Also the loop can probably run over data.iterrows()
-    write_data_ascii(np.asarray(pd_series_to_np_array(data.ix[counter])), \
-                                                         path+filename, verbose)
+    write_ascii_correlator(data.ix[counter], path+filename, verbose)
 
 def create_pdfplot(path, filename):
   """
