@@ -5,6 +5,7 @@ Subduce     = False
 Contract    = False
 Create Gevp = False
 Plot data   = False
+Old data    = False
 
 [gauge configuration numbers]
 First configuration =     714

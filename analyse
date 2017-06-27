@@ -1,3 +1,4 @@
+#!/hiskp2/jost/code/Enthought/System/bin/python
 #!/hiskp2/werner/libraries/Python-2.7.12/python
 import numpy as np
 
@@ -27,6 +28,7 @@ def main():
   flag_contraction = config.getboolean('parameters', 'Contract')
   flag_gevp        = config.getboolean('parameters', 'Create Gevp')
   flag_plot        = config.getboolean('parameters', 'Plot data')
+  flag_old         = config.getboolean('parameters', 'Old data')
   
   if verbose:
     print '#################################################################'\
@@ -39,6 +41,7 @@ def main():
     print flag_contraction
     print flag_gevp
     print flag_plot
+    print flag_old
   
   sta_cnfg = config.getint('gauge configuration numbers', 'First configuration')
   end_cnfg = config.getint('gauge configuration numbers', 'Last configuration')
@@ -145,7 +148,11 @@ def main():
                                                        missing_configs, verbose)
       pion_qn = raw_data.set_lookup_qn(diagram, p_cm, p_max, gammas, verbose)
     
-      pion_data = raw_data.read(lookup_cnfg, pion_qn, diagram, T, 
+      if flag_old:
+        pion_data = raw_data.read_old(lookup_cnfg, pion_qn, diagram, T, 
+                                                             directory, verbose)
+      else:
+        pion_data = raw_data.read(lookup_cnfg, pion_qn, diagram, T, 
                                                              directory, verbose)
       if verbose:
         print 'Pion mass for p_cm = %1d' % (p_cm)
@@ -193,7 +200,11 @@ def main():
         lookup_qn[diagram] = raw_data.set_lookup_qn(diagram, p_cm, p_max, 
                                                                   gammas, verbose)
     
-        data[diagram] = raw_data.read(lookup_cnfg, lookup_qn[diagram], diagram, T, 
+        if flag_old:
+          data[diagram] = raw_data.read_old(lookup_cnfg, lookup_qn[diagram], diagram, T, 
+                                                               directory, verbose)
+        else:
+          data[diagram] = raw_data.read(lookup_cnfg, lookup_qn[diagram], diagram, T, 
                                                                directory, verbose)
         # write data
         # TODO: Writing into same file only works in append mode

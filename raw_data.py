@@ -371,6 +371,7 @@ def read(lookup_cnfg, lookup_qn, diagram, T, directory, verbose=0):
       data_qn[op] = pd.DataFrame(tmp, columns=['re/im'])
     data.append(data_qn)
   data = pd.concat(data, keys=lookup_cnfg, axis=0, names=['cnfg', 'T'])
+  print(data)
 
   if verbose:
     print '\tfinished reading'
@@ -407,6 +408,7 @@ def read_old(lookup_cnfg, lookup_qn, diagram, T, directory, verbose=0):
   for cnfg in lookup_cnfg:
     # filename and path
     filename = directory + '/' + diagram + '_cnfg%i' % cnfg + '.h5'
+    # open file
     try:
       fh = h5py.File(filename, "r")
     except IOError:
@@ -422,30 +424,25 @@ def read_old(lookup_cnfg, lookup_qn, diagram, T, directory, verbose=0):
 #    print DataFrame(lookup_g)
 
     for op in lookup_qn.index:
+      # generate operator name
       p = lookup_qn.ix[op, ['p_{so}', 'p_{si}']]
       g = lookup_qn.ix[op, ['\gamma_{so}', '\gamma_{si}']]
-      # TODO: catch when a groupname does not exist
       groupname = set_groupname(diagram, p, g)
 
-      # TODO: real and imaginay part are treated seperately through the whole
-      # program. It might be easiert to combine them already at read-in or 
-      # even better after wick contraction because of different structure for
-      # C4+D
+      # read operator from file and store in data frame
       try:
         tmp = np.asarray(fh[groupname])
       except ValueError:
         print("could not read %s for config %d" % (groupname, cnfg))
         continue
-
-      print(tmp[0])
-      print(tmp.shape)
-      print(tmp.dtype)
       data_qn[op] = pd.DataFrame(tmp, columns=['re/im'])
 
+    # append all data for one config and close the file
     data.append(data_qn)
     fh.close()
+  # generate data frame containing all operators for all configs
   data = pd.concat(data, keys=lookup_cnfg, axis=0, names=['cnfg'])
-  #print(data)
+  print(data)
 
   if verbose:
     print '\tfinished reading'
