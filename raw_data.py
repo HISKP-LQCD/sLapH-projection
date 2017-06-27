@@ -236,17 +236,17 @@ def set_groupname(diagram, p, g):
   groupname : string
       Filename of contracted perambulators for the given parameters
   """
-  if diagram == 'C20' or diagram == 'C2+':
+  if diagram.startswith('C2'):
     groupname = diagram + '_uu_p%1i%1i%1i.d000.g%i' % \
                                              (p[0][0], p[0][1], p[0][2], g[0][0]) \
                     + '_p%1i%1i%1i.d000.g%i' % (p[1][0], p[1][1], p[1][2], g[1][0])
-  elif diagram == 'C3+':
+  elif diagram.startswith('C3'):
     groupname = diagram + '_uuu_p%1i%1i%1i.d000.g5' % \
                                                    (p[0][0][0], p[0][0][1], p[0][0][2]) \
                         + '_p%1i%1i%1i.d000.g%1i' % \
                                                 (p[1][0], p[1][1], p[1][2], g[1][0]) \
                         + '_p%1i%1i%1i.d000.g5' % (p[0][1][0], p[0][1][1], p[0][1][2])
-  elif diagram == 'C4+D':
+  elif diagram == 'C4+D' or diagram == 'C4+C':
     groupname = diagram + '_uuuu_p%1i%1i%1i.d000.g5' % (p[0][0][0], p[0][0][1], p[0][0][2]) + \
              '_p%1i%1i%1i.d000.g5' % (p[1][0][0], p[1][0][1], p[1][0][2]) + \
              '_p%1i%1i%1i.d000.g5' % (p[0][1][0], p[0][1][1], p[0][1][2]) + \
@@ -362,7 +362,78 @@ def read(lookup_cnfg, lookup_qn, diagram, T, directory, verbose=0):
     print '\tfinished reading'
 
   return data.sort_index(level=[0,1])
-  
+
+def read_old(lookup_cnfg, lookup_qn, diagram, T, directory, verbose=0):
+  """
+  Read resulting correlators from contraction code and creates a pd.DataFrame
+
+  Parameters
+  ----------
+  lookup_cnfg : list of int
+      List of the gauge configurations to read
+  lookup_qn : pd.DataFrame
+      pd.DataFrame with every row being a set of physical quantum numbers to be 
+      read
+  diagram : string, {'C20', 'C2+', 'C3+', 'C4+B', 'C4+D', 'C4+C'}
+      Diagram of wick contractions for the rho meson.
+  T : int
+      Time extent of the lattice
+  directory : string
+      Output path of contraction code
+
+  Returns
+  -------
+  data : pd.DataFrame
+      A pd.DataFrame with rows (cnfg x T x re/im) and columns i where i are 
+      the row numbers of `lookup_qn` 
+  """
+
+  data = []
+
+  for cnfg in lookup_cnfg:
+    # filename and path
+    filename = directory + '/' + diagram + '_cnfg%i' % cnfg + '.h5'
+    try:
+      fh = h5py.File(filename, "r")
+    except IOError:
+      print 'file %s not found' % filename
+      raise
+
+    # to achieve hirarchical indexing for quantum numbers build DataFrame for
+    # each loop seperately
+    # TODO: is it necessary to build that completely or can that be 
+    # constructed by successively storing each operator with pd.HDFStore()?
+    data_qn = pd.DataFrame()
+#    print DataFrame(lookup_p)
+#    print DataFrame(lookup_g)
+
+    for op in lookup_qn.index:
+      p = lookup_qn.ix[op, ['p_{so}', 'p_{si}']]
+      g = lookup_qn.ix[op, ['\gamma_{so}', '\gamma_{si}']]
+      # TODO: catch when a groupname does not exist
+      groupname = set_groupname(diagram, p, g)
+
+      # TODO: real and imaginay part are treated seperately through the whole
+      # program. It might be easiert to combine them already at read-in or 
+      # even better after wick contraction because of different structure for
+      # C4+D
+      try:
+        tmp = np.asarray(fh[groupname])
+      except ValueError:
+        print("could not read %s for config %d" % (groupname, cnfg))
+        continue
+
+      data_qn[op] = pd.DataFrame(tmp, columns=['re/im'])
+
+    data.append(data_qn)
+    fh.close()
+  data = pd.concat(data, keys=lookup_cnfg, axis=0, names=['cnfg'])
+  print(data)
+
+  if verbose:
+    print '\tfinished reading'
+
+  return data.sort_index(level=[0,1])
   ##############################################################################
 
 
