@@ -324,14 +324,20 @@ def read(lookup_cnfg, lookup_qn, diagram, T, directory, verbose=0):
   """
 
   data = []
+  comb = True if diagram == 'C4+D' else False
 
   for cnfg in lookup_cnfg:
     # filename and path
     filename = directory + '/' + diagram + '_cnfg%i' % cnfg + '.h5'
+    try:
+      fh = h5py.File(filename, "r")
+    except IOError:
+      print 'file %s not found' % filename
+      raise
 
     # to achieve hirarchical indexing for quantum numbers build DataFrame for
     # each loop seperately
-    # TODO: is it necessary to builed that completely or can that be 
+    # TODO: is it necessary to build that completely or can that be 
     # constructed by successively storing each operator with pd.HDFStore()?
     data_qn = DataFrame()
 #    print DataFrame(lookup_p)
@@ -340,23 +346,31 @@ def read(lookup_cnfg, lookup_qn, diagram, T, directory, verbose=0):
     for op in lookup_qn.index:
       p = lookup_qn.ix[op, ['p_{so}', 'p_{si}']]
       g = lookup_qn.ix[op, ['\gamma_{so}', '\gamma_{si}']]
-      # TODO: catch when a groupname does not exist
       groupname = set_groupname(diagram, p, g)
 
-      # TODO: real and imaginay part are treated seperately through the whole
-      # program. It might be easiert to combine them already at read-in or 
-      # even better after wick contraction because of different structure for
-      # C4+D
-      data_qn[op] = pd.read_hdf(filename, key=groupname).stack()
+      # read data from file as numpy array and interpret as complex
+      # numbers for easier treatment
+      try:
+        tmp = np.asarray(fh[groupname]).view(complex)
+      except ValueError:
+        print("could not read %s for config %d" % (groupname, cnfg))
+        continue
+
+      # in case diagram is C4+D perform last mutliplication of factorizing
+      # traces
+      # the file contains 4 numbers per time slice: ReRe, ReIm, ImRe, and ImIm,
+      # here combined 2 complex number
+      if comb:
+        # reshaping so we can extract the data easier
+        tmp = tmp.reshape((-1,2))
+        # extracting right combination, assuming ImIm contains only noise
+        dtmp = 1.j * (tmp[:,1].real + tmp[:,0].imag) + tmp[:,0].real
+        tmp = dtmp.copy()
+
+      # save data into data frame
+      data_qn[op] = pd.DataFrame(tmp, columns=['re/im'])
     data.append(data_qn)
-  data = pd.concat(data, keys=lookup_cnfg, axis=0, names=['cnfg', 'T', 're/im'])
-
-  # in case diagram is C4+D perform last mutliplication of factorizing traces
-  if diagram == 'C4+D':
-    data = multiply_trtr_diagram(data)
-
-  # create full correlators as real + 1j * imag
-  data = data.xs('re', level='re/im') + (1j) * data.xs('im', level='re/im')
+  data = pd.concat(data, keys=lookup_cnfg, axis=0, names=['cnfg', 'T'])
 
   if verbose:
     print '\tfinished reading'
@@ -423,12 +437,15 @@ def read_old(lookup_cnfg, lookup_qn, diagram, T, directory, verbose=0):
         print("could not read %s for config %d" % (groupname, cnfg))
         continue
 
+      print(tmp[0])
+      print(tmp.shape)
+      print(tmp.dtype)
       data_qn[op] = pd.DataFrame(tmp, columns=['re/im'])
 
     data.append(data_qn)
     fh.close()
   data = pd.concat(data, keys=lookup_cnfg, axis=0, names=['cnfg'])
-  print(data)
+  #print(data)
 
   if verbose:
     print '\tfinished reading'
