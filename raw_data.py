@@ -55,6 +55,7 @@ def set_lookup_cnfg(sta_cnfg, end_cnfg, del_cnfg, missing_configs, verbose=0):
 # TODO: generalize lookup_p construction by writing a function that can get 
 # either a momentum or a tuple made of two
 # TODO: 4pt function is incosistent for box and direct diagram
+# NOTE: there is a convential minus sign for the sink momenta!
 def set_lookup_p(p_max, p_cm, diagram):
   """
   create lookup table for all possible 3-momenta that can appear on the lattice
@@ -352,7 +353,7 @@ def read(lookup_cnfg, lookup_qn, diagram, T, directory, verbose=0):
       # numbers for easier treatment
       try:
         tmp = np.asarray(fh[groupname]).view(complex)
-      except ValueError:
+      except KeyError:
         print("could not read %s for config %d" % (groupname, cnfg))
         continue
 
@@ -371,7 +372,6 @@ def read(lookup_cnfg, lookup_qn, diagram, T, directory, verbose=0):
       data_qn[op] = pd.DataFrame(tmp, columns=['re/im'])
     data.append(data_qn)
   data = pd.concat(data, keys=lookup_cnfg, axis=0, names=['cnfg', 'T'])
-  print(data)
 
   if verbose:
     print '\tfinished reading'
@@ -422,8 +422,11 @@ def read_old(lookup_cnfg, lookup_qn, diagram, T, directory, verbose=0):
     data_qn = pd.DataFrame()
 #    print DataFrame(lookup_p)
 #    print DataFrame(lookup_g)
+    ndata = 0
+    nfailed = 0
 
     for op in lookup_qn.index:
+      ndata += 1
       # generate operator name
       p = lookup_qn.ix[op, ['p_{so}', 'p_{si}']]
       g = lookup_qn.ix[op, ['\gamma_{so}', '\gamma_{si}']]
@@ -432,17 +435,20 @@ def read_old(lookup_cnfg, lookup_qn, diagram, T, directory, verbose=0):
       # read operator from file and store in data frame
       try:
         tmp = np.asarray(fh[groupname])
-      except ValueError:
-        print("could not read %s for config %d" % (groupname, cnfg))
+      except KeyError:
+        #if diagram == 'C4+C' and cnfg == 714:
+        #  print("could not read %s for config %d" % (groupname, cnfg))
+        nfailed += 1
         continue
       data_qn[op] = pd.DataFrame(tmp, columns=['re/im'])
+    if nfailed > 0:
+      print("could not read %d of %d data" % (nfailed, ndata))
 
     # append all data for one config and close the file
     data.append(data_qn)
     fh.close()
   # generate data frame containing all operators for all configs
   data = pd.concat(data, keys=lookup_cnfg, axis=0, names=['cnfg'])
-  print(data)
 
   if verbose:
     print '\tfinished reading'

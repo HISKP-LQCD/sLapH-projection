@@ -141,7 +141,8 @@ def write_ascii_correlators(path, filename, data, verbose):
   """
 
   ensure_dir(path)
-  write_data_ascii(np.asarray(pd_series_to_np_array(data)), filename, verbose)
+  fname = os.path.join(path, filename)
+  write_data_ascii(np.asarray(pd_series_to_np_array(data)), fname, verbose)
 
 def write_ascii_gevp(path, data, p_cm, irrep, verbose):
 
@@ -156,12 +157,13 @@ def write_ascii_gevp(path, data, p_cm, irrep, verbose):
   for counter in range(len(data.index)):
 
     ensure_dir(path)
-    filename = 'Rho_Gevp_p%1d_%s.%d.%d.dat' % (p_cm, irrep, \
+    #filename = 'Rho_Gevp_p%1d_%s.%d.%d.dat' % (p_cm, irrep, \
+    filename = 'Pipi_Gevp_p%1d_%s.%d.%d.dat' % (p_cm, irrep, \
                                            counter/data_size, counter%data_size)
 
     # TODO: with to_csv this becomes a onliner but Liumings head format will 
     # be annoying. Also the loop can probably run over data.iterrows()
-    write_ascii_correlator(data.ix[counter], path+filename, verbose)
+    write_ascii_correlators(path, filename, data.ix[counter], verbose)
 
 def create_pdfplot(path, filename):
   """

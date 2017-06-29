@@ -29,6 +29,7 @@ def main():
   flag_gevp        = config.getboolean('parameters', 'Create Gevp')
   flag_plot        = config.getboolean('parameters', 'Plot data')
   flag_old         = config.getboolean('parameters', 'Old data')
+  flag_ana         = config.getboolean('parameters', 'Rho analysis')
   
   if verbose:
     print '#################################################################'\
@@ -42,6 +43,7 @@ def main():
     print flag_gevp
     print flag_plot
     print flag_old
+    print flag_ana
   
   sta_cnfg = config.getint('gauge configuration numbers', 'First configuration')
   end_cnfg = config.getint('gauge configuration numbers', 'Last configuration')
@@ -140,7 +142,7 @@ def main():
 
     ############################################################################ 
     # read data for pion
-    if flag_pion:
+    if flag_pion and 'C2+' in diagrams:
       diagram = 'C2+'
       directory = directories[0]
 
@@ -171,7 +173,7 @@ def main():
       utils.write_ascii_correlators(path, filename, 
                                  pion_data.mean(axis=1).apply(np.real), verbose)
 
-    else:
+    elif 'C2+' in diagrams:
       # helper function to read all raw data from disk
       path = '%s/%s/0_raw-data/' % (outpath, ensemble)
   
@@ -225,12 +227,15 @@ def main():
         data[(diagram)] = utils.read_hdf5_correlators(path+filename, 'data')
         filename = '%s_p%1i_qn.h5' % (diagram, p_cm)
         lookup_qn[(diagram)] = utils.read_hdf5_correlators(path+filename, 'qn')
+    #print("diagram %s, shape %r, levels %d, axis %r" % (diagram, data[diagram].shape,
+    #    data[diagram].index.nlevels, data[diagram].axes))
 
     ############################################################################
     # Subduction
 
     if flag_subduction:
-      basis = subduction.get_lattice_basis(p_cm, verbose)
+      j_ana = 1 if flag_ana else 0
+      basis = subduction.get_lattice_basis(p_cm, verbose, j=j_ana)
   
       # List with the names of all contributing irreducible representations and 
       # their multiplicity
@@ -262,7 +267,8 @@ def main():
                                   subduced_data[(diagram,irrep)], 'data', verbose)
     else:
       # helper function to read all subduced data from disk
-      basis = subduction.get_lattice_basis(p_cm, verbose)
+      j_ana = 1 if flag_ana else 0
+      basis = subduction.get_lattice_basis(p_cm, verbose, j_ana)
 
       # List with the names of all contributing irreducible representations and 
       # their multiplicity
@@ -291,8 +297,16 @@ def main():
         print '\tcontracting data for %s' % correlator 
         for irrep in lookup_irreps:
 
-          contracted_data[(correlator,irrep)] = wick.rho(subduced_data, \
-                                                       correlator, irrep, verbose)
+          if flag_ana:
+              # rho analysis
+              contracted_data[(correlator,irrep)] = wick.rho(subduced_data, \
+                                                           correlator, irrep, verbose)
+          else:
+              # pipi I=2 analysis
+              contracted_data[(correlator,irrep)] = wick.pipi(subduced_data, \
+                                                           correlator, irrep, verbose)
+          #print("details for contracted data for corr %r, irrep %r" % (correlator, irrep))
+          #print(contracted_data[(correlator,irrep)].axes)
           # write data to disc
           path = '%s/%s/2_contracted-data/' % (outpath, ensemble)
           filename = '/%s_p%1i_%s.h5' % (correlator, p_cm, irrep)
@@ -324,7 +338,9 @@ def main():
       print '\tcreating gevp'
       for irrep in lookup_irreps:
   
-        gevp_data = setup_gevp.build_gevp(contracted_data_avg, irrep, verbose)
+        #gevp_data = setup_gevp.build_gevp(contracted_data_avg, irrep, verbose)
+        # NOTE: Delete all rows and colums with only NaN's
+        gevp_data = contracted_data_avg[("C4", irrep)].dropna(axis=0,how='all').dropna(axis=1,how='all')
   
         path = '%s/%s/3_gevp-data/' % (outpath, ensemble)
         filename = 'Gevp_p%1i_%s.h5' % (p_cm, irrep)
@@ -375,6 +391,8 @@ def main():
   
         if flag_gevp:
           if avg_rows_sum_mom:
+            #gevp_data = setup_gevp.build_gevp(contracted_data_avg, irrep, verbose)
+            gevp_data = contracted_data_avg[("C4", irrep)].dropna(axis=0,how='all').dropna(axis=1,how='all')
             filename = 'Gevp_p%1i_%s.pdf' % (p_cm, irrep)
             pdfplot = utils.create_pdfplot(path, filename)
             plot.avg_row_sum_mom(gevp_data, bootstrapsize, pdfplot)

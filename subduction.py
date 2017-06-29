@@ -204,7 +204,7 @@ def return_cg(p_cm, irrep):
 
   return df
 
-def get_lattice_basis(p_cm, verbose=True):
+def get_lattice_basis(p_cm, verbose=True, j=1):
   """
   Calculate basis for irreducible representations of appropriate little group 
   of rotational symmetry for lattice in a moving reference frame with 
@@ -248,7 +248,7 @@ def get_lattice_basis(p_cm, verbose=True):
   # calc coefficients
   basis = group.TOhBasis(groups,jmax=2)
   # Isospin 1 hardcoded here
-  df = basis.to_pandas(1)
+  df = basis.to_pandas(j)
 
   # munging to have a consistent format
   df.rename(columns={'row' : '\mu', 'coeff' : 'cg-coefficient'}, inplace=True)
@@ -332,6 +332,12 @@ def get_continuum_basis(names, basis_type, verbose):
                                      [(1,), (2,), (3,)]], \
                 names=["gevp", 'J', 'M', '\gamma']), \
             columns=['subduction-coefficient'], dtype=complex).sort_index()
+  basis_table = pd.concat([basis_table, DataFrame([1], \
+            index=pd.MultiIndex.from_product( \
+                [["\gamma_{5}  "], [0], [0], \
+                                     [(5,)]], \
+                names=["gevp", 'J', 'M', '\gamma']), \
+            columns=['subduction-coefficient'], dtype=complex).sort_index()])
   # conatenate basis chosen for two-pion operator. Trivial, because just two
   # singlet states.
   basis_table = pd.concat([basis_table, DataFrame([1], \
