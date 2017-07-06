@@ -45,7 +45,7 @@ def select_irrep(df, irrep):
   """
 
   df = df[df['Irrep'] == irrep]
-  df.drop(['Irrep'], axis=1, inplace=True)
+  #df.drop(['Irrep'], axis=1, inplace=True)
 
   return df
 
@@ -78,7 +78,7 @@ def select_irrep_mult(df, irrep, mult):
 
   df = df[df['Irrep'] == irrep]
   df = df[df['mult'] == mult]
-  df.drop(['Irrep', 'mult'], axis=1, inplace=True)
+  #df.drop(['Irrep', 'mult'], axis=1, inplace=True)
 
   return df
 
@@ -119,7 +119,6 @@ def return_cg(p_cm, irrep):
 
     clebsch_gordan.example_cg
   """
-
 
   prefs = [[0.,0.,0.], [0.,0.,1.], [0.,1.,1.], [1.,1.,1.], [0.,0.,2.]]
 #           [0.,1.,2.], [1.,1.,2.]]
@@ -197,10 +196,12 @@ def return_cg(p_cm, irrep):
   df['M'] = [(0,0)]*len(df.index)
 
 #  print df[((df['p'] == tuple([(0,-1,0),(0,1,1)])) | (df['p'] == tuple([(0,1,1),(0,-1,0)])) | (df['p'] == tuple([(0,1,0),(0,-1,1)])) | (df['p'] == tuple([(0,-1,1),(0,1,0)])) | (df['p'] == tuple([(-1,0,0),(1,0,1)])) | (df['p'] == tuple([(1,0,1),(-1,0,0)])) | (df['p'] == tuple([(1,0,0),(-1,0,1)])) | (df['p'] == tuple([(-1,0,1),(1,0,0)]))) & df['cg-coefficient'] != 0]
-#  print df['Irrep'].unique()
+  print df['Irrep'].unique()
 #  print df[(df['Irrep'] == 'Ep1g')]
 
-  df = select_irrep(df, irrep)
+  # we want all possible irreps for pipi, only the combinations possible for
+  # C2 for the rho
+  #df = select_irrep(df, irrep)
 
   return df
 
@@ -246,15 +247,16 @@ def get_lattice_basis(p_cm, verbose=True, j=1):
 #      groups.save()
 
   # calc coefficients
-  basis = group.TOhBasis(groups,jmax=2)
+  basis = group.TOhBasis(groups,jmax=j+1)
+  #basis.print_overview()
   # Isospin 1 hardcoded here
   df = basis.to_pandas(j)
 
   # munging to have a consistent format
   df.rename(columns={'row' : '\mu', 'coeff' : 'cg-coefficient'}, inplace=True)
   df['cg-coefficient'] = df['cg-coefficient'].apply(aeval)
-  def to_tuple(list, sign=+1):
-      return tuple([sign*int(l).real for l in list])
+  def to_tuple(_l, sign=+1):
+      return tuple([sign*int(l).real for l in _l])
   df['p'] = df['p'].apply(to_tuple)
 
   if verbose:
@@ -450,6 +452,12 @@ def get_coefficients(diagram, gammas, p_cm, irrep, basis, continuum_basis, \
     print 'coefficients_irrep'
     print coefficients_irrep
 
+  # delete any rows where irreps at source and sink are different
+  tmp = coefficients_irrep["Irrep_{so}"] == coefficients_irrep["Irrep_{si}"]
+  coefficients_irrep = coefficients_irrep[tmp]
+  del(coefficients_irrep['Irrep_{si}'])
+  coefficients_irrep.rename(columns={'Irrep_{so}' : 'Irrep'}, inplace=True)
+
   return coefficients_irrep
 
 def set_lookup_qn_irrep(coefficients_irrep, qn, verbose):
@@ -553,8 +561,9 @@ def ensembles(data, qn_irrep):
   del subduced['index']
   # construct hierarchical multiindex to be able to sum over momenta, average
   # over rows and reference gevp elements
-  subduced = subduced.set_index(['gevp_row', 'gevp_col', '\mu', \
-                      'p_{so}', '\gamma_{so}', 'p_{si}', '\gamma_{si}', 'mult_{so}', 'mult_{si}'])
+  subduced = subduced.set_index([ 'Irrep', 'gevp_row', 'gevp_col', '\mu', \
+                      'p_{so}', '\gamma_{so}', 'p_{si}', '\gamma_{si}', 'mult_{so}',
+                      'mult_{si}'])
   subduced = subduced.ix[:,2:].multiply(subduced['coefficient_{so}']*
                                np.conj(subduced['coefficient_{si}']), axis=0)
 

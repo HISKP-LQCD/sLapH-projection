@@ -148,7 +148,8 @@ def main():
 
       lookup_cnfg = raw_data.set_lookup_cnfg(sta_cnfg, end_cnfg, del_cnfg, \
                                                        missing_configs, verbose)
-      pion_qn = raw_data.set_lookup_qn(diagram, p_cm, p_max, gammas, verbose)
+      pion_qn = raw_data.set_lookup_qn(diagram, p_cm, p_max, gammas, skip=flag_ana,
+          verbose=verbose)
     
       if flag_old:
         pion_data = raw_data.read_old(lookup_cnfg, pion_qn, diagram, T, 
@@ -200,7 +201,7 @@ def main():
   #      p_cm_max = np.asarray([4,5,6,7,4], dtype=int)[p_cm]
         # TODO: that needs to be refactored when going to a larger operator basis
         lookup_qn[diagram] = raw_data.set_lookup_qn(diagram, p_cm, p_max, 
-                                                                  gammas, verbose)
+            gammas, skip=flag_ana, verbose=verbose)
     
         if flag_old:
           data[diagram] = raw_data.read_old(lookup_cnfg, lookup_qn[diagram], diagram, T, 
@@ -240,7 +241,6 @@ def main():
       # List with the names of all contributing irreducible representations and 
       # their multiplicity
       lookup_irreps = basis['Irrep'].unique()
-      print lookup_irreps
   
       subduced_data = {}
       lookup_qn_irrep = {}
@@ -304,9 +304,8 @@ def main():
           else:
               # pipi I=2 analysis
               contracted_data[(correlator,irrep)] = wick.pipi(subduced_data, \
-                                                           correlator, irrep, verbose)
-          #print("details for contracted data for corr %r, irrep %r" % (correlator, irrep))
-          #print(contracted_data[(correlator,irrep)].axes)
+                  correlator, irrep, verbose)
+
           # write data to disc
           path = '%s/%s/2_contracted-data/' % (outpath, ensemble)
           filename = '/%s_p%1i_%s.h5' % (correlator, p_cm, irrep)
@@ -317,13 +316,13 @@ def main():
           # Only real part is physically relevant at that point
           contracted_data_avg[(correlator,irrep)] = \
               contracted_data[(correlator,irrep)].apply(np.real).\
-                                                            sum(level=[0,1,2,3,5])
+                                                            sum(level=[0,1,2,3,4,6])
           # sum over equivalent momenta
           contracted_data_avg[(correlator,irrep)] = \
-                        contracted_data_avg[(correlator,irrep)].sum(level=[0,1,2])
+                        contracted_data_avg[(correlator,irrep)].sum(level=[0,1,2,3])
           # average over rows
           contracted_data_avg[(correlator,irrep)] = \
-                         contracted_data_avg[(correlator,irrep)].mean(level=[0,1])
+                         contracted_data_avg[(correlator,irrep)].mean(level=[0,1,2])
 
           # write data to disc
           path = '%s/%s/2_contracted-data/' % (outpath, ensemble)
@@ -336,18 +335,32 @@ def main():
 
     if flag_gevp:
       print '\tcreating gevp'
-      for irrep in lookup_irreps:
+      if flag_ana:
+        for irrep in lookup_irreps:
+          gevp_data = setup_gevp.build_gevp(contracted_data_avg, irrep, verbose)
   
-        #gevp_data = setup_gevp.build_gevp(contracted_data_avg, irrep, verbose)
-        # NOTE: Delete all rows and colums with only NaN's
-        gevp_data = contracted_data_avg[("C4", irrep)].dropna(axis=0,how='all').dropna(axis=1,how='all')
+          path = '%s/%s/3_gevp-data/' % (outpath, ensemble)
+          filename = 'Gevp_p%1i_%s.h5' % (p_cm, irrep)
+          utils.write_hdf5_correlators(path, filename, gevp_data, 'data', verbose)
   
-        path = '%s/%s/3_gevp-data/' % (outpath, ensemble)
-        filename = 'Gevp_p%1i_%s.h5' % (p_cm, irrep)
-        utils.write_hdf5_correlators(path, filename, gevp_data, 'data', verbose)
+          path = '%s/%s/3_gevp-data/p%1i/%s/' % (outpath, ensemble, p_cm, irrep)
+          utils.write_ascii_gevp(path, gevp_data, p_cm, irrep, verbose)
+      else:
+        for irrep in lookup_irreps:
+          gevp_data = contracted_data_avg[("C4", irrep)]
+          # NOTE: Delete all rows and colums with only NaN's
+          gevp_data = gevp_data.dropna(axis=0,how='all').dropna(axis=1,how='all')
+
+          # loop over target irreps
+          for tirr, select in gevp_data.groupby(level=[0]):
+            #print(select)
+            path = '%s/%s/3_gevp-data/' % (outpath, ensemble)
+            filename = 'Gevp_p%1i_%s_%s.h5' % (p_cm, irrep, tirr)
+            utils.write_hdf5_correlators(path, filename, select, 'data', verbose)
   
-        path = '%s/%s/3_gevp-data/p%1i/%s/' % (outpath, ensemble, p_cm, irrep)
-        utils.write_ascii_gevp(path, gevp_data, p_cm, irrep, verbose)
+            path = '%s/%s/3_gevp-data/p%1i/%s/%s/' % (outpath, ensemble, p_cm,
+                irrep, tirr)
+            utils.write_ascii_gevp(path, select, p_cm, irrep, verbose)
 
     ############################################################################ 
     # Plotting 

@@ -40,16 +40,16 @@ def build_gevp(data, irrep, verbose):
   # TODO: 2x2 kinds of operators hardcoded. E.g. for baryons this has to be
   # adopted.
   correlator = 'C2'
-  subduced_2pt = data[(correlator, irrep)]
+  subduced_2pt = data[(correlator, irrep)].loc[irrep]
   
   correlator = 'C3'
-  subduced_3pt = data[(correlator, irrep)]
+  subduced_3pt = data[(correlator, irrep)].loc[irrep]
   
   subduced_3pt_T = subduced_3pt.swaplevel(0,1)
   subduced_3pt_T.index.set_names(['gevp_row', 'gevp_col'], inplace=True)
 
   correlator = 'C4'
-  subduced_4pt = data[(correlator, irrep)]
+  subduced_4pt = data[(correlator, irrep)].loc[irrep]
 
   ############################################################################## 
 

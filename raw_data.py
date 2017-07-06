@@ -50,13 +50,29 @@ def set_lookup_cnfg(sta_cnfg, end_cnfg, del_cnfg, missing_configs, verbose=0):
   return lookup_cnfg
 
 
+def test_p(p_cm, p_max):
+  lookup_p3 = list(it.ifilter(lambda x: _abs2(x) <= p_max, \
+                                  it.product(range(-p_max, p_max+1), repeat=3)))
+  lookup_p3_reduced = [(0,0,0), (0,0,1), (0,1,1), (1,1,1), (0,0,2)]
+  lookup_so = it.ifilter(lambda (x,y): \
+                           _abs2(list(it.imap(operator.add, x, y))) == p_cm, \
+                           it.product(lookup_p3, repeat=2))
+  lookup_si = it.ifilter(lambda (x,y): \
+                           _abs2(list(it.imap(operator.add, x, y))) == p_cm, \
+                           it.product(lookup_p3, repeat=2))
+#  lookup_so, lookup_si = it.tee(lookup_so, 2)
+  lookup_p = it.ifilter(lambda ((w,x),(y,z)): \
+                          tuple(it.imap(operator.add, w, x)) == tuple(it.imap(operator.neg, it.imap(operator.add, y, z))), \
+                                             it.product(lookup_so, lookup_si))
+  return list(lookup_p)
+
 # TODO: write wrapper function that calculates lookup_p3 and make that a 
 # parameter itself
 # TODO: generalize lookup_p construction by writing a function that can get 
 # either a momentum or a tuple made of two
 # TODO: 4pt function is incosistent for box and direct diagram
 # NOTE: there is a convential minus sign for the sink momenta!
-def set_lookup_p(p_max, p_cm, diagram):
+def set_lookup_p(p_max, p_cm, diagram, skip=True):
   """
   create lookup table for all possible 3-momenta that can appear on the lattice
   below a given cutoff
@@ -71,6 +87,9 @@ def set_lookup_p(p_max, p_cm, diagram):
   diagram : string, {'C20', 'C2+', 'C3+', 'C4*'}
       The number of momenta is equal to the number of quarks in a chosen 
       diagram. It is encoded in the second char of the diagram name
+  skip : bool, optional
+      In the rho analysis the pions cannot be at rest, so skip these momentum
+      combinations.
 
   Returns
   -------
@@ -104,16 +123,26 @@ def set_lookup_p(p_max, p_cm, diagram):
                                                it.product(lookup_so, lookup_si))
 
   elif diagram.startswith('C4'):
-    lookup_so = it.ifilter(lambda (x,y): \
-#                             _abs2(list(it.imap(operator.add, x, y))) == p_cm and \
-                             (tuple(it.imap(operator.add, x, y)) == lookup_p3_reduced[p_cm]) and \
-                             not (p_cm == 0 and (tuple(x) == tuple(y))), \
-                                                it.product(lookup_p3, repeat=2))
-    lookup_si = it.ifilter(lambda (x,y): \
-                             (tuple(it.imap(operator.neg, it.imap(operator.add, x, y))) == lookup_p3_reduced[p_cm]) and \
-                             not (p_cm == 0 and (tuple(x) == tuple(y))), \
-                                                it.product(lookup_p3, repeat=2))
-#    lookup_so, lookup_si = it.tee(lookup_so, 2)
+    # leave out momentum combinations not contributing to rho analysis
+    if skip:
+      lookup_so = it.ifilter(lambda (x,y): \
+#                               _abs2(list(it.imap(operator.add, x, y))) == p_cm and \
+                               (tuple(it.imap(operator.add, x, y)) == lookup_p3_reduced[p_cm]) and \
+                               not (p_cm == 0 and (tuple(x) == tuple(y))), \
+                                                  it.product(lookup_p3, repeat=2))
+      lookup_si = it.ifilter(lambda (x,y): \
+                               (tuple(it.imap(operator.neg, it.imap(operator.add, x, y))) == lookup_p3_reduced[p_cm]) and \
+                               not (p_cm == 0 and (tuple(x) == tuple(y))), \
+                                                  it.product(lookup_p3, repeat=2))
+    else:
+      lookup_so = it.ifilter(lambda (x,y): \
+#                               _abs2(list(it.imap(operator.add, x, y))) == p_cm and \
+                               (tuple(it.imap(operator.add, x, y)) == lookup_p3_reduced[p_cm]), \
+                                                  it.product(lookup_p3, repeat=2))
+      lookup_si = it.ifilter(lambda (x,y): \
+                               (tuple(it.imap(operator.neg, it.imap(operator.add, x, y))) == lookup_p3_reduced[p_cm]), \
+                                                  it.product(lookup_p3, repeat=2))
+
     lookup_p = it.ifilter(lambda ((w,x),(y,z)): \
                             tuple(it.imap(operator.add, w, x)) == tuple(it.imap(operator.neg, it.imap(operator.add, y, z))), \
                                                it.product(lookup_so, lookup_si))
@@ -171,7 +200,7 @@ def set_lookup_g(gammas, diagram):
   lookup_g = it.product(lookup_so, lookup_si)
   return list(lookup_g)
 
-def set_lookup_qn(diagram, p_cm, p_max, gammas, verbose=0):
+def set_lookup_qn(diagram, p_cm, p_max, gammas, skip=True, verbose=0):
   """
   Calculates a data frame with physical quantum numbers
 
@@ -199,7 +228,7 @@ def set_lookup_qn(diagram, p_cm, p_max, gammas, verbose=0):
   at the same lattice site
   """
 
-  lookup_p = set_lookup_p(p_max, p_cm, diagram)
+  lookup_p = set_lookup_p(p_max, p_cm, diagram, skip)
   lookup_g = set_lookup_g(gammas, diagram)
 
   # TODO: A more elegant solution for combining lookup_p and lookup_g is welcome
@@ -441,14 +470,14 @@ def read_old(lookup_cnfg, lookup_qn, diagram, T, directory, verbose=0):
         nfailed += 1
         continue
       data_qn[op] = pd.DataFrame(tmp, columns=['re/im'])
-    if nfailed > 0:
+    if nfailed > 0 and verbose > 0:
       print("could not read %d of %d data" % (nfailed, ndata))
 
     # append all data for one config and close the file
     data.append(data_qn)
     fh.close()
   # generate data frame containing all operators for all configs
-  data = pd.concat(data, keys=lookup_cnfg, axis=0, names=['cnfg'])
+  data = pd.concat(data, keys=lookup_cnfg, axis=0, names=['cnfg', 'T'])
 
   if verbose:
     print '\tfinished reading'
