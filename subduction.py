@@ -196,7 +196,7 @@ def return_cg(p_cm, irrep):
   df['M'] = [(0,0)]*len(df.index)
 
 #  print df[((df['p'] == tuple([(0,-1,0),(0,1,1)])) | (df['p'] == tuple([(0,1,1),(0,-1,0)])) | (df['p'] == tuple([(0,1,0),(0,-1,1)])) | (df['p'] == tuple([(0,-1,1),(0,1,0)])) | (df['p'] == tuple([(-1,0,0),(1,0,1)])) | (df['p'] == tuple([(1,0,1),(-1,0,0)])) | (df['p'] == tuple([(1,0,0),(-1,0,1)])) | (df['p'] == tuple([(-1,0,1),(1,0,0)]))) & df['cg-coefficient'] != 0]
-  print df['Irrep'].unique()
+#  print df['Irrep'].unique()
 #  print df[(df['Irrep'] == 'Ep1g')]
 
   # we want all possible irreps for pipi, only the combinations possible for

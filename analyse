@@ -329,6 +329,32 @@ def main():
           filename = '/%s_p%1i_%s_avg.h5' % (correlator, p_cm, irrep)
           utils.write_hdf5_correlators(path, filename, \
                          contracted_data_avg[(correlator,irrep)], 'data', verbose)
+    else:
+      correlators = wick.set_lookup_correlators(diagrams)
+
+      contracted_data = {}
+      contracted_data_avg = {}
+
+      for correlator in correlators:
+        for irrep in lookup_irreps:
+          path = '%s/%s/2_contracted-data/' % (outpath, ensemble)
+
+          filename = '/%s_p%1i_%s.h5' % (correlator, p_cm, irrep)
+          contracted_data[(correlator,irrep)] = \
+              utils.read_hdf5_correlators(path+filename, 'data')
+
+#          filename = '/%s_p%1i_%s_avg.h5' % (correlator, p_cm, irrep)
+#          contracted_data_avg[(correlator,irrep)] = \
+#              utils.read_hdf5_correlators(path+filename, 'data')
+          contracted_data_avg[(correlator,irrep)] = \
+              contracted_data[(correlator,irrep)].apply(np.real).\
+                                                            sum(level=[0,1,2,3,4,6])
+         # sum over equivalent momenta
+          contracted_data_avg[(correlator,irrep)] = \
+                        contracted_data_avg[(correlator,irrep)].sum(level=[0,1,2,3])
+          # average over rows
+          contracted_data_avg[(correlator,irrep)] = \
+                         contracted_data_avg[(correlator,irrep)].mean(level=[0,1,2])
 
     ############################################################################ 
     # Gevp construction
