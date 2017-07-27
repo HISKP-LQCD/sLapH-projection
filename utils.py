@@ -144,7 +144,7 @@ def write_ascii_correlators(path, filename, data, verbose):
   fname = os.path.join(path, filename)
   write_data_ascii(np.asarray(pd_series_to_np_array(data)), fname, verbose)
 
-def write_ascii_gevp(path, data, p_cm, irrep, verbose):
+def write_ascii_gevp(path, name, data, p_cm, irrep, verbose):
 
   assert np.all(data.notnull()), 'Gevp contains null entires'
   assert gmpy.is_square(len(data.index)), 'Gevp is not a square matrix'
@@ -157,8 +157,7 @@ def write_ascii_gevp(path, data, p_cm, irrep, verbose):
   for counter in range(len(data.index)):
 
     ensure_dir(path)
-    #filename = 'Rho_Gevp_p%1d_%s.%d.%d.dat' % (p_cm, irrep, \
-    filename = 'Pipi_Gevp_p%1d_%s.%d.%d.dat' % (p_cm, irrep, \
+    filename = name + '_p%1d_%s.%d.%d.dat' % (p_cm, irrep, \
                                            counter/data_size, counter%data_size)
 
     # TODO: with to_csv this becomes a onliner but Liumings head format will 

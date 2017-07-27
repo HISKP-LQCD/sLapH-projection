@@ -142,7 +142,7 @@ def main():
 
     ############################################################################ 
     # read data for pion
-    if flag_pion and 'C2+' in diagrams:
+    if flag_pion and 'C2+' not in diagrams:
       diagram = 'C2+'
       directory = directories[0]
 
@@ -370,7 +370,7 @@ def main():
           utils.write_hdf5_correlators(path, filename, gevp_data, 'data', verbose)
   
           path = '%s/%s/3_gevp-data/p%1i/%s/' % (outpath, ensemble, p_cm, irrep)
-          utils.write_ascii_gevp(path, gevp_data, p_cm, irrep, verbose)
+          utils.write_ascii_gevp(path, 'Rho_Gevp', gevp_data, p_cm, irrep, verbose)
       else:
         for irrep in lookup_irreps:
           gevp_data = contracted_data_avg[("C4", irrep)]
@@ -386,7 +386,7 @@ def main():
   
             path = '%s/%s/3_gevp-data/p%1i/%s/%s/' % (outpath, ensemble, p_cm,
                 irrep, tirr)
-            utils.write_ascii_gevp(path, select, p_cm, irrep, verbose)
+            utils.write_ascii_gevp(path, 'Pipi_Gevp', select, p_cm, irrep, verbose)
 
     ############################################################################ 
     # Plotting 
