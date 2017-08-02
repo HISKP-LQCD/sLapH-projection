@@ -144,7 +144,7 @@ def write_ascii_correlators(path, filename, data, verbose):
   fname = os.path.join(path, filename)
   write_data_ascii(np.asarray(pd_series_to_np_array(data)), fname, verbose)
 
-def write_ascii_gevp(path, name, data, p_cm, irrep, verbose):
+def write_ascii_gevp(path, name, data, verbose):
 
   assert np.all(data.notnull()), 'Gevp contains null entires'
   assert gmpy.is_square(len(data.index)), 'Gevp is not a square matrix'
@@ -154,11 +154,18 @@ def write_ascii_gevp(path, name, data, p_cm, irrep, verbose):
   if verbose:
     print 'creating a %d x %d Gevp' % (data_size, data_size)
 
+  ensure_dir(path)
+  f = open(os.path.join(path, name+'_indices.txt'), 'w')
+  f.write("%8s\tphysical content\n" % "Element")
+
   for counter in range(len(data.index)):
 
     ensure_dir(path)
-    filename = name + '_p%1d_%s.%d.%d.dat' % (p_cm, irrep, \
-                                           counter/data_size, counter%data_size)
+    filename = name + '.%d.%d.dat' % (counter/data_size, counter%data_size)
+
+    # Write file with physical content corresponding to index number
+    if counter < data_size:
+      f.write("%12d\t%s\n" % (counter, data.index[counter][2]))
 
     # TODO: with to_csv this becomes a onliner but Liumings head format will 
     # be annoying. Also the loop can probably run over data.iterrows()
