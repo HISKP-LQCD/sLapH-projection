@@ -76,9 +76,10 @@ def set_lookup_p(p_max, p_cm, diagram, skip=True):
 
   Returns
   -------
-  list of tuples (of tuples)
-      List that contains tuples for source and sink with tuples for the momenta.
-      For every possible momentum combination, there is one list entry
+  pd.DataFrame
+      DataFrame that contains a column for each particle involved in the 
+      diagram and a row for every possible combination of momenta respecting 
+      momentum conservation and the cutoff given by p_max.
   """
 
   # for the center-of-mass frame p_max was restricted to (1,1,0)
@@ -93,9 +94,11 @@ def set_lookup_p(p_max, p_cm, diagram, skip=True):
   elif p_cm == 4:
     p_max = 4
 
+  # List of all 3-vectors with absolute value  p_cm
   lookup_p_cm = list(it.ifilter(lambda x : _abs2(x) == p_cm, \
                                   it.product(range(-p_max, p_max+1), repeat=3)))
 
+  # List of all 3-vectors a single particle could have
   lookup_p3 = list(it.ifilter(lambda x: _abs2(x) <= p_max, \
                                   it.product(range(-p_max, p_max+1), repeat=3)))
   lookup_p3 = pd.DataFrame(zip(lookup_p3), columns=['p']) 
@@ -103,47 +106,87 @@ def set_lookup_p(p_max, p_cm, diagram, skip=True):
 
   if diagram.startswith('C2'):
 
-    lookup_so = lookup_p3[lookup_p3['p'].isin(lookup_p_cm)]
+    # Restrict set of 3-momenta to those with the correct abulute value
+    lookup_so = DataFrame.copy(lookup_p3[lookup_p3['p'].isin(lookup_p_cm)])
 
 #    lookup_si = lookup_so.applymap(_minus)
 
+    # Because of momentum conservation, source momentum and sink momentum are 
+    # equal and equal to total momentum
     lookup_p = pd.concat([lookup_so, lookup_so, lookup_so], axis=1).reset_index(drop=True)
     lookup_p.columns = pd.MultiIndex.from_tuples([('p_{so}',0), ('p_{cm}',0), ('p_{si}',0)])
 
   elif diagram.startswith('C3'):
 
+    # DataFrame with all combinations of 3-momenta
     lookup_so = pd.merge(lookup_p3, lookup_p3, how='outer', \
                          left_index=True, right_index=True)
     lookup_so.columns = pd.MultiIndex.from_tuples([('p',0), ('p',1)])
+    # Total momentum is equal to the sum of the particle's momenta
     lookup_so[('p_{cm}',0)] = map(lambda k1, k2: tuple([sum(x) for x in zip(k1,k2)]), \
-                         lookup_so[('p',0)], lookup_so[('p',1)])
+                                  lookup_so[('p',0)], lookup_so[('p',1)])
+    # Restrict set of 3-momenta to those with the correct abulute value
     lookup_so = lookup_so[lookup_so[('p_{cm}',0)].isin(lookup_p_cm)]
+    # Restrict set of 3-momenta to those where |p1|+|p2| <= p_max
+    lookup_so = lookup_so[lookup_so['p'].applymap(_abs2).sum(axis=1) <= p_max]
+    # For rho analysis, explicitely exclude S-wave:
+    # \pi(0,0,0) + \pi(0,0,0) -> \rho(0,0,0) forbidden by angular momentum 
+    # conservation
+    if skip:
+      lookup_so = lookup_so[(lookup_so[('p',0)] != (0,0,0)) | (lookup_so[('p',1)] != (0,0,0))]
 
-    lookup_si = lookup_p3[lookup_p3['p'].isin(lookup_p_cm)]
+    # Restrict set of 3-momenta to those with the correct abulute value
+    lookup_si = DataFrame.copy(lookup_p3[lookup_p3['p'].isin(lookup_p_cm)])
     lookup_si.columns = pd.MultiIndex.from_tuples([('p',0)])
+    # Total momentum is equal to the particle's momentum
     lookup_si[('p_{cm}',0)] = lookup_si[('p',0)]
 
-    lookup_p = pd.merge(lookup_so, lookup_si, on=[('p_{cm}',0)], suffixes=['_{so}', '_{si}'])
+    # DataFrame with all combinations of source and sink with same total 
+    # momentum
+    lookup_p = pd.merge(lookup_so, lookup_si, on=[('p_{cm}',0)], \
+                        suffixes=['_{so}', '_{si}'])
 
   elif diagram.startswith('C4'):
 
+    # DataFrame with all combinations of 3-momenta
     lookup_so = pd.merge(lookup_p3, lookup_p3, \
                          left_index=True, right_index=True)
     lookup_so.columns = pd.MultiIndex.from_tuples([('p',0), ('p',1)])
+    # Total momentum is equal to the sum of the particle's momenta
     lookup_so[('p_{cm}',0)] = map(lambda k1, k2: tuple([sum(x) for x in zip(k1, k2)]), \
                          lookup_so[('p',0)], lookup_so[('p',1)])
+    # Restrict set of 3-momenta to those with the correct abulute value
     lookup_so = lookup_so[lookup_so[('p_{cm}',0)].isin(lookup_p_cm)]
+    # Restrict set of 3-momenta to those where |p1|+|p2| <= p_max
+    lookup_so = lookup_so[lookup_so['p'].applymap(_abs2).sum(axis=1) <= p_max]
+    # For rho analysis, explicitely exclude S-wave:
+    # \pi(0,0,0) + \pi(0,0,0) -> \rho(0,0,0) forbidden by angular momentum 
+    # conservation
+    if skip:
+      lookup_so = lookup_so[(lookup_so[('p',0)] != (0,0,0)) | (lookup_so[('p',1)] != (0,0,0))]
 
+    # DataFrame with all combinations of 3-momenta
     lookup_si = pd.merge(lookup_p3, lookup_p3, \
                          left_index=True, right_index=True)
     lookup_si.columns = pd.MultiIndex.from_tuples([('p',0), ('p',1)])
+    # Total momentum is equal to the sum of the particle's momenta
     lookup_si[('p_{cm}',0)] = map(lambda k1, k2: tuple([sum(x) for x in zip(k1,k2)]), \
                          lookup_si[('p',0)], lookup_si[('p',1)])
+    # Restrict set of 3-momenta to those with the correct abulute value
     lookup_si = lookup_si[lookup_si[('p_{cm}',0)].isin(lookup_p_cm)]
+    # Restrict set of 3-momenta to those where |p1|+|p2| <= p_max
+    lookup_si = lookup_si[lookup_si['p'].applymap(_abs2).sum(axis=1) <= p_max]
+    # For rho analysis, explicitely exclude S-wave:
+    # \pi(0,0,0) + \pi(0,0,0) -> \rho(0,0,0) forbidden by angular momentum 
+    # conservation
+    if skip:
+      lookup_si = lookup_si[(lookup_si[('p',0)] != (0,0,0)) | (lookup_si[('p',1)] != (0,0,0))]
 
-    lookup_p = pd.merge(lookup_so, lookup_si, on=[('p_{cm}',0)], suffixes=['_{so}', '_{si}'])
+    # DataFrame with all combinations of source and sink with same total 
+    # momentum
+    lookup_p = pd.merge(lookup_so, lookup_si, on=[('p_{cm}',0)], \
+                        suffixes=['_{so}', '_{si}'])
 
-                                               it.product(lookup_so, lookup_si))
   else:
     print 'in set_lookup_p: diagram unknown! Quantum numbers corrupted.'
   
@@ -240,6 +283,7 @@ def set_lookup_qn(diagram, p_cm, p_max, gammas, skip=True, verbose=0):
 #  lookup_qn['p_{so}'] = qn['p_{so}'].apply(np.array)
 #  lookup_qn['p_{si}'] = qn['p_{si}'].apply(np.array)
   
+  print lookup_qn
   return lookup_qn
 
 # TODO: displacement hardcoded
