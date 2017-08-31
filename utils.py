@@ -3,6 +3,7 @@
 # TODO: could be restructured as table format to access individual files and 
 # allow appending, but speed is uncritical
 import os
+import errno
 
 import numpy as np
 import pandas as pd
@@ -15,10 +16,17 @@ from matplotlib.backends.backend_pdf import PdfPages
 
 ################################################################################
 # checks if the directory where the file will be written does exist
+# See https://stackoverflow.com/questions/600268/mkdir-p-functionality-in-python
 def ensure_dir(f):
-  """Helper function to create a directory if it does not exis"""
-  if not os.path.exists(f):
+  """Helper function to create a directory if it does not exist"""
+#  if not os.path.exists(f):
+  try:
     os.makedirs(f)
+  except OSError as exc:  # Python >2.5
+    if exc.errno == errno.EEXIST and os.path.isdir(f):
+      pass
+  else:
+    raise exc
 
 def read_hdf5_correlators(path, key):
   """

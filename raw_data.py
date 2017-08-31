@@ -358,7 +358,7 @@ def read(lookup_cnfg, lookup_qn, diagram, T, directory, verbose=0):
 
   for cnfg in lookup_cnfg:
     # filename and path
-    filename = directory + '/' + diagram + '_cnfg%i' % cnfg + '.h5'
+    filename = directory + '/' + diagram + '_cnfg%04i' % cnfg + '.h5'
     try:
       fh = h5py.File(filename, "r")
     except IOError:

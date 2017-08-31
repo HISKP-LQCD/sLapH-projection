@@ -22,28 +22,30 @@ def main():
   verbose = args.verbose
   continuum_basis = args.basis
 
-  flag_pion        = config.getboolean('parameters', 'Read pion') 
-  flag_read        = config.getboolean('parameters', 'Read rho') 
-  flag_subduction  = config.getboolean('parameters', 'Subduce')
-  flag_contraction = config.getboolean('parameters', 'Contract')
-  flag_gevp        = config.getboolean('parameters', 'Create Gevp')
-  flag_plot        = config.getboolean('parameters', 'Plot data')
-  flag_old         = config.getboolean('parameters', 'Old data')
-  flag_ana         = config.getboolean('parameters', 'Rho analysis')
+  flag = {}
+
+  flag_pion           = config.getboolean('parameters', 'Read pion') 
+  flag_ana            = config.getboolean('parameters', 'Rho analysis')
+
+  flag['read']        = config.getboolean('parameters', 'Read rho') 
+  flag['subduce']     = config.getboolean('parameters', 'Subduce')
+  flag['contract']    = config.getboolean('parameters', 'Contract')
+  flag['create gevp'] = config.getboolean('parameters', 'Create Gevp')
+  flag['plot']        = config.getboolean('parameters', 'Plot data')
+
+  # optional parameter, Default: False
+  flag_old         = config.getboolean('parameters', 'use old data format')
   
   if verbose:
     print '#################################################################'\
                                                                '###############'
     print 'Reading infile'
   
+  if verbose >= 2:
     print flag_pion
-    print flag_read
-    print flag_subduction
-    print flag_contraction
-    print flag_gevp
-    print flag_plot
-    print flag_old
     print flag_ana
+
+    print flag
   
   sta_cnfg = config.getint('gauge configuration numbers', 'First configuration')
   end_cnfg = config.getint('gauge configuration numbers', 'Last configuration')
@@ -57,7 +59,7 @@ def main():
   else:
     missing_configs = [int(m) for m in missing_configs.split(',')]
   
-  if verbose:
+  if verbose >= 2:
     print sta_cnfg
     print end_cnfg
     print del_cnfg
@@ -66,7 +68,7 @@ def main():
   ensemble = config.get('ensemble parameters', 'Ensemble Name')
   T = config.getint('ensemble parameters', 'T')
   
-  if verbose:
+  if verbose >= 2:
     print ensemble
     print T
   
@@ -93,7 +95,7 @@ def main():
   gamma_input = gamma_input.replace(" ", "").split(',')
   gammas = [gamma_dictionary[g] for g in gamma_input]
   
-  if verbose:
+  if verbose >= 2:
     print p_max
     print p
     print gamma_input
@@ -107,14 +109,14 @@ def main():
   if(len(directories) == 1):
     directories = directories*len(diagrams)
   
-  if verbose:
+  if verbose >= 2:
     print diagrams
     print directories 
   
   outpath = config.get('other parameters', 'Output Path')
   
   if verbose:
-    print outpath
+    print 'Data will be writen to', outpath
   
   sep_rows_sep_mom = config.getboolean('plot details', 'Plot sep_rows_sep_mom') 
   sep_rows_sum_mom = config.getboolean('plot details', 'Plot sep_rows_sum_mom') 
@@ -125,7 +127,7 @@ def main():
   
   bootstrapsize = config.getint('plot details', 'Number of bootstrap samples')
   
-  if verbose:
+  if verbose >= 2:
     print sep_rows_sum_mom
     print avg_rows_sep_mom
     print avg_rows_sum_mom
@@ -170,7 +172,7 @@ def main():
       utils.write_hdf5_correlators(path, filename, pion_qn, 'qn', verbose=False)
 
       path = '%s/%s/3_gevp-data/' % (outpath, ensemble)
-      filename = 'Pion_p%1i.dat' % (p_cm)
+      filename = 'pi_p%1i.dat' % (p_cm)
       utils.write_ascii_correlators(path, filename, 
                                  pion_data.mean(axis=1).apply(np.real), verbose)
 
@@ -185,7 +187,7 @@ def main():
 
     ############################################################################ 
     # read diagrams for correlators contributing to rho
-    if flag_read:
+    if flag['read']:
       data = {}
       lookup_qn = {}
       for diagram, directory in zip(diagrams, directories):
@@ -217,7 +219,7 @@ def main():
         filename = '%s_p%1i_qn.h5' % (diagram, p_cm)
         utils.write_hdf5_correlators(path, filename, lookup_qn[diagram], 'qn', verbose=False)
  
-    else:
+    elif flag['subduce']:
       # helper function to read all raw data from disk
       path = '%s/%s/0_raw-data/' % (outpath, ensemble)
   
@@ -234,7 +236,7 @@ def main():
     ############################################################################
     # Subduction
 
-    if flag_subduction:
+    if flag['subduce']:
       j_ana = 1 if flag_ana else 0
       basis = subduction.get_lattice_basis(p_cm, verbose, j=j_ana)
   
@@ -265,7 +267,8 @@ def main():
           filename = '/%s_p%1i_%s.h5' % (diagram, p_cm, irrep)
           utils.write_hdf5_correlators(path, filename, 
                                   subduced_data[(diagram,irrep)], 'data', verbose)
-    else:
+
+    elif flag['contract']:
       # helper function to read all subduced data from disk
       j_ana = 1 if flag_ana else 0
       basis = subduction.get_lattice_basis(p_cm, verbose, j_ana)
@@ -286,7 +289,7 @@ def main():
     ############################################################################ 
     # Wick contraction
 
-    if flag_contraction:
+    if flag['contract']:
       correlators = wick.set_lookup_correlators(diagrams)
 
       contracted_data = {}
@@ -329,7 +332,8 @@ def main():
           filename = '/%s_p%1i_%s_avg.h5' % (correlator, p_cm, irrep)
           utils.write_hdf5_correlators(path, filename, \
                          contracted_data_avg[(correlator,irrep)], 'data', verbose)
-    else:
+
+    elif any([flag['create gevp'], flag['plot']]):
       correlators = wick.set_lookup_correlators(diagrams)
 
       contracted_data = {}
@@ -359,7 +363,7 @@ def main():
     ############################################################################ 
     # Gevp construction
 
-    if flag_gevp:
+    if flag['create gevp']:
       print '\tcreating gevp'
       if flag_ana:
         mode = "rho"
@@ -383,7 +387,7 @@ def main():
     ############################################################################ 
     # Plotting 
 
-    if flag_plot:
+    if flag['plot']:
       for irrep in lookup_irreps:
   
         path = '%s/%s/4_plots/p%1i/%s/' % (outpath, ensemble, p_cm, irrep)
@@ -420,7 +424,7 @@ def main():
                             correlator, bootstrapsize, pdfplot, logscale, verbose)
             pdfplot.close()
   
-        if flag_gevp:
+        if flag['create gevp']:
           if avg_rows_sum_mom:
             #gevp_data = setup_gevp.build_gevp(contracted_data_avg, irrep, verbose)
             gevp_data = contracted_data_avg[("C4", irrep)].dropna(axis=0,how='all').dropna(axis=1,how='all')
