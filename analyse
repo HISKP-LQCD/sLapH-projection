@@ -142,6 +142,9 @@ def main():
                                                               '################'
       print 'p_cm = ', p_cm
 
+    for diagram in diagrams:
+      raw_data.set_lookup_p(0, p_cm, diagram)
+
     ############################################################################ 
     # read data for pion
     if flag_pion and 'C2+' not in diagrams:
@@ -159,11 +162,6 @@ def main():
       else:
         pion_data = raw_data.read(lookup_cnfg, pion_qn, diagram, T, 
                                                              directory, verbose)
-      if verbose:
-        print 'Pion mass for p_cm = %1d' % (p_cm)
-        print pion_qn
-        print pion_data.mean(axis=1).apply(np.real)
-
       # write data
       path = '%s/%s/0_raw-data/' % (outpath, ensemble)
       filename = '%s_p%1i.h5' % ('pion', p_cm)

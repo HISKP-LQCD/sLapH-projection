@@ -14,6 +14,9 @@ def _scalar_mul(x, y):
 def _abs2(x):
   return _scalar_mul(x, x)
 
+def _minus(x):
+  return tuple(-np.array(x))
+
 # TODO: nb_cnfg is spurious, can just use len(lookup_cnfg)
 def set_lookup_cnfg(sta_cnfg, end_cnfg, del_cnfg, missing_configs, verbose=0):
   """
@@ -50,27 +53,7 @@ def set_lookup_cnfg(sta_cnfg, end_cnfg, del_cnfg, missing_configs, verbose=0):
   return lookup_cnfg
 
 
-def test_p(p_cm, p_max):
-  lookup_p3 = list(it.ifilter(lambda x: _abs2(x) <= p_max, \
-                                  it.product(range(-p_max, p_max+1), repeat=3)))
-  lookup_p3_reduced = [(0,0,0), (0,0,1), (0,1,1), (1,1,1), (0,0,2)]
-  lookup_so = it.ifilter(lambda (x,y): \
-                           _abs2(list(it.imap(operator.add, x, y))) == p_cm, \
-                           it.product(lookup_p3, repeat=2))
-  lookup_si = it.ifilter(lambda (x,y): \
-                           _abs2(list(it.imap(operator.add, x, y))) == p_cm, \
-                           it.product(lookup_p3, repeat=2))
-#  lookup_so, lookup_si = it.tee(lookup_so, 2)
-  lookup_p = it.ifilter(lambda ((w,x),(y,z)): \
-                          tuple(it.imap(operator.add, w, x)) == tuple(it.imap(operator.neg, it.imap(operator.add, y, z))), \
-                                             it.product(lookup_so, lookup_si))
-  return list(lookup_p)
-
-# TODO: write wrapper function that calculates lookup_p3 and make that a 
-# parameter itself
-# TODO: generalize lookup_p construction by writing a function that can get 
-# either a momentum or a tuple made of two
-# TODO: 4pt function is incosistent for box and direct diagram
+# TODO Refactor lookup_p_2meson and lookup_p_1meson
 # NOTE: there is a convential minus sign for the sink momenta!
 def set_lookup_p(p_max, p_cm, diagram, skip=True):
   """
@@ -101,54 +84,70 @@ def set_lookup_p(p_max, p_cm, diagram, skip=True):
   # for the center-of-mass frame p_max was restricted to (1,1,0)
   if p_cm == 0:
     p_max = 2
+  elif p_cm == 1:
+    p_max = 5
+  elif p_cm == 2:
+    p_max = 6
+  elif p_cm == 3:
+    p_max = 7
+  elif p_cm == 4:
+    p_max = 4
+
+  lookup_p_cm = list(it.ifilter(lambda x : _abs2(x) == p_cm, \
+                                  it.product(range(-p_max, p_max+1), repeat=3)))
 
   lookup_p3 = list(it.ifilter(lambda x: _abs2(x) <= p_max, \
                                   it.product(range(-p_max, p_max+1), repeat=3)))
-  lookup_p3_reduced = [(0,0,0), (0,0,1), (0,1,1), (1,1,1), (0,0,2)]
-  
-  if diagram == 'C20' or diagram == 'C2+':
-    lookup_so = it.ifilter(lambda x : _abs2(x) == p_cm, lookup_p3)
-    lookup_so, lookup_si = it.tee(lookup_so, 2)
-    lookup_p = it.ifilter(lambda (x,y): \
-                            tuple(x) == tuple(it.imap(operator.neg, y)), \
-                                               it.product(lookup_so, lookup_si))
-  elif diagram == 'C3+':
-    lookup_so = it.ifilter(lambda (x,y): \
-                             _abs2(list(it.imap(operator.add, x, y))) == p_cm and \
-                             not (p_cm == 0 and (tuple(x) == tuple(y))), \
-                                                it.product(lookup_p3, repeat=2))
-    lookup_si = it.ifilter(lambda x : _abs2(x) == p_cm, lookup_p3)
-    lookup_p = it.ifilter(lambda ((w,x),y): \
-                            tuple(it.imap(operator.add, w, x)) == tuple(it.imap(operator.neg, y)), \
-                                               it.product(lookup_so, lookup_si))
+  lookup_p3 = pd.DataFrame(zip(lookup_p3), columns=['p']) 
+  lookup_p3.index = np.repeat(0, len(lookup_p3))
+
+  if diagram.startswith('C2'):
+
+    lookup_so = lookup_p3[lookup_p3['p'].isin(lookup_p_cm)]
+
+#    lookup_si = lookup_so.applymap(_minus)
+
+    lookup_p = pd.concat([lookup_so, lookup_so, lookup_so], axis=1).reset_index(drop=True)
+    lookup_p.columns = pd.MultiIndex.from_tuples([('p_{so}',0), ('p_{cm}',0), ('p_{si}',0)])
+
+  elif diagram.startswith('C3'):
+
+    lookup_so = pd.merge(lookup_p3, lookup_p3, how='outer', \
+                         left_index=True, right_index=True)
+    lookup_so.columns = pd.MultiIndex.from_tuples([('p',0), ('p',1)])
+    lookup_so[('p_{cm}',0)] = map(lambda k1, k2: tuple([sum(x) for x in zip(k1,k2)]), \
+                         lookup_so[('p',0)], lookup_so[('p',1)])
+    lookup_so = lookup_so[lookup_so[('p_{cm}',0)].isin(lookup_p_cm)]
+
+    lookup_si = lookup_p3[lookup_p3['p'].isin(lookup_p_cm)]
+    lookup_si.columns = pd.MultiIndex.from_tuples([('p',0)])
+    lookup_si[('p_{cm}',0)] = lookup_si[('p',0)]
+
+    lookup_p = pd.merge(lookup_so, lookup_si, on=[('p_{cm}',0)], suffixes=['_{so}', '_{si}'])
 
   elif diagram.startswith('C4'):
-    # leave out momentum combinations not contributing to rho analysis
-    if skip:
-      lookup_so = it.ifilter(lambda (x,y): \
-#                               _abs2(list(it.imap(operator.add, x, y))) == p_cm and \
-                               (tuple(it.imap(operator.add, x, y)) == lookup_p3_reduced[p_cm]) and \
-                               not (p_cm == 0 and (tuple(x) == tuple(y))), \
-                                                  it.product(lookup_p3, repeat=2))
-      lookup_si = it.ifilter(lambda (x,y): \
-                               (tuple(it.imap(operator.neg, it.imap(operator.add, x, y))) == lookup_p3_reduced[p_cm]) and \
-                               not (p_cm == 0 and (tuple(x) == tuple(y))), \
-                                                  it.product(lookup_p3, repeat=2))
-    else:
-      lookup_so = it.ifilter(lambda (x,y): \
-#                               _abs2(list(it.imap(operator.add, x, y))) == p_cm and \
-                               (tuple(it.imap(operator.add, x, y)) == lookup_p3_reduced[p_cm]), \
-                                                  it.product(lookup_p3, repeat=2))
-      lookup_si = it.ifilter(lambda (x,y): \
-                               (tuple(it.imap(operator.neg, it.imap(operator.add, x, y))) == lookup_p3_reduced[p_cm]), \
-                                                  it.product(lookup_p3, repeat=2))
 
-    lookup_p = it.ifilter(lambda ((w,x),(y,z)): \
-                            tuple(it.imap(operator.add, w, x)) == tuple(it.imap(operator.neg, it.imap(operator.add, y, z))), \
+    lookup_so = pd.merge(lookup_p3, lookup_p3, \
+                         left_index=True, right_index=True)
+    lookup_so.columns = pd.MultiIndex.from_tuples([('p',0), ('p',1)])
+    lookup_so[('p_{cm}',0)] = map(lambda k1, k2: tuple([sum(x) for x in zip(k1, k2)]), \
+                         lookup_so[('p',0)], lookup_so[('p',1)])
+    lookup_so = lookup_so[lookup_so[('p_{cm}',0)].isin(lookup_p_cm)]
+
+    lookup_si = pd.merge(lookup_p3, lookup_p3, \
+                         left_index=True, right_index=True)
+    lookup_si.columns = pd.MultiIndex.from_tuples([('p',0), ('p',1)])
+    lookup_si[('p_{cm}',0)] = map(lambda k1, k2: tuple([sum(x) for x in zip(k1,k2)]), \
+                         lookup_si[('p',0)], lookup_si[('p',1)])
+    lookup_si = lookup_si[lookup_si[('p_{cm}',0)].isin(lookup_p_cm)]
+
+    lookup_p = pd.merge(lookup_so, lookup_si, on=[('p_{cm}',0)], suffixes=['_{so}', '_{si}'])
+
                                                it.product(lookup_so, lookup_si))
   else:
     print 'in set_lookup_p: diagram unknown! Quantum numbers corrupted.'
-  return list(lookup_p)
+  
+  return lookup_p
 
 # TODO: currently calculates all combinations, but only g1 with g01 etc. is wanted,
 # not eg. g1 with g02
@@ -401,11 +400,16 @@ def read(lookup_cnfg, lookup_qn, diagram, T, directory, verbose=0):
       data_qn[op] = pd.DataFrame(tmp, columns=['re/im'])
     data.append(data_qn)
   data = pd.concat(data, keys=lookup_cnfg, axis=0, names=['cnfg', 'T'])
+  data.sort_index(level=[0,1], inplace=True)
 
+  if verbose >= 2:
+    print lookup_qn
   if verbose:
-    print '\tfinished reading'
+    print '\tfinished reading\n'
+  if verbose >= 3:
+    print data.mean(axis=1).apply(np.real)
 
-  return data.sort_index(level=[0,1])
+  return data
 
 def read_old(lookup_cnfg, lookup_qn, diagram, T, directory, verbose=0):
   """
@@ -478,11 +482,16 @@ def read_old(lookup_cnfg, lookup_qn, diagram, T, directory, verbose=0):
     fh.close()
   # generate data frame containing all operators for all configs
   data = pd.concat(data, keys=lookup_cnfg, axis=0, names=['cnfg', 'T'])
+  data.sort_index(level=[0,1], inplace=True)
 
+  if verbose >= 2:
+    print lookup_qn
   if verbose:
-    print '\tfinished reading'
+    print '\tfinished reading\n'
+  if verbose >= 3:
+    print data.mean(axis=1).apply(np.real)
 
-  return data.sort_index(level=[0,1])
+  return data
   ##############################################################################
 
 

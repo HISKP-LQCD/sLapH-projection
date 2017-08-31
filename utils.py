@@ -25,8 +25,8 @@ def ensure_dir(f):
   except OSError as exc:  # Python >2.5
     if exc.errno == errno.EEXIST and os.path.isdir(f):
       pass
-  else:
-    raise exc
+    else:
+      raise
 
 def read_hdf5_correlators(path, key):
   """
