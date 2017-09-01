@@ -188,10 +188,11 @@ def set_lookup_p(p_max, p_cm, diagram, skip=False):
   print lookup_p
   return lookup_p
 
-# TODO: currently calculates all combinations, but only g1 with g01 etc. is wanted,
-# not eg. g1 with g02
 # TODO: gamma_5 is hardcoded. That should be generelized in the future
 # TODO: combine set_lookup_p and set_lookup_g (and set_lookup_d) to possible set_lookup_qn?
+# TODO: Refactor set_lookup with different lists for scalar,  vector, etc.
+# TODO: Is there a more elegent method to get a product than merging 
+#       Dataframes with index set to 0? itertools? :D
 def set_lookup_g(gammas, diagram):
   """
   create lookup table for all combinations of Dirac operators that can appear 
@@ -217,26 +218,54 @@ def set_lookup_g(gammas, diagram):
   """
 
   if diagram == 'C20':
-    lookup_so = it.product([g for gamma in gammas for g in gamma[:-1]])
-    lookup_so, lookup_si = it.tee(lookup_so, 2)
+
+    lookup_so = DataFrame([g for gamma in gammas for g in gamma[:-1]])
+    lookup_so.index = np.repeat(0, len(lookup))
+    lookup_so.columns = pd.MultiIndex.from_tuples( [('\gamma', 0)] )
+
+    lookup_si = lookup_so
+
   elif diagram == 'C2+':
-    lookup_so = it.product([5])
-    lookup_so, lookup_si = it.tee(lookup_so, 2)
+
+    lookup_so = DataFrame([5])
+    lookup_so.index = np.repeat(0, len(lookup_so))
+    lookup_so.columns = pd.MultiIndex.from_tuples( [('\gamma', 0)] )
+
+    lookup_si = lookup_so
+
   elif diagram == 'C3+':
-    lookup_so = it.product([5], [5]) 
-    lookup_si = it.product([g for gamma in gammas for g in gamma[:-1]])
+
+    lookup = DataFrame([5])
+    lookup.index = np.repeat(0, len(lookup))
+
+    lookup_so = pd.merge(lookup, lookup, left_index=True, right_index=True)
+    lookup_so.columns = pd.MultiIndex.from_tuples( [('\gamma', 0), ('\gamma', 1) ] )
+
+    lookup_si = DataFrame([g for gamma in gammas for g in gamma[:-1]])
+    lookup_si.index = np.repeat(0, len(lookup_si))
+    lookup_si.columns = pd.MultiIndex.from_tuples( [('\gamma', 0)] )
+
   elif diagram.startswith('C4'):
-    lookup_so = it.product([5], [5]) 
-    lookup_so, lookup_si = it.tee(lookup_so, 2)
+
+    lookup = DataFrame([5])
+    lookup.index = np.repeat(0, len(lookup))
+
+    lookup_so = pd.merge(lookup, lookup, left_index=True, right_index=True)
+    lookup_so.columns = pd.MultiIndex.from_tuples( [('\gamma', 0), ('\gamma', 1) ] )
+
+    lookup_si = lookup_so
+
   else:
     print 'in set_lookup_g: diagram unknown! Quantum numbers corrupted.'
     return
-#  indices = [[1,2,3],[10,11,12],[13,14,15]]
-#  lookup_g2 = [list(it.product([i[j] for i in indices], repeat=2)) for j in range(len(indices[0]))]
-#  lookup_g = [item for sublist in lookup_g2 for item in sublist]
 
-  lookup_g = it.product(lookup_so, lookup_si)
-  return list(lookup_g)
+  lookup_g = pd.merge(lookup_so, lookup_si, left_index=True, right_index=True,
+                      suffixes=['_{so}', '_{si}'])
+
+  print diagram
+  print lookup_g
+
+  return lookup_g
 
 def set_lookup_qn(diagram, p_cm, p_max, gammas, skip=True, verbose=0):
   """
@@ -267,17 +296,21 @@ def set_lookup_qn(diagram, p_cm, p_max, gammas, skip=True, verbose=0):
   """
 
   lookup_p = set_lookup_p(p_max, p_cm, diagram, skip)
+  lookup_p.index = np.repeat(0, len(lookup_p))
   lookup_g = set_lookup_g(gammas, diagram)
+  lookup_g.index = np.repeat(0, len(lookup_g))
 
-  # TODO: A more elegant solution for combining lookup_p and lookup_g is welcome
-  # maybe Multiindex.from_product()
-  tmp = it.product(lookup_p, lookup_g)
-  lookup_qn = []
-  for t in tmp:
-    lookup_qn.append(t[0]+t[1])
-  lookup_qn = DataFrame(lookup_qn, columns=['p_{so}', 'p_{si}', '\gamma_{so}', '\gamma_{si}'])
+#  # TODO: A more elegant solution for combining lookup_p and lookup_g is welcome
+#  # maybe Multiindex.from_product()
+#  tmp = it.product(lookup_p, lookup_g)
+#  lookup_qn = []
+#  for t in tmp:
+#    lookup_qn.append(t[0]+t[1])
+#  lookup_qn = DataFrame(lookup_qn, columns=['p_{so}', 'p_{si}', '\gamma_{so}', '\gamma_{si}'])
 #  lookup_qn['p_{so}'] = qn['p_{so}'].apply(np.array)
 #  lookup_qn['p_{si}'] = qn['p_{si}'].apply(np.array)
+  lookup_qn = pd.merge(lookup_p, lookup_g, how='left', left_index=True, right_index=True)
+  lookup_qn.reset_index(drop=True, inplace=True)
   
   print lookup_qn
   return lookup_qn
