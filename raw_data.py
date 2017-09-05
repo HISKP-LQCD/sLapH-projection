@@ -3,6 +3,8 @@
 import h5py
 import numpy as np
 import itertools as it
+
+import functools
 import operator
 
 from pandas import Series, DataFrame
@@ -149,8 +151,6 @@ def set_lookup_p(p_max, p_cm, diagram, skip=False):
     # Restrict set of 3-momenta to those with the correct abulute value
     lookup = DataFrame.copy(lookup_p3[lookup_p3['p'].apply(_abs2) == p_cm])
 
-#    lookup_si = lookup_so.applymap(_minus)
-
     # Because of momentum conservation, source momentum and sink momentum are 
     # equal and equal to total momentum
     lookup_p = pd.concat([lookup, lookup, lookup], axis=1).reset_index(drop=True)
@@ -220,7 +220,7 @@ def set_lookup_g(gammas, diagram):
   if diagram == 'C20':
 
     lookup_so = DataFrame([g for gamma in gammas for g in gamma[:-1]])
-    lookup_so.index = np.repeat(0, len(lookup))
+    lookup_so.index = np.repeat(0, len(lookup_so))
     lookup_so.columns = pd.MultiIndex.from_tuples( [('\gamma', 0)] )
 
     lookup_si = lookup_so
@@ -300,23 +300,13 @@ def set_lookup_qn(diagram, p_cm, p_max, gammas, skip=True, verbose=0):
   lookup_g = set_lookup_g(gammas, diagram)
   lookup_g.index = np.repeat(0, len(lookup_g))
 
-#  # TODO: A more elegant solution for combining lookup_p and lookup_g is welcome
-#  # maybe Multiindex.from_product()
-#  tmp = it.product(lookup_p, lookup_g)
-#  lookup_qn = []
-#  for t in tmp:
-#    lookup_qn.append(t[0]+t[1])
-#  lookup_qn = DataFrame(lookup_qn, columns=['p_{so}', 'p_{si}', '\gamma_{so}', '\gamma_{si}'])
-#  lookup_qn['p_{so}'] = qn['p_{so}'].apply(np.array)
-#  lookup_qn['p_{si}'] = qn['p_{si}'].apply(np.array)
   lookup_qn = pd.merge(lookup_p, lookup_g, how='left', left_index=True, right_index=True)
   lookup_qn.reset_index(drop=True, inplace=True)
   
   print lookup_qn
   return lookup_qn
 
-# TODO: displacement hardcoded
-def set_groupname(diagram, p, g):
+def set_groupname(diagram, s):
   """
   Creates string with filename of the desired diagram calculated by the 
   cntrv0.1-code.
@@ -325,77 +315,53 @@ def set_groupname(diagram, p, g):
   ----------
   diagram : string, {'C20', 'C2+', 'C3+', 'C4+B', 'C4+D'}
       Diagram of wick contractions for the rho meson.
-  p : tuple (of tuple) of tuple of int
-      Tuple of momentum (or tuple of tuple of momenta in case of two-meson 
-      operators) at source and sink. Momenta are given as tuple of int. 
-  g : tuple (of tuple) of int
-      Tuple of Dirac operators (or tuple of tuple of Dirac operators) at source
-      and sink. Dirac operators are referred toby their id in the cntrv0.1-code.
-      For every possible operators combination, there is one list entry.
+  s : pd.Series
+      Contains momenta and gamma structure the groupnames shall be built with.
+      Index is given by Multiindex where the first level is 'p_{so}', 'p_{si}', 
+      '\gamma_{so}' or '\gamma_{si}' and the second level id of the particle
+      Dirac operators are referred to by their id in the sLapH-contractions
+      code. 
 
   Returns
   -------
   groupname : string
       Filename of contracted perambulators for the given parameters
-  """
-  if diagram.startswith('C2'):
-    groupname = diagram + '_uu_p%1i%1i%1i.d000.g%i' % \
-                                             (p[0][0], p[0][1], p[0][2], g[0][0]) \
-                    + '_p%1i%1i%1i.d000.g%i' % (p[1][0], p[1][1], p[1][2], g[1][0])
-  elif diagram.startswith('C3'):
-    groupname = diagram + '_uuu_p%1i%1i%1i.d000.g5' % \
-                                                   (p[0][0][0], p[0][0][1], p[0][0][2]) \
-                        + '_p%1i%1i%1i.d000.g%1i' % \
-                                                (p[1][0], p[1][1], p[1][2], g[1][0]) \
-                        + '_p%1i%1i%1i.d000.g5' % (p[0][1][0], p[0][1][1], p[0][1][2])
-  elif diagram == 'C4+D' or diagram == 'C4+C':
-    groupname = diagram + '_uuuu_p%1i%1i%1i.d000.g5' % (p[0][0][0], p[0][0][1], p[0][0][2]) + \
-             '_p%1i%1i%1i.d000.g5' % (p[1][0][0], p[1][0][1], p[1][0][2]) + \
-             '_p%1i%1i%1i.d000.g5' % (p[0][1][0], p[0][1][1], p[0][1][2]) + \
-             '_p%1i%1i%1i.d000.g5' % (p[1][1][0], p[1][1][1], p[1][1][2])
-  elif diagram == 'C4+B':
-    groupname = diagram + '_uuuu_p%1i%1i%1i.d000.g5' % (p[0][0][0], p[0][0][1], p[0][0][2]) + \
-             '_p%1i%1i%1i.d000.g5' % (p[1][0][0], p[1][0][1], p[1][0][2]) + \
-             '_p%1i%1i%1i.d000.g5' % (p[1][1][0], p[1][1][1], p[1][1][2]) + \
-             '_p%1i%1i%1i.d000.g5' % (p[0][1][0], p[0][1][1], p[0][1][2]) 
 
+  Function takes a series in order to be used with DataFrame.apply()
+  """
+ 
+  p_so = s['p_{so}']
+  g_so = s['\gamma_{so}']
+
+  p_si = s['p_{si}'].apply(_minus)
+  g_si = s['\gamma_{si}']
+
+  if diagram.startswith('C2'):
+    groupname = diagram \
+                  + '_uu_p%1i%1i%1i.d000.g%i' % ( p_so[0] + (g_so[0],) ) \
+                  +    '_p%1i%1i%1i.d000.g%i' % ( p_si[0] + (g_si[0],) ) 
+  elif diagram.startswith('C3'):
+    groupname = diagram \
+                  + '_uuu_p%1i%1i%1i.d000.g%1i' % ( p_so[0] + (g_so[0],) ) \
+                  +     '_p%1i%1i%1i.d000.g%1i' % ( p_si[0] + (g_si[0],) ) \
+                  +     '_p%1i%1i%1i.d000.g%1i' % ( p_so[1] + (g_so[1],) )
+  elif diagram == 'C4+D' or diagram == 'C4+C':
+    groupname = diagram \
+                  + '_uuuu_p%1i%1i%1i.d000.g%1i' % ( p_so[0] + (g_so[0],) ) \
+                  +      '_p%1i%1i%1i.d000.g%1i' % ( p_si[0] + (g_si[0],) ) \
+                  +      '_p%1i%1i%1i.d000.g%1i' % ( p_so[1] + (g_so[1],) ) \
+                  +      '_p%1i%1i%1i.d000.g%1i' % ( p_si[1] + (g_si[1],) )
+  elif diagram == 'C4+B':
+    groupname = diagram \
+                  + '_uuuu_p%1i%1i%1i.d000.g%1i' % ( p_so[0] + (g_so[0],) ) \
+                  +      '_p%1i%1i%1i.d000.g%1i' % ( p_si[0] + (g_si[0],) ) \
+                  +      '_p%1i%1i%1i.d000.g%1i' % ( p_si[1] + (g_si[1],) ) \
+                  +      '_p%1i%1i%1i.d000.g%1i' % ( p_so[1] + (g_so[1],) ) 
   else:
     print 'in set_groupname: diagram unknown! Quantum numbers corrupted.'
     return
 
   return groupname
-
-def multiply_trtr_diagram(data):
-  """
-  Multiply factors of the tr()*tr() like diagram C4+D
-
-  Parameters
-  ----------
-  data : pd.DataFrame
-      A dataframe with rows cnfg x T x {rere, reim, imre, imim}. 
-
-  Returns
-  -------
-  data : pd.DataFrame
-      A dataframe with rows cnfg x T x {re, im} appropriately multiplied out.
-
-  Notes
-  -----
-  C4+D is the diagram factorizing into a product of two traces. The imaginary 
-  part of the individual traces is 0 in the isosping limit. To suppress noise, 
-  The real part of C4+D are calculated as product of real parts of the single 
-  traces:
-  (a+ib)*(c+id) ~= (ac) +i(bc+ad)
-  because b, d are noise
-  """
-
-  names = data.index.names
-  data = pd.concat([ data.xs('rere', level=2), \
-                     data.xs('reim', level=2) + data.xs('imre', level=2)], \
-                   keys=['re', 'im']).reorder_levels([1,2,0]).\
-                                                         sort_index(level=[0,1])
-  data.index.names = names
-  return data
 
 ################################################################################
 # reading configurations
@@ -425,8 +391,11 @@ def read(lookup_cnfg, lookup_qn, diagram, T, directory, verbose=0):
       the row numbers of `lookup_qn` 
   """
 
-  data = []
   comb = True if diagram == 'C4+D' else False
+
+  groupname = lookup_qn.apply(functools.partial(set_groupname, diagram), axis=1)
+
+  data = []
 
   for cnfg in lookup_cnfg:
     # filename and path
@@ -437,42 +406,37 @@ def read(lookup_cnfg, lookup_qn, diagram, T, directory, verbose=0):
       print 'file %s not found' % filename
       raise
 
-    # to achieve hirarchical indexing for quantum numbers build DataFrame for
-    # each loop seperately
-    # TODO: is it necessary to build that completely or can that be 
-    # constructed by successively storing each operator with pd.HDFStore()?
-    data_qn = DataFrame()
-#    print DataFrame(lookup_p)
-#    print DataFrame(lookup_g)
+    data_fh = DataFrame()
 
     for op in lookup_qn.index:
-      p = lookup_qn.ix[op, ['p_{so}', 'p_{si}']]
-      g = lookup_qn.ix[op, ['\gamma_{so}', '\gamma_{si}']]
-      groupname = set_groupname(diagram, p, g)
 
       # read data from file as numpy array and interpret as complex
       # numbers for easier treatment
       try:
-        tmp = np.asarray(fh[groupname]).view(complex)
+        tmp = np.asarray(fh[groupname[op]]).view(complex)
       except KeyError:
         print("could not read %s for config %d" % (groupname, cnfg))
         continue
-
-      # in case diagram is C4+D perform last mutliplication of factorizing
-      # traces
-      # the file contains 4 numbers per time slice: ReRe, ReIm, ImRe, and ImIm,
-      # here combined 2 complex number
+  
+      # C4+D is the diagram factorizing into a product of two traces. The imaginary 
+      # part of the individual traces is 0 in the isosping limit. To suppress noise, 
+      # The real part of C4+D are calculated as product of real parts of the single 
+      # traces:
+      # (a+ib)*(c+id) ~= (ac) +i(bc+ad)
+      # because b, d are noise
       if comb:
         # reshaping so we can extract the data easier
         tmp = tmp.reshape((-1,2))
         # extracting right combination, assuming ImIm contains only noise
         dtmp = 1.j * (tmp[:,1].real + tmp[:,0].imag) + tmp[:,0].real
         tmp = dtmp.copy()
-
+  
       # save data into data frame
-      data_qn[op] = pd.DataFrame(tmp, columns=['re/im'])
-    data.append(data_qn)
+      data_fh[op] = pd.Series(tmp)
+    data.append(data_fh)
   data = pd.concat(data, keys=lookup_cnfg, axis=0, names=['cnfg', 'T'])
+  
+ 
   data.sort_index(level=[0,1], inplace=True)
 
   if verbose >= 2:
