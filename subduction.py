@@ -231,45 +231,74 @@ def get_lattice_basis(p_cm, p_cm_vecs, verbose=True, j=1):
         indices
   """
 
-  #prefs = [[0.,0.,0.], [0.,0.,1.], [0.,1.,1.], [1.,1.,1.]]
-
-
-  # tells clebsch_gordan to use cartesian basis
-  S = 1./np.sqrt(2.)
-  U3 = np.asarray([[0,0,-1.],[1.j,0,0],[0,1,0]])
-  U2 = np.asarray([[S,S],[1.j*S,-1.j*S]])
+#  def normalize_basis():
+    #TODO: Write a function to calculate cross product if basis is not 
+    #      complete and orthonormalize basis states
 
   lattice_basis = DataFrame()
 
   for p_cm_vec in p_cm_vecs:
-    # initialize groups
-#    try:
-#        groups = group.TOh.read(p2=p_cm)
-#        if not np.allclose(groups.U3, U3) or not np.allclose(groups.U2, U2):
-#            raise IOError("redo computation")
-#    except IOError:
-#        groups = group.TOh(pref=p_cm_vec, irreps=True, U3=U3, U2=U2)
-    print 'p_cm_vec', list(p_cm_vec)
-    groups = group.TOh(pref=p_cm_vec, irreps=True, U3=U3, U2=U2)
-#        groups.save()
 
-    # calc coefficients
-    basis = group.TOhBasis(groups,jmax=j+1)
+    filename = 'lattice-basis_maple/lattice-basis_J{0}_P{1}_Msum.dataframe'.format(j, "".join([str(p) for p in p_cm_vec]))
+    if not os.path.exists(filename):
+      continue
+    df = pd.read_csv(filename, delim_whitespace=True, dtype=str) 
 
-    df = basis.to_pandas(j)
-
-    # munging to have a consistent format
-    df.rename(columns={'row' : '\mu', 'coeff' : 'cg-coefficient'}, inplace=True)
+    df = pd.merge(df.ix[:,2:].stack().reset_index(level=1), df.ix[:,:2], left_index=True, right_index=True)
+    df.columns = ['M', 'cg-coefficient', 'Irrep', '\mu']
     df['cg-coefficient'] = df['cg-coefficient'].apply(aeval)
-    df['p'] = df['p'].apply(tuple)
+    df['M'] = df['M'].apply(int)
+    df['p'] = [tuple(p_cm_vec)] * len(df)
+    df['J'] = j
+    df['mult'] = 1
 
     if verbose:
       print 'lattice_basis for {}'.format(p_cm_vec)
-      print df
+      print df, '\n'
 
     lattice_basis = pd.concat([lattice_basis, df], ignore_index=True)
 
   return lattice_basis
+
+#  #prefs = [[0.,0.,0.], [0.,0.,1.], [0.,1.,1.], [1.,1.,1.]]
+#
+#
+#  # tells clebsch_gordan to use cartesian basis
+#  S = 1./np.sqrt(2.)
+#  U3 = np.asarray([[0,0,-1.],[1.j,0,0],[0,1,0]])
+#  U2 = np.asarray([[S,S],[1.j*S,-1.j*S]])
+#
+#  lattice_basis = DataFrame()
+#
+#  for p_cm_vec in p_cm_vecs:
+#    # initialize groups
+##    try:
+##        groups = group.TOh.read(p2=p_cm)
+##        if not np.allclose(groups.U3, U3) or not np.allclose(groups.U2, U2):
+##            raise IOError("redo computation")
+##    except IOError:
+##        groups = group.TOh(pref=p_cm_vec, irreps=True, U3=U3, U2=U2)
+#    print 'p_cm_vec', list(p_cm_vec)
+#    groups = group.TOh(pref=p_cm_vec, irreps=True, U3=U3, U2=U2)
+##        groups.save()
+#
+#    # calc coefficients
+#    basis = group.TOhBasis(groups,jmax=j+1)
+#
+#    df = basis.to_pandas(j)
+#
+#    # munging to have a consistent format
+#    df.rename(columns={'row' : '\mu', 'coeff' : 'cg-coefficient'}, inplace=True)
+#    df['cg-coefficient'] = df['cg-coefficient'].apply(aeval)
+#    df['p'] = df['p'].apply(tuple)
+#
+#    if verbose:
+#      print 'lattice_basis for {}'.format(p_cm_vec)
+#      print df
+#
+#    lattice_basis = pd.concat([lattice_basis, df], ignore_index=True)
+#
+#  return lattice_basis
 
 # TODO: properly read that from infile and pass to get_clebsch_gordan
 # TODO: actually use names to restrict basis_table to what was in the infile
@@ -437,6 +466,7 @@ def get_coefficients(diagram, gammas, p_cm, irrep, basis, continuum_basis, \
                                                    set_index('\mu').sort_index()   
   cg_table_si = pd.merge(cg_table_si, continuum_basis_table.reset_index()).\
                                                    set_index('\mu').sort_index()  
+
   # Munging the result: Delete rows with coefficient 0, combine coefficients 
   # and clean columns no longer needed.
   cg_table_so = cg_table_so[cg_table_so['cg-coefficient'] != 0]
