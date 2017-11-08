@@ -4,20 +4,12 @@ import h5py
 import numpy as np
 import itertools as it
 
+from utils import _scalar_mul, _abs2, _minus
+
 import functools
-import operator
 
-from pandas import Series, DataFrame
 import pandas as pd
-
-def _scalar_mul(x, y):
-  return sum(it.imap(operator.mul, x, y))
-
-def _abs2(x):
-  return _scalar_mul(x, x)
-
-def _minus(x):
-  return tuple(-np.array(x))
+from pandas import Series, DataFrame
 
 # TODO: nb_cnfg is spurious, can just use len(lookup_cnfg)
 def set_lookup_cnfg(sta_cnfg, end_cnfg, del_cnfg, missing_configs, verbose=0):
@@ -85,10 +77,10 @@ def set_lookup_p_for_two_particles(lookup_p3, p_max, p_cm, skip=False):
                        left_index=True, right_index=True)
   lookup.columns = pd.MultiIndex.from_tuples([('p',0), ('p',1)])
   # Total momentum is equal to the sum of the particle's momenta
-  lookup[('p_{cm}',0)] = map(lambda k1, k2: tuple([sum(x) for x in zip(k1,k2)]), \
+  lookup['p_{cm}'] = map(lambda k1, k2: tuple([sum(x) for x in zip(k1,k2)]), \
                                 lookup[('p',0)], lookup[('p',1)])
   # Restrict set of 3-momenta to those with the correct abulute value
-  lookup = lookup[lookup[('p_{cm}',0)].apply(_abs2) == p_cm]
+  lookup = lookup[lookup['p_{cm}'].apply(_abs2) == p_cm]
   # Restrict set of 3-momenta to those where |p1|+|p2| <= p_max
   lookup = lookup[lookup['p'].applymap(_abs2).sum(axis=1) <= p_max]
   # For rho analysis, explicitely exclude S-wave:
@@ -128,8 +120,12 @@ def set_lookup_p(p_max, p_cm, diagram, skip=False):
       momenta respecting momentum conservation and the cutoff given by p_max.
   """
 
-  # for the center-of-mass frame p_max was restricted to (1,1,0)
+  # for moving frames, sum of individual component's absolute value (i.e.
+  # total kindetic energy) might be larger than center of mass absolute 
+  # value. Modify the cutoff accordingly.
+  # p_cm_max = np.asarray([4,5,6,7,4], dtype=int)[p_cm]
   if p_cm == 0:
+    # for the center-of-mass frame p_max was restricted to (1,1,0)
     p_max = 2
   elif p_cm == 1:
     p_max = 5
@@ -154,7 +150,8 @@ def set_lookup_p(p_max, p_cm, diagram, skip=False):
     # Because of momentum conservation, source momentum and sink momentum are 
     # equal and equal to total momentum
     lookup_p = pd.concat([lookup, lookup, lookup], axis=1).reset_index(drop=True)
-    lookup_p.columns = pd.MultiIndex.from_tuples([('p_{so}',0), ('p_{cm}',0), ('p_{si}',0)])
+#    lookup_p.columns = pd.MultiIndex.from_tuples([('p_{so}',0), ('p_{cm}',0), ('p_{si}',0)])
+    lookup_p.columns = ['p_{so}', 'p_{cm}', 'p_{si}']
 
   elif diagram.startswith('C3'):
 
@@ -162,13 +159,15 @@ def set_lookup_p(p_max, p_cm, diagram, skip=False):
 
     # Restrict set of 3-momenta to those with the correct abulute value
     lookup_si = DataFrame.copy(lookup_p3[lookup_p3['p'].apply(_abs2) == p_cm])
-    lookup_si.columns = pd.MultiIndex.from_tuples([('p',0)])
+#    lookup_si.columns = pd.MultiIndex.from_tuples([('p',0)])
+    lookup_si.columns = ['p']
     # Total momentum is equal to the particle's momentum
-    lookup_si[('p_{cm}',0)] = lookup_si[('p',0)]
+#    lookup_si['p_{cm}'] = lookup_si[('p',0)]
+    lookup_si['p_{cm}'] = lookup_si['p']
 
     # DataFrame with all combinations of source and sink with same total 
     # momentum
-    lookup_p = pd.merge(lookup_so, lookup_si, on=[('p_{cm}',0)], \
+    lookup_p = pd.merge(lookup_so, lookup_si, on=['p_{cm}'], \
                         suffixes=['_{so}', '_{si}'])
 
   elif diagram.startswith('C4'):
@@ -179,7 +178,7 @@ def set_lookup_p(p_max, p_cm, diagram, skip=False):
 
     # DataFrame with all combinations of source and sink with same total 
     # momentum
-    lookup_p = pd.merge(lookup_so, lookup_si, on=[('p_{cm}',0)], \
+    lookup_p = pd.merge(lookup_so, lookup_si, on=['p_{cm}'], \
                         suffixes=['_{so}', '_{si}'])
 
   else:
@@ -221,7 +220,7 @@ def set_lookup_g(gammas, diagram):
 
     lookup_so = DataFrame([g for gamma in gammas for g in gamma[:-1]])
     lookup_so.index = np.repeat(0, len(lookup_so))
-    lookup_so.columns = pd.MultiIndex.from_tuples( [('\gamma', 0)] )
+    lookup_so.columns = ['\gamma']
 
     lookup_si = lookup_so
 
@@ -229,7 +228,7 @@ def set_lookup_g(gammas, diagram):
 
     lookup_so = DataFrame([5])
     lookup_so.index = np.repeat(0, len(lookup_so))
-    lookup_so.columns = pd.MultiIndex.from_tuples( [('\gamma', 0)] )
+    lookup_so.columns = ['\gamma']
 
     lookup_si = lookup_so
 
@@ -243,7 +242,7 @@ def set_lookup_g(gammas, diagram):
 
     lookup_si = DataFrame([g for gamma in gammas for g in gamma[:-1]])
     lookup_si.index = np.repeat(0, len(lookup_si))
-    lookup_si.columns = pd.MultiIndex.from_tuples( [('\gamma', 0)] )
+    lookup_si.columns = ['\gamma']
 
   elif diagram.startswith('C4'):
 
@@ -267,7 +266,7 @@ def set_lookup_g(gammas, diagram):
 
   return lookup_g
 
-def set_lookup_qn(diagram, p_cm, p_max, gammas, skip=True, verbose=0):
+def set_lookup_qn(diagram, p_cm, p_max, gammas, process='pipi', verbose=0):
   """
   Calculates a data frame with physical quantum numbers
 
@@ -294,6 +293,8 @@ def set_lookup_qn(diagram, p_cm, p_max, gammas, skip=True, verbose=0):
   Depending on the number of quark lines there can be tuples of quantum numbers
   at the same lattice site
   """
+
+  skip = True if process == 'rho' else False
 
   lookup_p = set_lookup_p(p_max, p_cm, diagram, skip)
   lookup_p.index = np.repeat(0, len(lookup_p))
@@ -333,17 +334,17 @@ def set_groupname(diagram, s):
   p_so = s['p_{so}']
   g_so = s['\gamma_{so}']
 
-  p_si = s['p_{si}'].apply(_minus)
+  p_si = _minus(s['p_{si}'])#.apply(_minus)
   g_si = s['\gamma_{si}']
 
   if diagram.startswith('C2'):
     groupname = diagram \
-                  + '_uu_p%1i%1i%1i.d000.g%i' % ( p_so[0] + (g_so[0],) ) \
-                  +    '_p%1i%1i%1i.d000.g%i' % ( p_si[0] + (g_si[0],) ) 
+                  + '_uu_p%1i%1i%1i.d000.g%i' % ( p_so + (g_so,) ) \
+                  +    '_p%1i%1i%1i.d000.g%i' % ( p_si + (g_si,) ) 
   elif diagram.startswith('C3'):
     groupname = diagram \
                   + '_uuu_p%1i%1i%1i.d000.g%1i' % ( p_so[0] + (g_so[0],) ) \
-                  +     '_p%1i%1i%1i.d000.g%1i' % ( p_si[0] + (g_si[0],) ) \
+                  +     '_p%1i%1i%1i.d000.g%1i' % ( p_si + (g_si,) ) \
                   +     '_p%1i%1i%1i.d000.g%1i' % ( p_so[1] + (g_so[1],) )
   elif diagram == 'C4+D' or diagram == 'C4+C':
     groupname = diagram \

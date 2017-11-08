@@ -10,6 +10,9 @@ import pandas as pd
 from pandas import Series, DataFrame
 import gmpy
 
+import itertools as it
+import operator
+
 import matplotlib
 matplotlib.use('Agg') 
 from matplotlib.backends.backend_pdf import PdfPages
@@ -27,6 +30,20 @@ def ensure_dir(f):
       pass
     else:
       raise
+
+################################################################################
+# Convenience function to work with three-momenta in pd.DataFrames
+def _scalar_mul(x, y):
+  return sum(it.imap(operator.mul, x, y))
+
+def _abs2(x):
+  return _scalar_mul(x, x)
+
+def _minus(x):
+  return tuple(-np.array(x))
+
+################################################################################
+# IO routines
 
 def read_hdf5_correlators(path, key):
   """
@@ -178,6 +195,9 @@ def write_ascii_gevp(path, name, data, verbose):
     # TODO: with to_csv this becomes a onliner but Liumings head format will 
     # be annoying. Also the loop can probably run over data.iterrows()
     write_ascii_correlators(path, filename, data.ix[counter], verbose)
+
+################################################################################
+# Convenience function to create pdf files
 
 def create_pdfplot(path, filename):
   """

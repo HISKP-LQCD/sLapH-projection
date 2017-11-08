@@ -8,6 +8,8 @@ import cmath
 import functools
 import os
 
+from utils import _scalar_mul, _abs2, _minus
+
 import operator
 import collections
 
@@ -205,7 +207,7 @@ def return_cg(p_cm, irrep):
 
   return df
 
-def get_lattice_basis(p_cm, verbose=True, j=1):
+def get_lattice_basis(p_cm, p_cm_vecs, verbose=True, j=1):
   """
   Calculate basis for irreducible representations of appropriate little group 
   of rotational symmetry for lattice in a moving reference frame with 
@@ -213,10 +215,12 @@ def get_lattice_basis(p_cm, verbose=True, j=1):
 
   Parameters
   ----------
-    p_cm : int, {0,1,2,3,4}
+    p_cm : int {0,1,2,3}
+        Absolute value of the center of mass momentum of the lattice
+
+    p_cm_vecs : list
         Center of mass momentum of the lattice. Used to specify the appropriate
-        little group of rotational symmetry. Absolute value of an integer 
-        3-vector
+        little group of rotational symmetry. Contains integer 3-vectors
 
   Returns
   -------
@@ -227,43 +231,45 @@ def get_lattice_basis(p_cm, verbose=True, j=1):
         indices
   """
 
-  prefs = [[0.,0.,0.], [0.,0.,1.], [0.,1.,1.], [1.,1.,1.]]
+  #prefs = [[0.,0.,0.], [0.,0.,1.], [0.,1.,1.], [1.,1.,1.]]
 
-  # initialize groups
-  S = 1./np.sqrt(2.)
 
   # tells clebsch_gordan to use cartesian basis
+  S = 1./np.sqrt(2.)
   U3 = np.asarray([[0,0,-1.],[1.j,0,0],[0,1,0]])
   U2 = np.asarray([[S,S],[1.j*S,-1.j*S]])
-#  U3 = np.identity(3)
-#  U2 = np.identity(2)
 
-  try:
-      groups = group.TOh.read(p2=p_cm)
-      if not np.allclose(groups.U3, U3) or not np.allclose(groups.U2, U2):
-          raise IOError("redo computation")
-  except IOError:
-      groups = group.TOh(pref=prefs[p_cm], irreps=True, U3=U3, U2=U2)
-#      groups.save()
+  lattice_basis = DataFrame()
 
-  # calc coefficients
-  basis = group.TOhBasis(groups,jmax=j+1)
-  #basis.print_overview()
-  # Isospin 1 hardcoded here
-  df = basis.to_pandas(j)
+  for p_cm_vec in p_cm_vecs:
+    # initialize groups
+#    try:
+#        groups = group.TOh.read(p2=p_cm)
+#        if not np.allclose(groups.U3, U3) or not np.allclose(groups.U2, U2):
+#            raise IOError("redo computation")
+#    except IOError:
+#        groups = group.TOh(pref=p_cm_vec, irreps=True, U3=U3, U2=U2)
+    print 'p_cm_vec', list(p_cm_vec)
+    groups = group.TOh(pref=p_cm_vec, irreps=True, U3=U3, U2=U2)
+#        groups.save()
 
-  # munging to have a consistent format
-  df.rename(columns={'row' : '\mu', 'coeff' : 'cg-coefficient'}, inplace=True)
-  df['cg-coefficient'] = df['cg-coefficient'].apply(aeval)
-  def to_tuple(_l, sign=+1):
-      return tuple([sign*int(l).real for l in _l])
-  df['p'] = df['p'].apply(to_tuple)
+    # calc coefficients
+    basis = group.TOhBasis(groups,jmax=j+1)
 
-  if verbose:
-    print 'lattice_basis'
-    print df
+    df = basis.to_pandas(j)
 
-  return df
+    # munging to have a consistent format
+    df.rename(columns={'row' : '\mu', 'coeff' : 'cg-coefficient'}, inplace=True)
+    df['cg-coefficient'] = df['cg-coefficient'].apply(aeval)
+    df['p'] = df['p'].apply(tuple)
+
+    if verbose:
+      print 'lattice_basis for {}'.format(p_cm_vec)
+      print df
+
+    lattice_basis = pd.concat([lattice_basis, df], ignore_index=True)
+
+  return lattice_basis
 
 # TODO: properly read that from infile and pass to get_clebsch_gordan
 # TODO: actually use names to restrict basis_table to what was in the infile
@@ -300,6 +306,7 @@ def get_continuum_basis(names, basis_type, verbose):
                         [0, 1, 0], 
                         [0, 0, 1]]
   elif basis_type == "cyclic":
+    # Standard ladder operators; default choice
     ladder_operators = [[1./sqrt2, -1j/sqrt2, 0], 
                         [0,         0,        1], 
                         [1./sqrt2, +1j/sqrt2, 0]]
@@ -331,13 +338,13 @@ def get_continuum_basis(names, basis_type, verbose):
   basis_table = DataFrame(basis, \
             index=pd.MultiIndex.from_product( \
                 [["\gamma_{i}  "], [1], [-1,0,1], \
-                                     [(1,), (2,), (3,)]], \
+                                     [1, 2, 3]], \
                 names=["gevp", 'J', 'M', '\gamma']), \
             columns=['subduction-coefficient'], dtype=complex).sort_index()
   basis_table = pd.concat([basis_table, DataFrame([1], \
             index=pd.MultiIndex.from_product( \
                 [["\gamma_{5}  "], [0], [0], \
-                                     [(5,)]], \
+                                     [5]], \
                 names=["gevp", 'J', 'M', '\gamma']), \
             columns=['subduction-coefficient'], dtype=complex).sort_index()])
   # conatenate basis chosen for two-pion operator. Trivial, because just two
@@ -402,20 +409,20 @@ def get_coefficients(diagram, gammas, p_cm, irrep, basis, continuum_basis, \
   if diagram.startswith('C2'):
     cg_table_so = basis
     cg_table_si = basis.copy()
-    cg_table_si['p'] = ((-1)*cg_table_si['p'].apply(np.array)).apply(tuple)
+#    cg_table_si['p'] = ((-1)*cg_table_si['p'].apply(np.array)).apply(tuple)
   elif diagram.startswith('C3'):
     # get factors for the desired irreps
     cg_one_operator = basis
     cg_two_operators = return_cg(p_cm, irrep)
     # for 3pt function we have pipi operator at source and rho operator at sink
     cg_table_so, cg_table_si = cg_two_operators, cg_one_operator
-    cg_table_si['p'] = (cg_table_si['p'].apply(np.array)*(-1)).apply(tuple)
+#    cg_table_si['p'] = (cg_table_si['p'].apply(np.array)*(-1)).apply(tuple)
   elif diagram.startswith('C4'):
     cg_table_so = return_cg(p_cm, irrep)
     cg_table_si = cg_table_so.copy()
-    def to_tuple(list):
-      return tuple([tuple(l) for l in list])
-    cg_table_si['p'] = (cg_table_si['p'].apply(np.array)*(-1)).apply(to_tuple)
+#    def to_tuple(list):
+#      return tuple([tuple(l) for l in list])
+#    cg_table_si['p'] = (cg_table_si['p'].apply(np.array)*(-1)).apply(to_tuple)
 
   else:
     print 'in get_coefficients: diagram unknown! Quantum numbers corrupted.'
@@ -561,11 +568,12 @@ def ensembles(data, qn_irrep):
   del subduced['index']
   # construct hierarchical multiindex to be able to sum over momenta, average
   # over rows and reference gevp elements
-  subduced = subduced.set_index([ 'Irrep', 'gevp_row', 'gevp_col', '\mu', \
+  subduced = subduced.set_index([ 'Irrep', 'gevp_row', 'gevp_col', 'p_{cm}', '\mu', \
                       'p_{so}', '\gamma_{so}', 'p_{si}', '\gamma_{si}', 'mult_{so}',
                       'mult_{si}'])
-  subduced = subduced.ix[:,2:].multiply(subduced['coefficient_{so}']*
-                               np.conj(subduced['coefficient_{si}']), axis=0)
+  subduced = subduced[subduced.columns.difference(['coefficient_{so}','coefficient_{si}'])].\
+              multiply(subduced['coefficient_{so}']*\
+                       np.conj(subduced['coefficient_{si}']), axis=0)
 
   subduced.columns=pd.MultiIndex.from_tuples(subduced.columns, \
                                                          names=('cnfg', 'T'))

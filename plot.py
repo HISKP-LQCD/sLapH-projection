@@ -7,6 +7,8 @@ import numpy as np
 import pandas as pd
 from pandas import Series, DataFrame
 
+import itertools as it
+
 import utils
 
 # TODO: Symmetrization and Antisymmetrization. Take negative eigenvalues under 
@@ -78,7 +80,7 @@ def mean_and_std(df, bootstrapsize):
 
   return pd.concat([mean, std], axis=1, keys=['mean', 'std'])
 
-def plot_gevp_el(data, label_template):
+def plot_gevp_el(data, label_template, multiindex=False):
   """
   Plot all rows of given pd.DataFrame into a single page as seperate graphs
 
@@ -114,7 +116,10 @@ def plot_gevp_el(data, label_template):
       cmap_brg = plt.cm.brg(np.asarray(range(len(rows))) * 256/(len(rows)-1))
     shift = 2./5/len(rows)
 
-    label = label_template % index
+    if multiindex:
+      label = label_template.format(*index)
+    else:
+      label = label_template.format(index)
 
     # plot
     plt.errorbar(T+shift*counter, mean, std, 
@@ -189,9 +194,14 @@ def sep_rows_sep_mom(data, diagram, bootstrapsize, pdfplot, logscale=False, \
 #  data = data.apply(np.real)
   # sum over all gamma structures to get the full Dirac operator transforming 
   # like a row of the desired irrep
-  data = data.sum(level=[0,1,2,3,5])
+  data = data.sum(level=[0,1,2,3,4,6])
+  # sum over equivalent momenta
+  data = data.sum(level=[0,1,2,3])
 
   data = mean_and_std(data, bootstrapsize)
+
+#  print data.index.map(str, level='p_{cm}')
+#  data.index.get_level_values('p_{cm}') = data.index.get_level_values('p_{cm}').map(str)
 
   # create list of gevp elements to loop over
   gevp_index = list(set([(g[0],g[1]) for g in data.index.values]))
@@ -212,7 +222,7 @@ def sep_rows_sep_mom(data, diagram, bootstrapsize, pdfplot, logscale=False, \
     gevp_el = data.xs(gevp_el_name, level=[0,1])
 
     # plot
-    plot_gevp_el(gevp_el, r'$\mu = %i, p_{so} = %s - p_{si} = %s$')
+    plot_gevp_el(gevp_el, r'$p_{{cm}} = {}, \mu = {}$', multiindex=True)
 
     # clean up for next plot
     plt.legend(numpoints=1, loc='best', fontsize=6)
@@ -259,9 +269,11 @@ def sep_rows_sum_mom(data, diagram, bootstrapsize, pdfplot, logscale=False, \
   data = data.apply(np.real)
   # sum over all gamma structures to get the full Dirac operator transforming 
   # like a row of the desired irrep
-  data = data.sum(level=[0,1,2,3,5])
+  data = data.sum(level=[0,1,2,3,4,6])
   # sum over equivalent momenta
-  data = data.sum(level=[0,1,2])
+  data = data.sum(level=[0,1,2,3])
+  # mean over equivalent cm-momenta
+  data = data.mean(level=[0,1,3])
 
   data = mean_and_std(data, bootstrapsize)
 
@@ -284,7 +296,7 @@ def sep_rows_sum_mom(data, diagram, bootstrapsize, pdfplot, logscale=False, \
     gevp_el = data.xs(gevp_el_name, level=[0,1])
 
     # plot
-    plot_gevp_el(gevp_el, r'$\mu = %i$')
+    plot_gevp_el(gevp_el, r'$\mu = {}$')
 
     # clean up for next plot
     plt.legend(numpoints=1, loc='best', fontsize=6)
@@ -331,9 +343,11 @@ def avg_rows_sep_mom(data, diagram, bootstrapsize, pdfplot, logscale=False, \
   data = data.apply(np.real)
   # sum over all gamma structures to get the full Dirac operator transforming 
   # like a row of the desired irrep
-  data = data.sum(level=[0,1,2,3,5])
-  # average over rows
-  data = data.mean(level=[0,1,3,4])
+  data = data.sum(level=[0,1,2,3,4,6])
+  # sum over equivalent momenta
+  data = data.sum(level=[0,1,2,3])
+  # mean over equivalent rows
+  data = data.mean(level=[0,1,2])
  
   data = mean_and_std(data, bootstrapsize)
 
@@ -355,7 +369,7 @@ def avg_rows_sep_mom(data, diagram, bootstrapsize, pdfplot, logscale=False, \
     gevp_el = data.xs(gevp_el_name, level=[0,1])
 
     # plot
-    plot_gevp_el(gevp_el, r'$p_{so} = %s - p_{si} = %s$')
+    plot_gevp_el(gevp_el, r'$p_{{cm}} = {}$')
 
     # clean up for next plot
     plt.legend(numpoints=1, loc='best', fontsize=6)

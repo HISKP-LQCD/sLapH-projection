@@ -15,7 +15,7 @@ def get_parameters():
   # TODO: Only allow certain options, specify standard behavior, etc.
   parser.add_argument("-b", "--basis", choices=['cartesian', 'cyclic', \
                         'cyclic-i', 'cyclic-christian'], \
-                        default='cyclic-christian',
+                        default='cyclic',
                         help="continuum basis to be used in the program")
   
   args = parser.parse_args()
