@@ -46,6 +46,36 @@ def set_lookup_cnfg(sta_cnfg, end_cnfg, del_cnfg, missing_configs, verbose=0):
 
   return lookup_cnfg
 
+def set_lookup_p_for_one_particle(lookup_p3, p_cm):
+  """
+  Create lookup table for all 3-momenta p_0, used for a single particle
+
+  Parameters
+  ----------
+  lookup_p3 : pd.DataFrame
+      List of all 3-vectors a single particle could have
+  p_cm : int
+      Absolute value of sum of all momenta at source or sink. Must be equal at
+      both due to momentum conservation
+
+  Returns
+  -------
+  pd.DataFrame
+      DataFrame that contains one column for the particle and a row for every 
+      possible combination of momenta respecting momentum conservation and the 
+      cutoff given. Also contains one column for the total momentum to merge on.
+  """
+
+  # Restrict set of 3-momenta to those with the correct abulute value
+  # Set multiindex to allow combination with two-particle operators
+  lookup = DataFrame.copy(lookup_p3[lookup_p3['p'].apply(_abs2) == p_cm])
+  lookup.columns = pd.MultiIndex.from_tuples([('p',0)])
+
+  # Total momentum is equal to the particle's momentum
+  lookup['p_{cm}'] = lookup[('p',0)]
+
+  return lookup
+
 def set_lookup_p_for_two_particles(lookup_p3, p_max, p_cm, skip=False):
   """
   Create lookup table for all possible 3-momenta (p_0, p_1), that two particles 
@@ -76,13 +106,16 @@ def set_lookup_p_for_two_particles(lookup_p3, p_max, p_cm, skip=False):
   lookup = pd.merge(lookup_p3, lookup_p3, how='outer', \
                        left_index=True, right_index=True)
   lookup.columns = pd.MultiIndex.from_tuples([('p',0), ('p',1)])
+
   # Total momentum is equal to the sum of the particle's momenta
   lookup['p_{cm}'] = map(lambda k1, k2: tuple([sum(x) for x in zip(k1,k2)]), \
                                 lookup[('p',0)], lookup[('p',1)])
+
   # Restrict set of 3-momenta to those with the correct abulute value
   lookup = lookup[lookup['p_{cm}'].apply(_abs2) == p_cm]
   # Restrict set of 3-momenta to those where |p1|+|p2| <= p_max
   lookup = lookup[lookup['p'].applymap(_abs2).sum(axis=1) <= p_max]
+
   # For rho analysis, explicitely exclude S-wave:
   # \pi(0,0,0) + \pi(0,0,0) -> \rho(0,0,0) forbidden by angular momentum 
   # conservation
@@ -123,10 +156,8 @@ def set_lookup_p(p_max, p_cm, diagram, skip=False):
   # for moving frames, sum of individual component's absolute value (i.e.
   # total kindetic energy) might be larger than center of mass absolute 
   # value. Modify the cutoff accordingly.
-  # p_cm_max = np.asarray([4,5,6,7,4], dtype=int)[p_cm]
   if p_cm == 0:
-    # for the center-of-mass frame p_max was restricted to (1,1,0)
-    p_max = 2
+    p_max = 4
   elif p_cm == 1:
     p_max = 5
   elif p_cm == 2:
@@ -136,54 +167,38 @@ def set_lookup_p(p_max, p_cm, diagram, skip=False):
   elif p_cm == 4:
     p_max = 4
 
+
   # List of all 3-vectors a single particle could have
-  lookup_p3 = list(it.ifilter(lambda x: _abs2(x) <= p_max, \
-                                  it.product(range(-p_max, p_max+1), repeat=3)))
+  # 
+  # for the range in it.product ceil(sqrt(p_max_for_one_particle)) would 
+  # suffice
+  p_max_for_one_particle = 4
+  max_possible_component = ceil(sqrt(p_max_for_one_particle))
+  lookup_p3 = list(it.ifilter(lambda x: _abs2(x) <= p_max_for_one_particle, \
+                              it.product(range(-max_possible_component, 
+                                          max_possible_component+1), repeat=3)))
   lookup_p3 = pd.DataFrame(zip(lookup_p3), columns=['p']) 
   lookup_p3.index = np.repeat(0, len(lookup_p3))
 
   if diagram.startswith('C2'):
-
-    # Restrict set of 3-momenta to those with the correct abulute value
-    lookup = DataFrame.copy(lookup_p3[lookup_p3['p'].apply(_abs2) == p_cm])
-
-    # Because of momentum conservation, source momentum and sink momentum are 
-    # equal and equal to total momentum
-    lookup_p = pd.concat([lookup, lookup, lookup], axis=1).reset_index(drop=True)
-#    lookup_p.columns = pd.MultiIndex.from_tuples([('p_{so}',0), ('p_{cm}',0), ('p_{si}',0)])
-    lookup_p.columns = ['p_{so}', 'p_{cm}', 'p_{si}']
+    lookup_so = set_lookup_p_for_one_particle(lookup_p3, p_cm)
+    lookup_si = set_lookup_p_for_one_particle(lookup_p3, p_cm)
 
   elif diagram.startswith('C3'):
-
     lookup_so = set_lookup_p_for_two_particles(lookup_p3, p_max, p_cm, skip)
-
-    # Restrict set of 3-momenta to those with the correct abulute value
-    lookup_si = DataFrame.copy(lookup_p3[lookup_p3['p'].apply(_abs2) == p_cm])
-#    lookup_si.columns = pd.MultiIndex.from_tuples([('p',0)])
-    lookup_si.columns = ['p']
-    # Total momentum is equal to the particle's momentum
-#    lookup_si['p_{cm}'] = lookup_si[('p',0)]
-    lookup_si['p_{cm}'] = lookup_si['p']
-
-    # DataFrame with all combinations of source and sink with same total 
-    # momentum
-    lookup_p = pd.merge(lookup_so, lookup_si, on=['p_{cm}'], \
-                        suffixes=['_{so}', '_{si}'])
+    lookup_si = set_lookup_p_for_one_particle(lookup_p3, p_cm)
 
   elif diagram.startswith('C4'):
-
     lookup_so = set_lookup_p_for_two_particles(lookup_p3, p_max, p_cm, skip)
-
     lookup_si = set_lookup_p_for_two_particles(lookup_p3, p_max, p_cm, skip)
-
-    # DataFrame with all combinations of source and sink with same total 
-    # momentum
-    lookup_p = pd.merge(lookup_so, lookup_si, on=['p_{cm}'], \
-                        suffixes=['_{so}', '_{si}'])
 
   else:
     print 'in set_lookup_p: diagram unknown! Quantum numbers corrupted.'
-  
+ 
+  # DataFrame with all combinations of source and sink with same total momentum
+  lookup_p = pd.merge(lookup_so, lookup_si, on=['p_{cm}'], \
+                      suffixes=['_{so}', '_{si}'])
+
   print lookup_p
   return lookup_p
 
@@ -220,7 +235,7 @@ def set_lookup_g(gammas, diagram):
 
     lookup_so = DataFrame([g for gamma in gammas for g in gamma[:-1]])
     lookup_so.index = np.repeat(0, len(lookup_so))
-    lookup_so.columns = ['\gamma']
+    lookup_so.columns = pd.MultiIndex.from_tuples( [('\gamma', 0)] )
 
     lookup_si = lookup_so
 
@@ -228,7 +243,7 @@ def set_lookup_g(gammas, diagram):
 
     lookup_so = DataFrame([5])
     lookup_so.index = np.repeat(0, len(lookup_so))
-    lookup_so.columns = ['\gamma']
+    lookup_so.columns = pd.MultiIndex.from_tuples( [('\gamma', 0)] )
 
     lookup_si = lookup_so
 
@@ -242,7 +257,7 @@ def set_lookup_g(gammas, diagram):
 
     lookup_si = DataFrame([g for gamma in gammas for g in gamma[:-1]])
     lookup_si.index = np.repeat(0, len(lookup_si))
-    lookup_si.columns = ['\gamma']
+    lookup_si.columns = pd.MultiIndex.from_tuples( [('\gamma', 0)] )
 
   elif diagram.startswith('C4'):
 
@@ -330,21 +345,21 @@ def set_groupname(diagram, s):
 
   Function takes a series in order to be used with DataFrame.apply()
   """
- 
+
   p_so = s['p_{so}']
   g_so = s['\gamma_{so}']
 
-  p_si = _minus(s['p_{si}'])#.apply(_minus)
+  p_si = s['p_{si}'].apply(_minus)
   g_si = s['\gamma_{si}']
 
   if diagram.startswith('C2'):
     groupname = diagram \
-                  + '_uu_p%1i%1i%1i.d000.g%i' % ( p_so + (g_so,) ) \
-                  +    '_p%1i%1i%1i.d000.g%i' % ( p_si + (g_si,) ) 
+                  + '_uu_p%1i%1i%1i.d000.g%i' % ( p_so[0] + (g_so[0],) ) \
+                  +    '_p%1i%1i%1i.d000.g%i' % ( p_si[0] + (g_si[0],) ) 
   elif diagram.startswith('C3'):
     groupname = diagram \
                   + '_uuu_p%1i%1i%1i.d000.g%1i' % ( p_so[0] + (g_so[0],) ) \
-                  +     '_p%1i%1i%1i.d000.g%1i' % ( p_si + (g_si,) ) \
+                  +     '_p%1i%1i%1i.d000.g%1i' % ( p_si[0] + (g_si[0],) ) \
                   +     '_p%1i%1i%1i.d000.g%1i' % ( p_so[1] + (g_so[1],) )
   elif diagram == 'C4+D' or diagram == 'C4+C':
     groupname = diagram \
