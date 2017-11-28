@@ -167,6 +167,8 @@ def set_lookup_qn(diagram, p_cm, p_max, gammas, process='pipi', verbose=0):
   print lookup_qn
   return lookup_qn
 
+# TODO: possible speedup if strings are directly used rather than the 
+#       components of tuples
 def set_groupname(diagram, s):
   """
   Creates string with filename of the desired diagram calculated by the 
@@ -195,10 +197,10 @@ def set_groupname(diagram, s):
   Function takes a series as argument in order to be called in DataFrame.apply()
   """
 
-  p_so = s['p_{so}']
+  p_so = s['p_{so}'].apply(eval)
   g_so = s['\gamma_{so}']
 
-  p_si = s['p_{si}'].apply(_minus)
+  p_si = s['p_{si}'].apply(eval).apply(_minus)
   g_si = s['\gamma_{si}']
 
   if diagram.startswith('C2'):

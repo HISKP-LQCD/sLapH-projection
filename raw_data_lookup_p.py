@@ -34,7 +34,7 @@ def set_lookup_p_for_one_particle(lookup_p3, p_cm):
   # Total momentum is equal to the particle's momentum
   lookup['p_{cm}'] = lookup[('p',0)]
 
-  return lookup
+  return lookup.applymap(str)
 
 def set_lookup_p_for_two_particles(lookup_p3, p_max, p_cm, skip=False):
   """
@@ -82,7 +82,7 @@ def set_lookup_p_for_two_particles(lookup_p3, p_max, p_cm, skip=False):
   if skip:
     lookup = lookup[(lookup[('p',0)] != (0,0,0)) | (lookup[('p',1)] != (0,0,0))]
 
-  return lookup
+  return lookup.applymap(str)
 
 def set_lookup_p(p_max, p_cm, diagram, skip=False):
   """
