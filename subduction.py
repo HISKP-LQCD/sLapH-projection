@@ -241,6 +241,7 @@ def get_lattice_basis(p_cm, p_cm_vecs, verbose=True, j=1):
 
     filename = 'lattice-basis_maple/lattice-basis_J{0}_P{1}_Msum.dataframe'.format(j, "".join([str(p) for p in p_cm_vec]))
     if not os.path.exists(filename):
+      print 'Warning: Could not find {}'.format(filename)
       continue
     df = pd.read_csv(filename, delim_whitespace=True, dtype=str) 
 
@@ -347,6 +348,10 @@ def get_continuum_basis(names, basis_type, verbose):
     ladder_operators = [[1./sqrt2,  -1j/sqrt2, 0], 
                         [0,         0,        -1j], 
                         [-1./sqrt2, -1j/sqrt2, 0]]
+  elif basis_type == "dudek":
+    ladder_operators = [[1j/sqrt2,  -1/sqrt2, 0], 
+                        [0,         0,         1j], 
+                        [-1j/sqrt2, -1/sqrt2, 0]]
   else:
     print "In get_continuum_basis: continuum_basis type ", basis_type, " not known!"
     exit()
