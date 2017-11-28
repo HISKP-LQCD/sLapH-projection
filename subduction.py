@@ -148,25 +148,6 @@ def return_cg(p_cm, irrep):
     for _i1, _i2 in it.product(i1, i2):
       try:
 
-#        #hardcoded from cntr.v0.1: Cutoffs for single momenta
-        # not really needed. Makes cg-calculation more efficient, but merging 
-        # takes care of superfluous coefficients anyway
-#        if p_cm == 0:
-#          if p > 3:
-#            continue
-#        elif p_cm == 1:
-#          if p > 5:
-#            continue
-#        elif p_cm == 2:
-#          if p > 6:
-#            continue
-#        elif p_cm == 3:
-#          if p > 7:
-#            continue
-#        elif p_cm == 4:
-#          if p > 4:
-#            continue
-
         cgs = group.TOhCG(p_cm, i, j, groups, ir1=_i1, ir2=_i2)
 
         # TODO: irreps explizit angeben. TOh gibt Liste der beitragenden irreps 
@@ -239,19 +220,28 @@ def get_lattice_basis(p_cm, p_cm_vecs, verbose=True, j=1):
 
   for p_cm_vec in p_cm_vecs:
 
-    filename = 'lattice-basis_maple/lattice-basis_J{0}_P{1}_Msum.dataframe'.format(j, "".join([str(p) for p in p_cm_vec]))
+    # I don't get why I can't just strip ' ' and ','...
+    p_cm_as_string = p_cm_vec.replace(',','').replace(' ','').strip('()')
+    filename = 'lattice-basis_maple/lattice-basis_J{0}_P{1}_Msum.dataframe'.\
+                                                       format(j, p_cm_as_string)
+    print filename
     if not os.path.exists(filename):
       print 'Warning: Could not find {}'.format(filename)
       continue
     df = pd.read_csv(filename, delim_whitespace=True, dtype=str) 
 
-    df = pd.merge(df.ix[:,2:].stack().reset_index(level=1), df.ix[:,:2], left_index=True, right_index=True)
+    df = pd.merge(df.ix[:,2:].stack().reset_index(level=1), df.ix[:,:2], 
+                                              left_index=True, right_index=True)
     df.columns = ['M', 'cg-coefficient', 'Irrep', '\mu']
     df['cg-coefficient'] = df['cg-coefficient'].apply(aeval)
     df['M'] = df['M'].apply(int)
-    df['p'] = [tuple(p_cm_vec)] * len(df)
+    df['p'] = [p_cm_vec] * len(df)
     df['J'] = j
     df['mult'] = 1
+
+#    df.columns = pd.MultiIndex.from_tuples(
+#                    [('M',u''), ('cg-coefficient',u''), ('Irrep',u''), 
+#                     ('\mu',u''), ('p',0), ('J',u''), ('mult',u'')])
 
     if verbose:
       print 'lattice_basis for {}'.format(p_cm_vec)
@@ -260,46 +250,6 @@ def get_lattice_basis(p_cm, p_cm_vecs, verbose=True, j=1):
     lattice_basis = pd.concat([lattice_basis, df], ignore_index=True)
 
   return lattice_basis
-
-#  #prefs = [[0.,0.,0.], [0.,0.,1.], [0.,1.,1.], [1.,1.,1.]]
-#
-#
-#  # tells clebsch_gordan to use cartesian basis
-#  S = 1./np.sqrt(2.)
-#  U3 = np.asarray([[0,0,-1.],[1.j,0,0],[0,1,0]])
-#  U2 = np.asarray([[S,S],[1.j*S,-1.j*S]])
-#
-#  lattice_basis = DataFrame()
-#
-#  for p_cm_vec in p_cm_vecs:
-#    # initialize groups
-##    try:
-##        groups = group.TOh.read(p2=p_cm)
-##        if not np.allclose(groups.U3, U3) or not np.allclose(groups.U2, U2):
-##            raise IOError("redo computation")
-##    except IOError:
-##        groups = group.TOh(pref=p_cm_vec, irreps=True, U3=U3, U2=U2)
-#    print 'p_cm_vec', list(p_cm_vec)
-#    groups = group.TOh(pref=p_cm_vec, irreps=True, U3=U3, U2=U2)
-##        groups.save()
-#
-#    # calc coefficients
-#    basis = group.TOhBasis(groups,jmax=j+1)
-#
-#    df = basis.to_pandas(j)
-#
-#    # munging to have a consistent format
-#    df.rename(columns={'row' : '\mu', 'coeff' : 'cg-coefficient'}, inplace=True)
-#    df['cg-coefficient'] = df['cg-coefficient'].apply(aeval)
-#    df['p'] = df['p'].apply(tuple)
-#
-#    if verbose:
-#      print 'lattice_basis for {}'.format(p_cm_vec)
-#      print df
-#
-#    lattice_basis = pd.concat([lattice_basis, df], ignore_index=True)
-#
-#  return lattice_basis
 
 # TODO: properly read that from infile and pass to get_clebsch_gordan
 # TODO: actually use names to restrict basis_table to what was in the infile
@@ -472,6 +422,9 @@ def get_coefficients(diagram, gammas, p_cm, irrep, basis, continuum_basis, \
   cg_table_si = pd.merge(cg_table_si, continuum_basis_table.reset_index()).\
                                                    set_index('\mu').sort_index()  
 
+  print 'cg_table_so'
+  print cg_table_so
+
   # Munging the result: Delete rows with coefficient 0, combine coefficients 
   # and clean columns no longer needed.
   cg_table_so = cg_table_so[cg_table_so['cg-coefficient'] != 0]
@@ -540,18 +493,14 @@ def set_lookup_qn_irrep(coefficients_irrep, qn, verbose):
 
   # Add two additional columns with the same string if the quantum numbers 
   # describe equivalent physical constellations: gevp_row and gevp_col
-  qn_irrep['gevp_row'] = 'p = ' + \
-                            qn_irrep['p_{so}'].apply(np.array).apply(np.square).\
+  qn_irrep['gevp_row'] = qn_irrep['p_{so}'].apply(np.array).apply(np.square).\
                               apply(functools.partial(np.sum, axis=-1)).\
                               astype(tuple).astype(str) \
-                         + ', \gamma = ' + \
-                            qn_irrep['gevp_{so}']
-  qn_irrep['gevp_col'] = 'p = ' + \
-                            qn_irrep['p_{si}'].apply(np.array).apply(np.square).\
+                         + qn_irrep['gevp_{so}']
+  qn_irrep['gevp_col'] = qn_irrep['p_{si}'].apply(np.array).apply(np.square).\
                               apply(functools.partial(np.sum, axis=-1)).\
                               astype(tuple).astype(str) \
-                          + ', \gamma = ' + \
-                            qn_irrep['gevp_{si}']
+                         + qn_irrep['gevp_{si}']
 
   del(qn_irrep['gevp_{so}'])
   del(qn_irrep['gevp_{si}'])

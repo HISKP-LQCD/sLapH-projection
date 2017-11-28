@@ -13,6 +13,9 @@ import subduction
 import setup_gevp
 import plot
 
+import pandas as pd
+from pandas import Series, DataFrame
+
 # TODO: pull out irrep as outer loop and do not use it in any of the files
 # TODO: refactor towards a more objectoriented design
 def main():
@@ -237,14 +240,18 @@ def main():
       j = 0
 
     if flag['subduce']:
- 
+
       subduced_data = {}
 
       for diagram in diagrams:
         print '\tsubducing data for %s' % diagram
 
+        print lookup_qn[diagram].columns
+
         list_p_cm = lookup_qn[diagram]['p_{cm}'].unique()
         basis = subduction.get_lattice_basis(p_cm, list_p_cm, verbose, j=j)
+
+        print basis.columns
 
         # List with the names of all contributing irreducible representations and 
         # their multiplicity
