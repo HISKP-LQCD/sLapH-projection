@@ -46,7 +46,7 @@ def select_irrep(df, irrep):
     get_lattice_basis()
   """
 
-  return select_irrep_mult(df, irrep, 1):
+  return select_irrep_mult(df, irrep, 1)
 
 
 def select_irrep_mult(df, irrep, mult):
@@ -281,6 +281,20 @@ def get_continuum_basis(names, basis_type, verbose):
       independent Lorentz structure.
   """
 
+  basis_J0 = DataFrame({'J' : [0],
+                        'M' : [0], 
+                        'gamma_id' : range(1)*1, 
+                        'subduction-coefficient' : [1]})
+
+  gamma_5 = DataFrame({'\gamma' : [5],
+                         'gevp' : '\gamma_{5}  '})
+
+  gamma = gamma_5
+
+  basis_J0 = pd.merge(basis_J0, gamma, how='left', left_on=['gamma_id'], right_index=True)
+  del(basis_J0['gamma_id'])
+  basis_J0 = basis_J0.set_index(['J','M'])
+
   # implement trivial cartesian basis as it is taken account for in 
   # cg coefficients
   # TODO: Swithc case for the different basis types chosen for p=0,1,...
@@ -312,44 +326,30 @@ def get_continuum_basis(names, basis_type, verbose):
     print "In get_continuum_basis: continuum_basis type ", basis_type, " not known!"
     exit()
 
-  basis = np.array(ladder_operators).flatten()
-#  basis = np.array([m + [0]*3 for m in ladder_operators] + \
-#                                  [[0]*3+m for m in ladder_operators]).flatten()
+  basis_J1 = DataFrame({'J' : [1]*9,
+                        'M' : [-1]*3+[0]*3+[1]*3, 
+                        'gamma_id' : range(3)*3, 
+                        'subduction-coefficient' : np.array(ladder_operators).flatten()})
 
-  # hardcode basis operators for \gamma_i and \gamma_5\gamma_0\gamma_i
-  # TODO: replace first list in MultiIndex.from_product by names (or some kind 
-  # of latex(names)
-#  basis_table = DataFrame(basis, \
-#            index=pd.MultiIndex.from_product( \
-#                [["\gamma_{i}  ", "\gamma_{50i}"], [1], [-1,0,1], \
-#                                     [(1,), (2,), (3,), (13,), (14,), (15,)]], \
-#                names=["gevp", 'J', 'M', '\gamma']), \
-#            columns=['subduction-coefficient'], dtype=complex).sort_index()
-  basis_table = DataFrame(basis, \
-            index=pd.MultiIndex.from_product( \
-                [["\gamma_{i}  "], [1], [-1,0,1], \
-                                     [1, 2, 3]], \
-                names=["gevp", 'J', 'M', '\gamma']), \
-            columns=['subduction-coefficient'], dtype=complex).sort_index()
-  basis_table = pd.concat([basis_table, DataFrame([1], \
-            index=pd.MultiIndex.from_product( \
-                [["\gamma_{5}  "], [0], [0], \
-                                     [5]], \
-                names=["gevp", 'J', 'M', '\gamma']), \
-            columns=['subduction-coefficient'], dtype=complex).sort_index()])
-  # conatenate basis chosen for two-pion operator. Trivial, because just two
-  # singlet states.
-  basis_table = pd.concat([basis_table, DataFrame([1], \
-            index=pd.MultiIndex.from_product( \
-                [["(\gamma_{5}, \gamma_{5})"], [(0,0)], [(0,0)], [(5,5)]], \
-                names=["gevp", 'J', 'M', '\gamma']), \
-            columns=['subduction-coefficient'], dtype=complex).sort_index()])
+  gamma_i   = DataFrame({'\gamma' : [1,2,3],
+                         'gevp' : '\gamma_{i}  '})
+  gamma_50i = DataFrame({'\gamma' : [13,14,15],
+                         'gevp' : '\gamma_{50i}'})
+
+#  gamma = pd.concat([gamma_i, gamma_50i])
+  gamma = gamma_i
+
+  basis_J1 = pd.merge(basis_J1, gamma, how='left', left_on=['gamma_id'], right_index=True)
+  del(basis_J1['gamma_id'])
+  basis_J1 = basis_J1.set_index(['J','M'])
+
+  basis = pd.concat([basis_J0, basis_J1])
 
   if verbose:
-    print 'basis_table'
-    print basis_table
+    print 'basis'
+    print basis
 
-  return basis_table[basis_table['subduction-coefficient'] != 0]
+  return basis[basis['subduction-coefficient'] != 0]
 
 
 # TODO: change p_cm to string symmetry_group in get_coeffients
