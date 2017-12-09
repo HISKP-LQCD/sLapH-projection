@@ -75,7 +75,7 @@ def select_irrep_mult(df, irrep, mult):
     get_lattice_basis()
   """
 
-  return df.xs((irrep,mult), level=('Irrep','mult'))
+  return df.xs((irrep,mult), level=('Irrep','mult'), drop_level=False)
 
 # TODO: path for groups is hardcoded here. Shift that into clebsch-gordan module
 def return_cg(p_cm, irrep):
@@ -239,14 +239,14 @@ def get_lattice_basis(p_cm, p_cm_vecs, verbose=True, j=1):
     df = pd.read_csv(filename, delim_whitespace=True, dtype=str) 
 
     df = pd.merge(df.ix[:,2:].stack().reset_index(level=1), df.ix[:,:2], left_index=True, right_index=True)
-    df.columns = [('M',0), 'cg-coefficient', 'Irrep', '\mu']
+    df.columns = ['M^{0}', 'cg-coefficient', 'Irrep', '\mu']
     df['mult'] = 1
     df['cg-coefficient'] = df['cg-coefficient'].apply(aeval)
-    df[('M',0)] = df[('M',0)].apply(int)
+    df['M^{0}'] = df['M^{0}'].apply(int)
     df = df.set_index(['Irrep', '\mu', 'mult'])
-    df[('p',0)] = [eval(p_cm_vec)] * len(df)
-    df[('J',0)] = j
-    df = df[[('p',0),('J',0),('M',0),'cg-coefficient']]
+    df['p^{0}'] = [eval(p_cm_vec)] * len(df)
+    df['J^{0}'] = j
+    df = df[['p^{0}','J^{0}','M^{0}','cg-coefficient']]
 
     if verbose:
       print 'lattice_basis for {}'.format(p_cm_vec)
@@ -419,16 +419,16 @@ def get_coefficients(diagram, gammas, p_cm, irrep, basis, continuum_basis, \
 
   # express basis states for all Lorentz structures in `gammas` in terms of 
   # physical Dirac operators
-  continuum_basis_table = get_continuum_basis(gammas, continuum_basis, verbose)
+  continuum_basis_table = get_continuum_basis(gammas, continuum_basis, verbose).rename(columns={'\gamma' : '\gamma^{0}'})
 
   print 'continuum_basis_table'
   print continuum_basis_table
 
   # express the subduced eigenstates in terms of Dirac operators.
   cg_table_so = pd.merge(cg_table_so, continuum_basis_table, 
-                         how='left', left_on=[('J',0),('M',0)], right_index=True)   
+                         how='left', left_on=['J^{0}','M^{0}'], right_index=True)   
   cg_table_si = pd.merge(cg_table_si, continuum_basis_table, 
-                         how='left', left_on=[('J',0),('M',0)], right_index=True)   
+                         how='left', left_on=['J^{0}','M^{0}'], right_index=True)   
 
   print cg_table_so
 
@@ -437,13 +437,13 @@ def get_coefficients(diagram, gammas, p_cm, irrep, basis, continuum_basis, \
   cg_table_so = cg_table_so[cg_table_so['cg-coefficient'] != 0]
   cg_table_so['coefficient'] = \
            cg_table_so['cg-coefficient'] * cg_table_so['subduction-coefficient']
-  cg_table_so.drop([('J',0), ('M',0), 'cg-coefficient', 'subduction-coefficient'], \
+  cg_table_so.drop(['J^{0}','M^{0}', 'cg-coefficient', 'subduction-coefficient'], \
                                                            axis=1, inplace=True)
   cg_table_si = cg_table_si[cg_table_si['cg-coefficient'] != 0]
   cg_table_si['coefficient'] = \
            cg_table_si['cg-coefficient'] * cg_table_si['subduction-coefficient']
 
-  cg_table_si.drop([('J',0), ('M',0), 'cg-coefficient', 'subduction-coefficient'], \
+  cg_table_si.drop(['J^{0}','M^{0}', 'cg-coefficient', 'subduction-coefficient'], \
                                                            axis=1, inplace=True)
 
   # combine clebsch-gordan coefficients for source and sink into one DataFrame
@@ -453,12 +453,6 @@ def get_coefficients(diagram, gammas, p_cm, irrep, basis, continuum_basis, \
   if verbose:
     print 'coefficients_irrep'
     print coefficients_irrep
-
-  # delete any rows where irreps at source and sink are different
-  tmp = coefficients_irrep["Irrep_{so}"] == coefficients_irrep["Irrep_{si}"]
-  coefficients_irrep = coefficients_irrep[tmp]
-  del(coefficients_irrep['Irrep_{si}'])
-  coefficients_irrep.rename(columns={'Irrep_{so}' : 'Irrep'}, inplace=True)
 
   return coefficients_irrep
 
