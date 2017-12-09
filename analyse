@@ -247,8 +247,8 @@ def main():
 
         # List with the names of all contributing irreducible representations and 
         # their multiplicity
-        lookup_irreps = basis['Irrep'].unique()
- 
+        lookup_irreps = basis.index.get_level_values('Irrep').unique()
+
         for irrep in lookup_irreps:
           print '\t  subducing into %s' % irrep
           di = ContractionType(diagram, irrep)

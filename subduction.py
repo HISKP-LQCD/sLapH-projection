@@ -38,18 +38,15 @@ def select_irrep(df, irrep):
 
   Returns
   -------
-        df restricted to *irrep* and *mult*. 
-        Has columns J, M, cg-coefficient, p, \mu and unnamed indices
+        df restricted to *irrep* and *mult*=1. 
+        Has columns p, J, M, cg-coefficient, index \mu
 
   See
   ---
     get_lattice_basis()
   """
 
-  df = df[df['Irrep'] == irrep]
-  #df.drop(['Irrep'], axis=1, inplace=True)
-
-  return df
+  return select_irrep_mult(df, irrep, 1):
 
 
 def select_irrep_mult(df, irrep, mult):
@@ -71,18 +68,14 @@ def select_irrep_mult(df, irrep, mult):
   Returns
   -------
         df restricted to *irrep* and *mult*. 
-        Has columns J, M, cg-coefficient, p, \mu and unnamed indices
+        Has columns p, J, M, cg-coefficient, index \mu
 
   See
   ---
     get_lattice_basis()
   """
 
-  df = df[df['Irrep'] == irrep]
-  df = df[df['mult'] == mult]
-  #df.drop(['Irrep', 'mult'], axis=1, inplace=True)
-
-  return df
+  return df.xs((irrep,mult), level=('Irrep','mult'))
 
 # TODO: path for groups is hardcoded here. Shift that into clebsch-gordan module
 def return_cg(p_cm, irrep):
@@ -246,64 +239,23 @@ def get_lattice_basis(p_cm, p_cm_vecs, verbose=True, j=1):
     df = pd.read_csv(filename, delim_whitespace=True, dtype=str) 
 
     df = pd.merge(df.ix[:,2:].stack().reset_index(level=1), df.ix[:,:2], left_index=True, right_index=True)
-    df.columns = ['M', 'cg-coefficient', 'Irrep', '\mu']
-    df['cg-coefficient'] = df['cg-coefficient'].apply(aeval)
-    df['M'] = df['M'].apply(int)
-    df['p'] = [eval(p_cm_vec)] * len(df)
-    df['J'] = j
+    df.columns = [('M',0), ('cg-coefficient',''), 'Irrep', '\mu']
     df['mult'] = 1
+    df[('cg-coefficient','')] = df[('cg-coefficient','')].apply(aeval)
+    df[('M',0)] = df[('M',0)].apply(int)
+    df = df.set_index(['Irrep', '\mu', 'mult'])
+    df[('p',0)] = [eval(p_cm_vec)] * len(df)
+    df[('J',0)] = j
+    df = df[[('p',0),('J',0),('M',0),('cg-coefficient','')]]
+    df.columns = pd.MultiIndex.from_tuples(df.columns)
 
     if verbose:
       print 'lattice_basis for {}'.format(p_cm_vec)
       print df, '\n'
 
-    lattice_basis = pd.concat([lattice_basis, df], ignore_index=True)
+    lattice_basis = pd.concat([lattice_basis, df])
 
-  if verbose:
-    print 'lattice_basis'
-    print lattice_basis
-
-  return lattice_basis
-
-#  #prefs = [[0.,0.,0.], [0.,0.,1.], [0.,1.,1.], [1.,1.,1.]]
-#
-#
-#  # tells clebsch_gordan to use cartesian basis
-#  S = 1./np.sqrt(2.)
-#  U3 = np.asarray([[0,0,-1.],[1.j,0,0],[0,1,0]])
-#  U2 = np.asarray([[S,S],[1.j*S,-1.j*S]])
-#
-#  lattice_basis = DataFrame()
-#
-#  for p_cm_vec in p_cm_vecs:
-#    # initialize groups
-##    try:
-##        groups = group.TOh.read(p2=p_cm)
-##        if not np.allclose(groups.U3, U3) or not np.allclose(groups.U2, U2):
-##            raise IOError("redo computation")
-##    except IOError:
-##        groups = group.TOh(pref=p_cm_vec, irreps=True, U3=U3, U2=U2)
-#    print 'p_cm_vec', list(p_cm_vec)
-#    groups = group.TOh(pref=p_cm_vec, irreps=True, U3=U3, U2=U2)
-##        groups.save()
-#
-#    # calc coefficients
-#    basis = group.TOhBasis(groups,jmax=j+1)
-#
-#    df = basis.to_pandas(j)
-#
-#    # munging to have a consistent format
-#    df.rename(columns={'row' : '\mu', 'coeff' : 'cg-coefficient'}, inplace=True)
-#    df['cg-coefficient'] = df['cg-coefficient'].apply(aeval)
-#    df['p'] = df['p'].apply(tuple)
-#
-#    if verbose:
-#      print 'lattice_basis for {}'.format(p_cm_vec)
-#      print df
-#
-#    lattice_basis = pd.concat([lattice_basis, df], ignore_index=True)
-#
-#  return lattice_basis
+  return lattice_basis.sort_index()
 
 # TODO: properly read that from infile and pass to get_clebsch_gordan
 # TODO: actually use names to restrict basis_table to what was in the infile
@@ -440,9 +392,9 @@ def get_coefficients(diagram, gammas, p_cm, irrep, basis, continuum_basis, \
   """
 
   basis = select_irrep(basis, irrep)
-#  if irrep == 'A1g':
-#    irrep = 'A2g'
-#    mult = 3
+
+  print 'basis'
+  print basis
 
   if diagram.startswith('C2'):
     cg_table_so = basis
@@ -469,6 +421,9 @@ def get_coefficients(diagram, gammas, p_cm, irrep, basis, continuum_basis, \
   # express basis states for all Lorentz structures in `gammas` in terms of 
   # physical Dirac operators
   continuum_basis_table = get_continuum_basis(gammas, continuum_basis, verbose)
+
+  print 'continuum_basis_table'
+  print continuum_basis_table
 
   # express the subduced eigenstates in terms of Dirac operators.
   cg_table_so = pd.merge(cg_table_so, continuum_basis_table.reset_index()).\
