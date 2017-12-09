@@ -241,10 +241,11 @@ def get_lattice_basis(p_cm, p_cm_vecs, verbose=True, j=1):
     df = pd.merge(df.ix[:,2:].stack().reset_index(level=1), df.ix[:,:2], left_index=True, right_index=True)
     df.columns = ['M^{0}', 'cg-coefficient', 'Irrep', '\mu']
     df['mult'] = 1
+    df['p_{cm}'] = [p_cm_vec] * len(df)
     df['cg-coefficient'] = df['cg-coefficient'].apply(aeval)
     df['M^{0}'] = df['M^{0}'].apply(int)
-    df = df.set_index(['Irrep', '\mu', 'mult'])
-    df['p^{0}'] = [eval(p_cm_vec)] * len(df)
+    df = df.set_index(['p_{cm}', 'Irrep', '\mu', 'mult'])
+    df['p^{0}'] = [p_cm_vec] * len(df)
     df['J^{0}'] = j
     df = df[['p^{0}','J^{0}','M^{0}','cg-coefficient']]
 
@@ -488,29 +489,29 @@ def set_lookup_qn_irrep(coefficients_irrep, qn, verbose):
 #  print coefficients_irrep[coefficients_irrep['p_{so}'] == tuple([(2,0,0),(-1,0,0)])] 
 #  print qn[qn['p_{so}'] == tuple([(0,0,0),(0,0,1)])]
 #  return
-  qn_irrep = pd.merge(coefficients_irrep.reset_index(), qn.reset_index())
-#  print 'qn_irrep'
+  qn_irrep = pd.merge(coefficients_irrep.reset_index(), qn.reset_index(), 
+                      how='left', 
+                      left_on=['p^{0}_{so}', '\gamma^{0}_{so}', 'p^{0}_{si}', '\gamma^{0}_{si}'],
+                      right_on=[('p_{so}',0), ('\gamma_{so}',0), ('p_{si}',0), ('\gamma_{si}',0)])
+  # TODO: Check whether left merge results in nan somewhere as in this case data is missing
+  del(qn_irrep[('p_{so}',0)])
+  del(qn_irrep[('p_{si}',0)])
+  del(qn_irrep[('\gamma_{so}',0)])
+  del(qn_irrep[('\gamma_{si}',0)])
+  del(qn_irrep[('p_{cm}','')])
+  qn_irrep = qn_irrep.rename(columns = {('index', '') : 'index'})
+
 #  print qn_irrep[qn_irrep['p_{so}_x'] == qn_irrep['p_{so}_y']]
 
   # Add two additional columns with the same string if the quantum numbers 
   # describe equivalent physical constellations: gevp_row and gevp_col
-  qn_irrep['gevp_row'] = 'p = ' + \
-                            qn_irrep['p_{so}'].apply(np.array).apply(np.square).\
-                              apply(functools.partial(np.sum, axis=-1)).\
-                              astype(tuple).astype(str) \
-                         + ', \gamma = ' + \
-                            qn_irrep['gevp_{so}']
-  qn_irrep['gevp_col'] = 'p = ' + \
-                            qn_irrep['p_{si}'].apply(np.array).apply(np.square).\
-                              apply(functools.partial(np.sum, axis=-1)).\
-                              astype(tuple).astype(str) \
-                          + ', \gamma = ' + \
-                            qn_irrep['gevp_{si}']
+  qn_irrep['gevp_row'] = 'p: ' + qn_irrep['p_{cm}'].astype(str) \
+                         + ', g: ' + qn_irrep['gevp_{so}']
+  qn_irrep['gevp_col'] = 'p: ' + qn_irrep['p_{cm}'].astype(str) \
+                          + ', g: ' + qn_irrep['gevp_{si}']
 
   del(qn_irrep['gevp_{so}'])
   del(qn_irrep['gevp_{si}'])
-#  del(qn_irrep['mult_{so}'])
-#  del(qn_irrep['mult_{si}'])
 
   if verbose:
     print 'qn_irrep'
@@ -557,9 +558,8 @@ def ensembles(data, qn_irrep):
   del subduced['index']
   # construct hierarchical multiindex to be able to sum over momenta, average
   # over rows and reference gevp elements
-  subduced = subduced.set_index([ 'Irrep', 'gevp_row', 'gevp_col', 'p_{cm}', '\mu', \
-                      'p_{so}', '\gamma_{so}', 'p_{si}', '\gamma_{si}', 'mult_{so}',
-                      'mult_{si}'])
+  subduced = subduced.set_index([ 'Irrep', 'mult', 'gevp_row', 'gevp_col', 'p_{cm}', '\mu', \
+                      'p^{0}_{so}', '\gamma^{0}_{so}', 'p^{0}_{si}', '\gamma^{0}_{si}'])
   subduced = subduced[subduced.columns.difference(['coefficient_{so}','coefficient_{si}'])].\
               multiply(subduced['coefficient_{so}']*\
                        np.conj(subduced['coefficient_{si}']), axis=0)
