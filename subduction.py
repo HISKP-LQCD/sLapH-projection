@@ -21,7 +21,7 @@ aeval.symtable['I'] = 1j
 #import clebsch_gordan_4pt as cg_4pt
 import utils
 
-from clebsch_gordan import group
+#from clebsch_gordan import group
 
 def select_irrep(df, irrep):
   """
@@ -239,7 +239,7 @@ def get_lattice_basis(p_cm, p_cm_vecs, verbose=True, j=1):
 
   for p_cm_vec in p_cm_vecs:
 
-    filename = 'lattice-basis_maple/lattice-basis_J{0}_P{1}_Msum.dataframe'.format(j, "".join([str(p) for p in p_cm_vec]))
+    filename = '/home/maow/Code/sLapH-projection/lattice-basis_maple/lattice-basis_J{0}_P{1}_Msum.dataframe'.format(j, "".join([str(p) for p in eval(p_cm_vec)]))
     if not os.path.exists(filename):
       print 'Warning: Could not find {}'.format(filename)
       continue
@@ -249,7 +249,7 @@ def get_lattice_basis(p_cm, p_cm_vecs, verbose=True, j=1):
     df.columns = ['M', 'cg-coefficient', 'Irrep', '\mu']
     df['cg-coefficient'] = df['cg-coefficient'].apply(aeval)
     df['M'] = df['M'].apply(int)
-    df['p'] = [tuple(p_cm_vec)] * len(df)
+    df['p'] = [eval(p_cm_vec)] * len(df)
     df['J'] = j
     df['mult'] = 1
 
@@ -258,6 +258,10 @@ def get_lattice_basis(p_cm, p_cm_vecs, verbose=True, j=1):
       print df, '\n'
 
     lattice_basis = pd.concat([lattice_basis, df], ignore_index=True)
+
+  if verbose:
+    print 'lattice_basis'
+    print lattice_basis
 
   return lattice_basis
 
