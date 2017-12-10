@@ -22,7 +22,7 @@ def main():
   args, config = infile_handler.get_parameters()
 
   verbose = args.verbose
-  continuum_basis = args.basis
+  continuum_basis_string = args.basis
 
   # optional parameter, Default: False
   flag_pion           = config.getboolean('parameters', 'Read pion') 
@@ -243,6 +243,10 @@ def main():
         print '\tsubducing data for %s' % diagram
 
         list_p_cm = lookup_qn[diagram]['p_{cm}'].unique()
+        # express basis states for all Lorentz structures in `gammas` in terms of 
+        # physical Dirac operators
+        su2_eigenstates = subduction.get_continuum_basis(gamma_input, continuum_basis_string, verbose)
+
         basis = subduction.get_lattice_basis(p_cm, list_p_cm, verbose, j=j)
 
         # List with the names of all contributing irreducible representations and 
@@ -256,8 +260,8 @@ def main():
           # read coefficients for correlation function, little group and irreducible 
           # representation given by diagram, p_cm irrep and mult
           # TODO: Refactor exploiting namedtuple 
-          coefficients_irrep = subduction.get_coefficients(diagram, gammas, p_cm, 
-              irrep, basis, continuum_basis, verbose)
+          coefficients_irrep = subduction.get_coefficients(diagram, p_cm, 
+              irrep, basis, su2_eigenstates, verbose)
           print 'coefficients_irrep'
           print coefficients_irrep
           print 'qn'

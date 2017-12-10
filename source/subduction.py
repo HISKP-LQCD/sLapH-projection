@@ -336,8 +336,7 @@ def get_continuum_basis(names, basis_type, verbose):
   gamma_50i = DataFrame({'\gamma' : [13,14,15],
                          'gevp' : '\gamma_{50i}'})
 
-#  gamma = pd.concat([gamma_i, gamma_50i])
-  gamma = gamma_i
+  gamma = pd.concat([eval(n) for n in names])
 
   basis_J1 = pd.merge(basis_J1, gamma, how='left', left_on=['gamma_id'], right_index=True)
   del(basis_J1['gamma_id'])
@@ -356,8 +355,7 @@ def get_continuum_basis(names, basis_type, verbose):
 # TODO: find a better name for diagram after Wick contraction
 # TODO:  The information in irrep, mult and basis is redundant. return_cg() 
 #        should be changed to simplify the interface
-def get_coefficients(diagram, gammas, p_cm, irrep, basis, continuum_basis, \
-                                                                       verbose):
+def get_coefficients(diagram, p_cm, irrep, basis, su2_eigenstates, verbose):
   """
   Read table with required coefficients from forming continuum basis states, 
   subduction to the lattice and Clebsch-Gordan coupling
@@ -379,8 +377,8 @@ def get_coefficients(diagram, gammas, p_cm, irrep, basis, continuum_basis, \
   basis : pd.DataFrame      
       discrete basis states restricted to *irrep* and *mult*. 
       Has columns J, M, cg-coefficient, p, \mu and unnamed indices
-  continuum_basis : string
-      String specifying the continuum basis to be chosen. 
+  su2_eigenstates: pd.DataFrame
+      Basis of SU(2) eigenstates (Spin-J basis).
 
   Returns
   ------- 
@@ -399,6 +397,7 @@ def get_coefficients(diagram, gammas, p_cm, irrep, basis, continuum_basis, \
   if diagram.startswith('C2'):
     cg_table_so = basis
     cg_table_si = basis.copy()
+    continuum_basis_table = su2_eigenstates.rename(columns={'\gamma' : '\gamma^{0}'})
 #    cg_table_si['p'] = ((-1)*cg_table_si['p'].apply(np.array)).apply(tuple)
   elif diagram.startswith('C3'):
     # get factors for the desired irreps
@@ -418,13 +417,7 @@ def get_coefficients(diagram, gammas, p_cm, irrep, basis, continuum_basis, \
     print 'in get_coefficients: diagram unknown! Quantum numbers corrupted.'
     return
 
-  # express basis states for all Lorentz structures in `gammas` in terms of 
-  # physical Dirac operators
-  continuum_basis_table = get_continuum_basis(gammas, continuum_basis, verbose).rename(columns={'\gamma' : '\gamma^{0}'})
-
-  print 'continuum_basis_table'
-  print continuum_basis_table
-
+  
   # express the subduced eigenstates in terms of Dirac operators.
   cg_table_so = pd.merge(cg_table_so, continuum_basis_table, 
                          how='left', left_on=['J^{0}','M^{0}'], right_index=True)   
