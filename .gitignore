@@ -2,6 +2,7 @@
 *.pyc
 # plots
 *.pdf
+*.png
 # data files
 *.dat
 *.npy
@@ -29,5 +30,6 @@ calc_cg_coefficients.py
 clebsch_gordan_2pt_numpy.py
 clebsch_gordan_4pt_numpy.py
 test_read.py
+build
 
 groups

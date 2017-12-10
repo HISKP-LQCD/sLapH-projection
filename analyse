@@ -4,13 +4,13 @@ import numpy as np
 import collections
 import sys
 
-import infile_handler
-import raw_data
-import utils
-import wick
-import subduction
-import setup_gevp
-import plot
+import source.infile_handler as infile_handler
+import source.raw_data as raw_data
+import source.utils as utils
+import source.wick as wick
+import source.subduction as subduction
+import source.setup_gevp as setup_gevp
+import source.plot as plot
 
 # TODO: pull out irrep as outer loop and do not use it in any of the files
 # TODO: refactor towards a more objectoriented design
