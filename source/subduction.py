@@ -21,7 +21,7 @@ aeval.symtable['I'] = 1j
 #import clebsch_gordan_4pt as cg_4pt
 import utils
 
-from clebsch_gordan import group
+#from clebsch_gordan import group
 
 def select_irrep(df, irrep):
   """
@@ -38,18 +38,15 @@ def select_irrep(df, irrep):
 
   Returns
   -------
-        df restricted to *irrep* and *mult*. 
-        Has columns J, M, cg-coefficient, p, \mu and unnamed indices
+        df restricted to *irrep* and *mult*=1. 
+        Has columns p, J, M, cg-coefficient, index \mu
 
   See
   ---
     get_lattice_basis()
   """
 
-  df = df[df['Irrep'] == irrep]
-  #df.drop(['Irrep'], axis=1, inplace=True)
-
-  return df
+  return select_irrep_mult(df, irrep, 1)
 
 
 def select_irrep_mult(df, irrep, mult):
@@ -71,18 +68,14 @@ def select_irrep_mult(df, irrep, mult):
   Returns
   -------
         df restricted to *irrep* and *mult*. 
-        Has columns J, M, cg-coefficient, p, \mu and unnamed indices
+        Has columns p, J, M, cg-coefficient, index \mu
 
   See
   ---
     get_lattice_basis()
   """
 
-  df = df[df['Irrep'] == irrep]
-  df = df[df['mult'] == mult]
-  #df.drop(['Irrep', 'mult'], axis=1, inplace=True)
-
-  return df
+  return df.xs((irrep,mult), level=('Irrep','mult'), drop_level=False)
 
 # TODO: path for groups is hardcoded here. Shift that into clebsch-gordan module
 def return_cg(p_cm, irrep):
@@ -220,24 +213,22 @@ def get_lattice_basis(p_cm, p_cm_vecs, verbose=True, j=1):
 
   for p_cm_vec in p_cm_vecs:
 
-    # I don't get why I can't just strip ' ' and ','...
-    p_cm_as_string = p_cm_vec.replace(',','').replace(' ','').strip('()')
-    filename = 'lattice-basis_maple/lattice-basis_J{0}_P{1}_Msum.dataframe'.\
-                                                       format(j, p_cm_as_string)
-    print filename
+    filename = '/home/maow/Code/sLapH-projection/lattice-basis_maple/lattice-basis_J{0}_P{1}_Msum.dataframe'.format(j, "".join([str(p) for p in eval(p_cm_vec)]))
     if not os.path.exists(filename):
       print 'Warning: Could not find {}'.format(filename)
       continue
     df = pd.read_csv(filename, delim_whitespace=True, dtype=str) 
 
-    df = pd.merge(df.ix[:,2:].stack().reset_index(level=1), df.ix[:,:2], 
-                                              left_index=True, right_index=True)
-    df.columns = ['M', 'cg-coefficient', 'Irrep', '\mu']
-    df['cg-coefficient'] = df['cg-coefficient'].apply(aeval)
-    df['M'] = df['M'].apply(int)
-    df['p'] = [p_cm_vec] * len(df)
-    df['J'] = j
+    df = pd.merge(df.ix[:,2:].stack().reset_index(level=1), df.ix[:,:2], left_index=True, right_index=True)
+    df.columns = ['M^{0}', 'cg-coefficient', 'Irrep', '\mu']
     df['mult'] = 1
+    df['p_{cm}'] = [p_cm_vec] * len(df)
+    df['cg-coefficient'] = df['cg-coefficient'].apply(aeval)
+    df['M^{0}'] = df['M^{0}'].apply(int)
+    df = df.set_index(['p_{cm}', 'Irrep', '\mu', 'mult'])
+    df['p^{0}'] = [p_cm_vec] * len(df)
+    df['J^{0}'] = j
+    df = df[['p^{0}','J^{0}','M^{0}','cg-coefficient']]
 
 #    df.columns = pd.MultiIndex.from_tuples(
 #                    [('M',u''), ('cg-coefficient',u''), ('Irrep',u''), 
@@ -247,9 +238,9 @@ def get_lattice_basis(p_cm, p_cm_vecs, verbose=True, j=1):
       print 'lattice_basis for {}'.format(p_cm_vec)
       print df, '\n'
 
-    lattice_basis = pd.concat([lattice_basis, df], ignore_index=True)
+    lattice_basis = pd.concat([lattice_basis, df])
 
-  return lattice_basis
+  return lattice_basis.sort_index()
 
 # TODO: properly read that from infile and pass to get_clebsch_gordan
 # TODO: actually use names to restrict basis_table to what was in the infile
@@ -274,6 +265,20 @@ def get_continuum_basis(names, basis_type, verbose):
       the eigenstates it contains. There one column for each linearlz 
       independent Lorentz structure.
   """
+
+  basis_J0 = DataFrame({'J' : [0],
+                        'M' : [0], 
+                        'gamma_id' : range(1)*1, 
+                        'subduction-coefficient' : [1]})
+
+  gamma_5 = DataFrame({'\gamma' : [5],
+                         'gevp' : '\gamma_{5}  '})
+
+  gamma = gamma_5
+
+  basis_J0 = pd.merge(basis_J0, gamma, how='left', left_on=['gamma_id'], right_index=True)
+  del(basis_J0['gamma_id'])
+  basis_J0 = basis_J0.set_index(['J','M'])
 
   # implement trivial cartesian basis as it is taken account for in 
   # cg coefficients
@@ -306,52 +311,36 @@ def get_continuum_basis(names, basis_type, verbose):
     print "In get_continuum_basis: continuum_basis type ", basis_type, " not known!"
     exit()
 
-  basis = np.array(ladder_operators).flatten()
-#  basis = np.array([m + [0]*3 for m in ladder_operators] + \
-#                                  [[0]*3+m for m in ladder_operators]).flatten()
+  basis_J1 = DataFrame({'J' : [1]*9,
+                        'M' : [-1]*3+[0]*3+[1]*3, 
+                        'gamma_id' : range(3)*3, 
+                        'subduction-coefficient' : np.array(ladder_operators).flatten()})
 
-  # hardcode basis operators for \gamma_i and \gamma_5\gamma_0\gamma_i
-  # TODO: replace first list in MultiIndex.from_product by names (or some kind 
-  # of latex(names)
-#  basis_table = DataFrame(basis, \
-#            index=pd.MultiIndex.from_product( \
-#                [["\gamma_{i}  ", "\gamma_{50i}"], [1], [-1,0,1], \
-#                                     [(1,), (2,), (3,), (13,), (14,), (15,)]], \
-#                names=["gevp", 'J', 'M', '\gamma']), \
-#            columns=['subduction-coefficient'], dtype=complex).sort_index()
-  basis_table = DataFrame(basis, \
-            index=pd.MultiIndex.from_product( \
-                [["\gamma_{i}  "], [1], [-1,0,1], \
-                                     [1, 2, 3]], \
-                names=["gevp", 'J', 'M', '\gamma']), \
-            columns=['subduction-coefficient'], dtype=complex).sort_index()
-  basis_table = pd.concat([basis_table, DataFrame([1], \
-            index=pd.MultiIndex.from_product( \
-                [["\gamma_{5}  "], [0], [0], \
-                                     [5]], \
-                names=["gevp", 'J', 'M', '\gamma']), \
-            columns=['subduction-coefficient'], dtype=complex).sort_index()])
-  # conatenate basis chosen for two-pion operator. Trivial, because just two
-  # singlet states.
-  basis_table = pd.concat([basis_table, DataFrame([1], \
-            index=pd.MultiIndex.from_product( \
-                [["(\gamma_{5}, \gamma_{5})"], [(0,0)], [(0,0)], [(5,5)]], \
-                names=["gevp", 'J', 'M', '\gamma']), \
-            columns=['subduction-coefficient'], dtype=complex).sort_index()])
+  gamma_i   = DataFrame({'\gamma' : [1,2,3],
+                         'gevp' : '\gamma_{i}  '})
+  gamma_50i = DataFrame({'\gamma' : [13,14,15],
+                         'gevp' : '\gamma_{50i}'})
+
+  gamma = pd.concat([eval(n) for n in names])
+
+  basis_J1 = pd.merge(basis_J1, gamma, how='left', left_on=['gamma_id'], right_index=True)
+  del(basis_J1['gamma_id'])
+  basis_J1 = basis_J1.set_index(['J','M'])
+
+  basis = pd.concat([basis_J0, basis_J1])
 
   if verbose:
-    print 'basis_table'
-    print basis_table
+    print 'basis'
+    print basis
 
-  return basis_table[basis_table['subduction-coefficient'] != 0]
+  return basis[basis['subduction-coefficient'] != 0]
 
 
 # TODO: change p_cm to string symmetry_group in get_coeffients
 # TODO: find a better name for diagram after Wick contraction
 # TODO:  The information in irrep, mult and basis is redundant. return_cg() 
 #        should be changed to simplify the interface
-def get_coefficients(diagram, gammas, p_cm, irrep, basis, continuum_basis, \
-                                                                       verbose):
+def get_coefficients(diagram, p_cm, irrep, basis, su2_eigenstates, verbose):
   """
   Read table with required coefficients from forming continuum basis states, 
   subduction to the lattice and Clebsch-Gordan coupling
@@ -373,8 +362,8 @@ def get_coefficients(diagram, gammas, p_cm, irrep, basis, continuum_basis, \
   basis : pd.DataFrame      
       discrete basis states restricted to *irrep* and *mult*. 
       Has columns J, M, cg-coefficient, p, \mu and unnamed indices
-  continuum_basis : string
-      String specifying the continuum basis to be chosen. 
+  su2_eigenstates: pd.DataFrame
+      Basis of SU(2) eigenstates (Spin-J basis).
 
   Returns
   ------- 
@@ -386,13 +375,14 @@ def get_coefficients(diagram, gammas, p_cm, irrep, basis, continuum_basis, \
   """
 
   basis = select_irrep(basis, irrep)
-#  if irrep == 'A1g':
-#    irrep = 'A2g'
-#    mult = 3
+
+  print 'basis'
+  print basis
 
   if diagram.startswith('C2'):
     cg_table_so = basis
     cg_table_si = basis.copy()
+    continuum_basis_table = su2_eigenstates.rename(columns={'\gamma' : '\gamma^{0}'})
 #    cg_table_si['p'] = ((-1)*cg_table_si['p'].apply(np.array)).apply(tuple)
   elif diagram.startswith('C3'):
     # get factors for the desired irreps
@@ -412,15 +402,14 @@ def get_coefficients(diagram, gammas, p_cm, irrep, basis, continuum_basis, \
     print 'in get_coefficients: diagram unknown! Quantum numbers corrupted.'
     return
 
-  # express basis states for all Lorentz structures in `gammas` in terms of 
-  # physical Dirac operators
-  continuum_basis_table = get_continuum_basis(gammas, continuum_basis, verbose)
-
+  
   # express the subduced eigenstates in terms of Dirac operators.
-  cg_table_so = pd.merge(cg_table_so, continuum_basis_table.reset_index()).\
-                                                   set_index('\mu').sort_index()   
-  cg_table_si = pd.merge(cg_table_si, continuum_basis_table.reset_index()).\
-                                                   set_index('\mu').sort_index()  
+  cg_table_so = pd.merge(cg_table_so, continuum_basis_table, 
+                         how='left', left_on=['J^{0}','M^{0}'], right_index=True)   
+  cg_table_si = pd.merge(cg_table_si, continuum_basis_table, 
+                         how='left', left_on=['J^{0}','M^{0}'], right_index=True)   
+
+  print cg_table_so
 
   print 'cg_table_so'
   print cg_table_so
@@ -430,13 +419,13 @@ def get_coefficients(diagram, gammas, p_cm, irrep, basis, continuum_basis, \
   cg_table_so = cg_table_so[cg_table_so['cg-coefficient'] != 0]
   cg_table_so['coefficient'] = \
            cg_table_so['cg-coefficient'] * cg_table_so['subduction-coefficient']
-  cg_table_so.drop(['J', 'M', 'cg-coefficient', 'subduction-coefficient'], \
+  cg_table_so.drop(['J^{0}','M^{0}', 'cg-coefficient', 'subduction-coefficient'], \
                                                            axis=1, inplace=True)
   cg_table_si = cg_table_si[cg_table_si['cg-coefficient'] != 0]
   cg_table_si['coefficient'] = \
            cg_table_si['cg-coefficient'] * cg_table_si['subduction-coefficient']
 
-  cg_table_si.drop(['J', 'M', 'cg-coefficient', 'subduction-coefficient'], \
+  cg_table_si.drop(['J^{0}','M^{0}', 'cg-coefficient', 'subduction-coefficient'], \
                                                            axis=1, inplace=True)
 
   # combine clebsch-gordan coefficients for source and sink into one DataFrame
@@ -446,12 +435,6 @@ def get_coefficients(diagram, gammas, p_cm, irrep, basis, continuum_basis, \
   if verbose:
     print 'coefficients_irrep'
     print coefficients_irrep
-
-  # delete any rows where irreps at source and sink are different
-  tmp = coefficients_irrep["Irrep_{so}"] == coefficients_irrep["Irrep_{si}"]
-  coefficients_irrep = coefficients_irrep[tmp]
-  del(coefficients_irrep['Irrep_{si}'])
-  coefficients_irrep.rename(columns={'Irrep_{so}' : 'Irrep'}, inplace=True)
 
   return coefficients_irrep
 
@@ -487,25 +470,29 @@ def set_lookup_qn_irrep(coefficients_irrep, qn, verbose):
 #  print coefficients_irrep[coefficients_irrep['p_{so}'] == tuple([(2,0,0),(-1,0,0)])] 
 #  print qn[qn['p_{so}'] == tuple([(0,0,0),(0,0,1)])]
 #  return
-  qn_irrep = pd.merge(coefficients_irrep.reset_index(), qn.reset_index())
-#  print 'qn_irrep'
+  qn_irrep = pd.merge(coefficients_irrep.reset_index(), qn.reset_index(), 
+                      how='left', 
+                      left_on=['p^{0}_{so}', '\gamma^{0}_{so}', 'p^{0}_{si}', '\gamma^{0}_{si}'],
+                      right_on=[('p_{so}',0), ('\gamma_{so}',0), ('p_{si}',0), ('\gamma_{si}',0)])
+  # TODO: Check whether left merge results in nan somewhere as in this case data is missing
+  del(qn_irrep[('p_{so}',0)])
+  del(qn_irrep[('p_{si}',0)])
+  del(qn_irrep[('\gamma_{so}',0)])
+  del(qn_irrep[('\gamma_{si}',0)])
+  del(qn_irrep[('p_{cm}','')])
+  qn_irrep = qn_irrep.rename(columns = {('index', '') : 'index'})
+
 #  print qn_irrep[qn_irrep['p_{so}_x'] == qn_irrep['p_{so}_y']]
 
   # Add two additional columns with the same string if the quantum numbers 
   # describe equivalent physical constellations: gevp_row and gevp_col
-  qn_irrep['gevp_row'] = qn_irrep['p_{so}'].apply(np.array).apply(np.square).\
-                              apply(functools.partial(np.sum, axis=-1)).\
-                              astype(tuple).astype(str) \
-                         + qn_irrep['gevp_{so}']
-  qn_irrep['gevp_col'] = qn_irrep['p_{si}'].apply(np.array).apply(np.square).\
-                              apply(functools.partial(np.sum, axis=-1)).\
-                              astype(tuple).astype(str) \
-                         + qn_irrep['gevp_{si}']
+  qn_irrep['gevp_row'] = 'p: ' + qn_irrep['p_{cm}'].astype(str) \
+                         + ', g: ' + qn_irrep['gevp_{so}']
+  qn_irrep['gevp_col'] = 'p: ' + qn_irrep['p_{cm}'].astype(str) \
+                          + ', g: ' + qn_irrep['gevp_{si}']
 
   del(qn_irrep['gevp_{so}'])
   del(qn_irrep['gevp_{si}'])
-#  del(qn_irrep['mult_{so}'])
-#  del(qn_irrep['mult_{si}'])
 
   if verbose:
     print 'qn_irrep'
@@ -552,9 +539,8 @@ def ensembles(data, qn_irrep):
   del subduced['index']
   # construct hierarchical multiindex to be able to sum over momenta, average
   # over rows and reference gevp elements
-  subduced = subduced.set_index([ 'Irrep', 'gevp_row', 'gevp_col', 'p_{cm}', '\mu', \
-                      'p_{so}', '\gamma_{so}', 'p_{si}', '\gamma_{si}', 'mult_{so}',
-                      'mult_{si}'])
+  subduced = subduced.set_index([ 'Irrep', 'mult', 'gevp_row', 'gevp_col', 'p_{cm}', '\mu', \
+                      'p^{0}_{so}', '\gamma^{0}_{so}', 'p^{0}_{si}', '\gamma^{0}_{si}'])
   subduced = subduced[subduced.columns.difference(['coefficient_{so}','coefficient_{si}'])].\
               multiply(subduced['coefficient_{so}']*\
                        np.conj(subduced['coefficient_{si}']), axis=0)

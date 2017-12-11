@@ -1,17 +1,16 @@
-#!/hiskp2/jost/code/Enthought/System/bin/python
-#!/hiskp2/werner/libraries/Python-2.7.12/python
+#!/usr/bin/python
 import numpy as np
 
 import collections
 import sys
 
-import infile_handler
-import raw_data
-import utils
-import wick
-import subduction
-import setup_gevp
-import plot
+import source.infile_handler as infile_handler
+import source.raw_data as raw_data
+import source.utils as utils
+import source.wick as wick
+import source.subduction as subduction
+import source.setup_gevp as setup_gevp
+import source.plot as plot
 
 import pandas as pd
 from pandas import Series, DataFrame
@@ -26,7 +25,7 @@ def main():
   args, config = infile_handler.get_parameters()
 
   verbose = args.verbose
-  continuum_basis = args.basis
+  continuum_basis_string = args.basis
 
   # optional parameter, Default: False
   flag_pion           = config.getboolean('parameters', 'Read pion') 
@@ -249,14 +248,18 @@ def main():
         print lookup_qn[diagram].columns
 
         list_p_cm = lookup_qn[diagram]['p_{cm}'].unique()
+        # express basis states for all Lorentz structures in `gammas` in terms of 
+        # physical Dirac operators
+        su2_eigenstates = subduction.get_continuum_basis(gamma_input, continuum_basis_string, verbose)
+
         basis = subduction.get_lattice_basis(p_cm, list_p_cm, verbose, j=j)
 
         print basis.columns
 
         # List with the names of all contributing irreducible representations and 
         # their multiplicity
-        lookup_irreps = basis['Irrep'].unique()
- 
+        lookup_irreps = basis.index.get_level_values('Irrep').unique()
+
         for irrep in lookup_irreps:
           print '\t  subducing into %s' % irrep
           di = ContractionType(diagram, irrep)
@@ -264,8 +267,8 @@ def main():
           # read coefficients for correlation function, little group and irreducible 
           # representation given by diagram, p_cm irrep and mult
           # TODO: Refactor exploiting namedtuple 
-          coefficients_irrep = subduction.get_coefficients(diagram, gammas, p_cm, 
-              irrep, basis, continuum_basis, verbose)
+          coefficients_irrep = subduction.get_coefficients(diagram, p_cm, 
+              irrep, basis, su2_eigenstates, verbose)
           print 'coefficients_irrep'
           print coefficients_irrep
           print 'qn'
@@ -289,7 +292,7 @@ def main():
 
       # List with the names of all contributing irreducible representations and 
       # their multiplicity
-      lookup_irreps = basis['Irrep'].unique()
+      lookup_irreps = basis.index.get_level_values('Irrep').unique()
 
       path = '%s/%s/1_subduced-data/' % (outpath, ensemble)
   
