@@ -120,10 +120,14 @@ def main():
   if verbose >= 2:
     print diagrams
     print directories 
-  
-  outpath = config.get('other parameters', 'Output Path')
+
+  path_to_sc = config.get('Environment details', 
+                          'Path to subduction coefficients')
+ 
+  outpath = config.get('Environment details', 'Output Path')
   
   if verbose:
+    print 'Subduction coefficients will be read from', path_to_sc
     print 'Data will be writen to', outpath
   
   sep_rows_sep_mom = config.getboolean('plot details', 'Plot sep_rows_sep_mom') 
@@ -250,30 +254,27 @@ def main():
         list_p_cm = lookup_qn[diagram]['p_{cm}'].unique()
         # express basis states for all Lorentz structures in `gammas` in terms of 
         # physical Dirac operators
-        su2_eigenstates = subduction.get_continuum_basis(gamma_input, continuum_basis_string, verbose)
-
-        basis = subduction.get_lattice_basis(p_cm, list_p_cm, verbose, j=j)
-
-        print basis.columns
+        continuum_operators = subduction.get_continuum_basis(gamma_input, continuum_basis_string, verbose)
+        # Read subduction coefficients for all momenta in list_p_cm
+        sbdctn_coeffs = subduction.read_sc(list_p_cm, path_to_sc, verbose, j=j)
 
         # List with the names of all contributing irreducible representations and 
         # their multiplicity
-        lookup_irreps = basis.index.get_level_values('Irrep').unique()
+        list_of_irreps = sbdctn_coeffs.index.get_level_values('Irrep').unique()
 
-        for irrep in lookup_irreps:
+        for irrep in list_of_irreps:
           print '\t  subducing into %s' % irrep
           di = ContractionType(diagram, irrep)
 
+          print continuum_operators
+          exit(0)
           # read coefficients for correlation function, little group and irreducible 
           # representation given by diagram, p_cm irrep and mult
           # TODO: Refactor exploiting namedtuple 
-          coefficients_irrep = subduction.get_coefficients(diagram, p_cm, 
-              irrep, basis, su2_eigenstates, verbose)
-          print 'coefficients_irrep'
-          print coefficients_irrep
-          print 'qn'
-          print lookup_qn[di.diagram]
-          lookup_qn_irrep = subduction.set_lookup_qn_irrep(coefficients_irrep, \
+          lattice_operators = subduction.project_operators(
+                                di, sbdctn_coeffs, continuum_operators, verbose)
+
+          lookup_qn_irrep = subduction.set_lookup_qn_irrep(lattice_operators, \
                                                  lookup_qn[di.diagram], verbose)
           subduced_data[di] = subduction.ensembles(data[di.diagram], \
                                                                 lookup_qn_irrep)
@@ -292,13 +293,13 @@ def main():
 
       # List with the names of all contributing irreducible representations and 
       # their multiplicity
-      lookup_irreps = basis.index.get_level_values('Irrep').unique()
+      list_of_irreps = basis.index.get_level_values('Irrep').unique()
 
       path = '%s/%s/1_subduced-data/' % (outpath, ensemble)
   
       subduced_data = {}
       for diagram in diagrams:
-        for irrep in lookup_irreps:
+        for irrep in list_of_irreps:
           di = ContractionType(diagram, irrep)
 
           filename = '/%s_p%1i_%s.h5' % (diagram, p_cm, irrep)
@@ -315,7 +316,7 @@ def main():
 
       for correlator in correlators:
         print '\tcontracting data for %s' % correlator 
-        for irrep in lookup_irreps:
+        for irrep in list_of_irreps:
           print '\t  contracting in %s' % irrep
           ci = ContractionType(correlator, irrep)
 
@@ -358,7 +359,7 @@ def main():
       contracted_data_avg = {}
 
       for correlator in correlators:
-        for irrep in lookup_irreps:
+        for irrep in list_of_irreps:
           ci = ContractionType(correlator, irrep)
           path = '%s/%s/2_contracted-data/' % (outpath, ensemble)
 
@@ -388,7 +389,7 @@ def main():
       else:
         mode = "pipi"
 
-      for irrep in lookup_irreps:
+      for irrep in list_of_irreps:
         # loop over target irreps
         gevp_data = setup_gevp.build_gevp(contracted_data_avg, mode, irrep, verbose)
 
@@ -406,7 +407,7 @@ def main():
     # Plotting 
 
     if flag['plot']:
-      for irrep in lookup_irreps:
+      for irrep in list_of_irreps:
   
         path = '%s/%s/4_plots/p%1i/%s/' % (outpath, ensemble, p_cm, irrep)
         for correlator in correlators:

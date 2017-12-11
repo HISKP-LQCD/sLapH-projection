@@ -181,20 +181,26 @@ def return_cg(p_cm, irrep):
 
   return df
 
-def get_lattice_basis(p_cm, p_cm_vecs, verbose=True, j=1):
+
+# TODO: Write a function to calculate cross product if basis is not 
+#       complete and orthonormalize basis states
+# To extend to 2 particle operators this must support use of 2 momenta as well.
+# We get an additional column \vec{q} that works similar to the row of the 
+# irrep. Either the maple script has to find unique operators, or an additional
+# unique function must be used here. I prefer the former.
+def read_sc(p_cm_vecs, path, verbose=True, j=1):
   """
-  Calculate basis for irreducible representations of appropriate little group 
-  of rotational symmetry for lattice in a moving reference frame with 
-  momentum p_cm
+  Read subduction coefficients from SO(3) to irreducible representations of 
+  appropriate little group of rotational symmetry for lattice in a reference 
+  frame moving with momentum p_cm \in list_p_cm
 
   Parameters
   ----------
-    p_cm : int {0,1,2,3}
-        Absolute value of the center of mass momentum of the lattice
-
     p_cm_vecs : list
         Center of mass momentum of the lattice. Used to specify the appropriate
         little group of rotational symmetry. Contains integer 3-vectors
+    path : string
+        Path to files with subduction coefficients
 
   Returns
   -------
@@ -203,23 +209,29 @@ def get_lattice_basis(p_cm, p_cm_vecs, verbose=True, j=1):
         space. 
         Has columns Irrep, mult, J, M, cg-coefficient, p, \mu and unnamed 
         indices
-  """
 
-#  def normalize_basis():
-    #TODO: Write a function to calculate cross product if basis is not 
-    #      complete and orthonormalize basis states
+  Note
+  ----
+    Filename of subduction coefficients hardcoded. Expected to be 
+    "lattice-basis_J%d_P%1i%1i%1i_Msum.dataframe"
+  """
 
   lattice_basis = DataFrame()
 
   for p_cm_vec in p_cm_vecs:
 
-    filename = '/home/maow/Code/sLapH-projection/lattice-basis_maple/lattice-basis_J{0}_P{1}_Msum.dataframe'.format(j, "".join([str(p) for p in eval(p_cm_vec)]))
-    if not os.path.exists(filename):
-      print 'Warning: Could not find {}'.format(filename)
+    name = path +'/' + 'lattice-basis_J{0}_P{1}_Msum.dataframe'.format(\
+           j, "".join([str(p) for p in eval(p_cm_vec)]))
+    if not os.path.exists(name):
+      print 'Warning: Could not find {}'.format(name)
       continue
-    df = pd.read_csv(filename, delim_whitespace=True, dtype=str) 
+    df = pd.read_csv(name, delim_whitespace=True, dtype=str) 
 
-    df = pd.merge(df.ix[:,2:].stack().reset_index(level=1), df.ix[:,:2], left_index=True, right_index=True)
+    df = pd.merge(df.ix[:,2:].stack().reset_index(level=1), df.ix[:,:2], 
+                  left_index=True, 
+                  right_index=True)
+
+    # Munging of column names
     df.columns = ['M^{0}', 'cg-coefficient', 'Irrep', '\mu']
     df['mult'] = 1
     df['p_{cm}'] = [p_cm_vec] * len(df)
@@ -229,10 +241,6 @@ def get_lattice_basis(p_cm, p_cm_vecs, verbose=True, j=1):
     df['p^{0}'] = [p_cm_vec] * len(df)
     df['J^{0}'] = j
     df = df[['p^{0}','J^{0}','M^{0}','cg-coefficient']]
-
-#    df.columns = pd.MultiIndex.from_tuples(
-#                    [('M',u''), ('cg-coefficient',u''), ('Irrep',u''), 
-#                     ('\mu',u''), ('p',0), ('J',u''), ('mult',u'')])
 
     if verbose:
       print 'lattice_basis for {}'.format(p_cm_vec)
@@ -336,34 +344,28 @@ def get_continuum_basis(names, basis_type, verbose):
   return basis[basis['subduction-coefficient'] != 0]
 
 
-# TODO: change p_cm to string symmetry_group in get_coeffients
 # TODO: find a better name for diagram after Wick contraction
-# TODO:  The information in irrep, mult and basis is redundant. return_cg() 
-#        should be changed to simplify the interface
-def get_coefficients(diagram, p_cm, irrep, basis, su2_eigenstates, verbose):
+# TODO: No restriction to multiplicacy currently done
+def project_operators(di, sc, continuum_operators, verbose):
   """
   Read table with required coefficients from forming continuum basis states, 
   subduction to the lattice and Clebsch-Gordan coupling
 
   Parameters
   ----------  
-  diagram : string, {'C2', 'C3', 'C4'}
-      Type of correlation function contributing to gevp. The number is the 
-      number of quarklines
-  gammas : list of string
-      Contains the names of chosen multiplets as the set of continuum 
-      eigenstates is ambiguous and multiple choices might be wanted for a gevp.
-  p_cm : int
-      Center of mass momentum of the lattice. Used to specify the appropriate
-      little group of rotational symmetry
-  irrep : string, {'T1', 'A1', 'E2', 'B1', 'B2'}
-      name of the irreducible representation of the little group the operator
-      is required to transform under.
-  basis : pd.DataFrame      
-      discrete basis states restricted to *irrep* and *mult*. 
-      Has columns J, M, cg-coefficient, p, \mu and unnamed indices
-  su2_eigenstates: pd.DataFrame
-      Basis of SU(2) eigenstates (Spin-J basis).
+  di : namedtuple('ContractionType', ['diagram', 'irrep'])
+      diagram : string, {'C2', 'C3', 'C4'}
+          Type of correlation function contributing to gevp. The number is the 
+          number of quarklines
+      irrep : string
+          Name of the irreducible representation of the little group the operator
+          is required to transform under.
+  sc : pd.DataFrame      
+      Subduction coefficients. Has column cg-coefficient and MultiIndex 
+      p_{cm} Irrep \mu mult
+  continuum_operators: pd.DataFrame
+      Basis of SO(3) eigenstates (Spin-J basis). Has columns 
+      subduction-coefficient \gamma gevp and MultiIndex J M 
 
   Returns
   ------- 
@@ -374,24 +376,26 @@ def get_coefficients(diagram, p_cm, irrep, basis, su2_eigenstates, verbose):
       numbers
   """
 
-  basis = select_irrep(basis, irrep)
+  # Restrict subduction coefficients to irredicible representation specified 
+  # in di
+  sc = select_irrep(sc, di.irrep)
 
   print 'basis'
   print basis
 
-  if diagram.startswith('C2'):
+  if di.diagram.startswith('C2'):
     cg_table_so = basis
     cg_table_si = basis.copy()
     continuum_basis_table = su2_eigenstates.rename(columns={'\gamma' : '\gamma^{0}'})
 #    cg_table_si['p'] = ((-1)*cg_table_si['p'].apply(np.array)).apply(tuple)
-  elif diagram.startswith('C3'):
+  elif di.diagram.startswith('C3'):
     # get factors for the desired irreps
     cg_one_operator = basis
     cg_two_operators = return_cg(p_cm, irrep)
     # for 3pt function we have pipi operator at source and rho operator at sink
     cg_table_so, cg_table_si = cg_two_operators, cg_one_operator
 #    cg_table_si['p'] = (cg_table_si['p'].apply(np.array)*(-1)).apply(tuple)
-  elif diagram.startswith('C4'):
+  elif di.diagram.startswith('C4'):
     cg_table_so = return_cg(p_cm, irrep)
     cg_table_si = cg_table_so.copy()
 #    def to_tuple(list):
