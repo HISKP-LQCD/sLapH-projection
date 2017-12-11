@@ -39,7 +39,7 @@ def select_irrep(df, irrep):
   Returns
   -------
         df restricted to *irrep* and *mult*=1. 
-        Has columns p, J, M, cg-coefficient, index \mu
+        Has columns p, J, M, subduction-coefficient, index \mu
 
   See
   ---
@@ -68,7 +68,7 @@ def select_irrep_mult(df, irrep, mult):
   Returns
   -------
         df restricted to *irrep* and *mult*. 
-        Has columns p, J, M, cg-coefficient, index \mu
+        Has columns p, J, M, subduction-coefficient, index \mu
 
   See
   ---
@@ -207,7 +207,7 @@ def read_sc(p_cm_vecs, path, verbose=True, j=1):
     df : pd.DataFrame
         Contains subduction coefficients for going from continuum to discete
         space. 
-        Has columns Irrep, mult, J, M, cg-coefficient, p, \mu and unnamed 
+        Has columns Irrep, mult, J, M, subduction-coefficient, p, \mu and unnamed 
         indices
 
   Note
@@ -232,15 +232,15 @@ def read_sc(p_cm_vecs, path, verbose=True, j=1):
                   right_index=True)
 
     # Munging of column names
-    df.columns = ['M^{0}', 'cg-coefficient', 'Irrep', '\mu']
+    df.columns = ['M^{0}', 'subduction-coefficient', 'Irrep', '\mu']
     df['mult'] = 1
     df['p_{cm}'] = [p_cm_vec] * len(df)
-    df['cg-coefficient'] = df['cg-coefficient'].apply(aeval)
+    df['subduction-coefficient'] = df['subduction-coefficient'].apply(aeval)
     df['M^{0}'] = df['M^{0}'].apply(int)
     df = df.set_index(['p_{cm}', 'Irrep', '\mu', 'mult'])
     df['p^{0}'] = [p_cm_vec] * len(df)
     df['J^{0}'] = j
-    df = df[['p^{0}','J^{0}','M^{0}','cg-coefficient']]
+    df = df[['p^{0}','J^{0}','M^{0}','subduction-coefficient']]
 
     if verbose:
       print 'lattice_basis for {}'.format(p_cm_vec)
@@ -253,7 +253,7 @@ def read_sc(p_cm_vecs, path, verbose=True, j=1):
 # TODO: properly read that from infile and pass to get_clebsch_gordan
 # TODO: actually use names to restrict basis_table to what was in the infile
 # Bug: flag for wanted gamma structures is not used
-def get_continuum_basis(names, basis_type, verbose):
+def set_continuum_basis(names, basis_type, verbose):
   """
   Get table with chosen operators to transform as the *continuum* eigenstates
   of the vector spin representation
@@ -270,14 +270,14 @@ def get_continuum_basis(names, basis_type, verbose):
   basis_table : pd.DataFrame
       Table with linear coefficients to contruct a spin 1 eigenstate from 
       operators. Rows are hierarchical containing the `name` of a multiplet and 
-      the eigenstates it contains. There one column for each linearlz 
+      the eigenstates it contains. There one column for each linearly
       independent Lorentz structure.
   """
 
   basis_J0 = DataFrame({'J' : [0],
                         'M' : [0], 
                         'gamma_id' : range(1)*1, 
-                        'subduction-coefficient' : [1]})
+                        'coordinate' : [1]})
 
   gamma_5 = DataFrame({'\gamma' : [5],
                          'gevp' : '\gamma_{5}  '})
@@ -322,7 +322,7 @@ def get_continuum_basis(names, basis_type, verbose):
   basis_J1 = DataFrame({'J' : [1]*9,
                         'M' : [-1]*3+[0]*3+[1]*3, 
                         'gamma_id' : range(3)*3, 
-                        'subduction-coefficient' : np.array(ladder_operators).flatten()})
+                        'coordinate' : np.array(ladder_operators).flatten()})
 
   gamma_i   = DataFrame({'\gamma' : [1,2,3],
                          'gevp' : '\gamma_{i}  '})
@@ -341,19 +341,19 @@ def get_continuum_basis(names, basis_type, verbose):
     print 'basis'
     print basis
 
-  return basis[basis['subduction-coefficient'] != 0]
+  return basis[basis['coordinate'] != 0]
 
 
 # TODO: find a better name for diagram after Wick contraction
 # TODO: No restriction to multiplicacy currently done
 def project_operators(di, sc, continuum_operators, verbose):
   """
-  Read table with required coefficients from forming continuum basis states, 
-  subduction to the lattice and Clebsch-Gordan coupling
+  Project continuum operators to lattice using subduction coefficients 
 
   Parameters
   ----------  
   di : namedtuple('ContractionType', ['diagram', 'irrep'])
+      Specifies the type of operator and lattice
       diagram : string, {'C2', 'C3', 'C4'}
           Type of correlation function contributing to gevp. The number is the 
           number of quarklines
@@ -361,15 +361,15 @@ def project_operators(di, sc, continuum_operators, verbose):
           Name of the irreducible representation of the little group the operator
           is required to transform under.
   sc : pd.DataFrame      
-      Subduction coefficients. Has column cg-coefficient and MultiIndex 
+      Subduction coefficients. Has column subduction-coefficient and MultiIndex 
       p_{cm} Irrep \mu mult
   continuum_operators: pd.DataFrame
       Basis of SO(3) eigenstates (Spin-J basis). Has columns 
-      subduction-coefficient \gamma gevp and MultiIndex J M 
+      coordinate \gamma gevp and MultiIndex J M 
 
   Returns
   ------- 
-  coefficients_irrep: pd.DataFrame
+  lattice_operators: pd.DataFrame
       Table with all quantum numbers on source and sink as columns and the rows
       of the irreducible representations as rows. Also contains two columns
       with the appropriate Clebsch Gordan coefficient for all these quantum
@@ -380,13 +380,11 @@ def project_operators(di, sc, continuum_operators, verbose):
   # in di
   sc = select_irrep(sc, di.irrep)
 
-  print 'basis'
-  print basis
-
   if di.diagram.startswith('C2'):
-    cg_table_so = basis
-    cg_table_si = basis.copy()
-    continuum_basis_table = su2_eigenstates.rename(columns={'\gamma' : '\gamma^{0}'})
+    cg_table_so = sc
+    cg_table_si = sc.copy()
+    names_of_sc_columns = ['J^{0}','M^{0}']
+    continuum_basis_table = continuum_operators.rename(columns={'\gamma' : '\gamma^{0}'})
 #    cg_table_si['p'] = ((-1)*cg_table_si['p'].apply(np.array)).apply(tuple)
   elif di.diagram.startswith('C3'):
     # get factors for the desired irreps
@@ -409,9 +407,9 @@ def project_operators(di, sc, continuum_operators, verbose):
   
   # express the subduced eigenstates in terms of Dirac operators.
   cg_table_so = pd.merge(cg_table_so, continuum_basis_table, 
-                         how='left', left_on=['J^{0}','M^{0}'], right_index=True)   
+                         how='left', left_on=names_of_sc_columns, right_index=True)
   cg_table_si = pd.merge(cg_table_si, continuum_basis_table, 
-                         how='left', left_on=['J^{0}','M^{0}'], right_index=True)   
+                         how='left', left_on=names_of_sc_columns, right_index=True)
 
   print cg_table_so
 
@@ -420,27 +418,27 @@ def project_operators(di, sc, continuum_operators, verbose):
 
   # Munging the result: Delete rows with coefficient 0, combine coefficients 
   # and clean columns no longer needed.
-  cg_table_so = cg_table_so[cg_table_so['cg-coefficient'] != 0]
+  cg_table_so = cg_table_so[cg_table_so['subduction-coefficient'] != 0]
   cg_table_so['coefficient'] = \
-           cg_table_so['cg-coefficient'] * cg_table_so['subduction-coefficient']
-  cg_table_so.drop(['J^{0}','M^{0}', 'cg-coefficient', 'subduction-coefficient'], \
+           cg_table_so['subduction-coefficient'] * cg_table_so['coordinate']
+  cg_table_so.drop(['J^{0}','M^{0}', 'subduction-coefficient', 'coordinate'], \
                                                            axis=1, inplace=True)
-  cg_table_si = cg_table_si[cg_table_si['cg-coefficient'] != 0]
+  cg_table_si = cg_table_si[cg_table_si['subduction-coefficient'] != 0]
   cg_table_si['coefficient'] = \
-           cg_table_si['cg-coefficient'] * cg_table_si['subduction-coefficient']
+           cg_table_si['subduction-coefficient'] * cg_table_si['coordinate']
 
-  cg_table_si.drop(['J^{0}','M^{0}', 'cg-coefficient', 'subduction-coefficient'], \
+  cg_table_si.drop(['J^{0}','M^{0}', 'subduction-coefficient', 'coordinate'], \
                                                            axis=1, inplace=True)
 
   # combine clebsch-gordan coefficients for source and sink into one DataFrame
-  coefficients_irrep = pd.merge(cg_table_so, cg_table_si, how='inner', \
+  lattice_operators = pd.merge(cg_table_so, cg_table_si, how='inner', \
       left_index=True, right_index=True, suffixes=['_{so}', '_{si}']) 
 
   if verbose:
-    print 'coefficients_irrep'
-    print coefficients_irrep
+    print 'lattice_operators'
+    print lattice_operators
 
-  return coefficients_irrep
+  return lattice_operators
 
 def set_lookup_qn_irrep(coefficients_irrep, qn, verbose):
   """
@@ -465,8 +463,8 @@ def set_lookup_qn_irrep(coefficients_irrep, qn, verbose):
       Table with a column for each quantum number at source and sink, the
       Clebsch-Gordan coefficients at source and sink and a column decoding
       the row and column of the gevp these quantum numbers enter into:
-      \mu \gamma_{so} cg-coefficient_{so} p_{so} \gamma_{si} \
-          cg-coefficient_{si} p_{si} index gevp_row gevp_col
+      \mu \gamma_{so} coefficient_{so} p_{so} \gamma_{si} \
+          coefficient_{si} p_{si} index gevp_row gevp_col
   """
 
   # associate clebsch-gordan coefficients with the correct qn index
@@ -519,8 +517,8 @@ def ensembles(data, qn_irrep):
       Series with a column for each quantum number at source and sink, the
       Clebsch-Gordan coefficients at source and sink and a column decoding
       the row and column of the gevp these quantum numbers enter into:
-      \mu \gamma_{so} cg-coefficient_{so} p_{so} \gamma_{si} \
-          cg-coefficient_{si} p_{si} index gevp_row gevp_col
+      \mu \gamma_{so} coefficient_{so} p_{so} \gamma_{si} \
+          coefficient_{si} p_{si} index gevp_row gevp_col
 
   Returns
   -------

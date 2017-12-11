@@ -252,9 +252,12 @@ def main():
         print lookup_qn[diagram].columns
 
         list_p_cm = lookup_qn[diagram]['p_{cm}'].unique()
-        # express basis states for all Lorentz structures in `gammas` in terms of 
-        # physical Dirac operators
-        continuum_operators = subduction.get_continuum_basis(gamma_input, continuum_basis_string, verbose)
+
+        # Express :math:`O^{J,M}` in terms of physical Dirac operators specified 
+        # in `gamma_input`
+        continuum_operators = subduction.set_continuum_basis(
+                                gamma_input, continuum_basis_string, verbose)
+
         # Read subduction coefficients for all momenta in list_p_cm
         sbdctn_coeffs = subduction.read_sc(list_p_cm, path_to_sc, verbose, j=j)
 
@@ -266,8 +269,6 @@ def main():
           print '\t  subducing into %s' % irrep
           di = ContractionType(diagram, irrep)
 
-          print continuum_operators
-          exit(0)
           # read coefficients for correlation function, little group and irreducible 
           # representation given by diagram, p_cm irrep and mult
           # TODO: Refactor exploiting namedtuple 
