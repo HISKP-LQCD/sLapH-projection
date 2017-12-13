@@ -479,9 +479,23 @@ def set_lookup_corr(coefficients_irrep, qn, verbose):
 
   lookup_corr.drop(['operator_label_{so}', 'operator_label_{si}'], axis=1, inplace=True)
 
+  # Set index as it shall appear in projected correlators
   index = lookup_corr.columns.difference(['index', 'coefficient_{so}', 'coefficient_{si}']).tolist()
-  print index
-  exit(0)
+  order = { 'p_{cm}' : 0, 
+            'gevp_row' : 1, 
+            'gevp_col' : 2, 
+            'Irrep' : 3, 
+            'mult' : 4, 
+            '\mu' : 5, 
+            'p^{0}_{so}' : 6, 
+            'p^{1}_{so}' : 7, 
+            'p^{0}_{si}' : 8, 
+            'p^{1}_{si}' : 9, 
+            '\gamma^{0}_{so}' : 10, 
+            '\gamma^{1}_{so}' : 11, 
+            '\gamma^{0}_{si}' : 12, 
+            '\gamma^{1}_{si}' : 13} 
+  index = sorted(index, key=lambda x : order[x])
   lookup_corr.set_index(index, inplace=True)
 
   if verbose:
@@ -518,30 +532,21 @@ def project_correlators(data, qn_irrep):
   """
 
   # actual subduction step. sum cg_so * conj(cg_si) * corr
-  # TODO: This generates a warning 
-  # /hadron/werner/.local/lib/python2.7/site-packages/pandas/tools/merge.py:480: UserWarning: merging between different levels can give an unintended result (1 levels on the left, 2 on the right)
-  #  warnings.warn(msg, UserWarning)
-  # But the merging is on one level only.
+  projected_correlators = pd.merge(qn_irrep, data.T, 
+                                   how='left', left_on=['index'], right_index=True)
+  del projected_correlators['index']
 
-  subduced = pd.merge(qn_irrep, data.T, how='left', left_on=['index'], 
-                                                               right_index=True)
-  # not needed after index was merged on
-  del subduced['index']
-  # construct hierarchical multiindex to be able to sum over momenta, average
-  # over rows and reference gevp elements
-#  subduced = subduced.set_index([ 'Irrep', 'mult', 'gevp_row', 'gevp_col', 'p_{cm}', '\mu', \
-#                      'p^{0}_{so}', '\gamma^{0}_{so}', 'p^{0}_{si}', '\gamma^{0}_{si}'])
-  subduced = subduced[subduced.columns.difference(['coefficient_{so}','coefficient_{si}'])].\
-              multiply(subduced['coefficient_{so}']*\
-                       np.conj(subduced['coefficient_{si}']), axis=0)
+  projected_correlators = projected_correlators[
+        projected_correlators.columns.difference(['coefficient_{so}','coefficient_{si}'])].\
+       multiply(projected_correlators['coefficient_{so}'] * \
+       np.conj(projected_correlators['coefficient_{si}']), axis=0)
 
-  subduced.columns=pd.MultiIndex.from_tuples(subduced.columns, \
+  projected_correlators.columns=pd.MultiIndex.from_tuples(projected_correlators.columns, \
                                                          names=('cnfg', 'T'))
 
-  subduced = subduced.sort_index()
-  print subduced
+  projected_correlators = projected_correlators.sort_index()
 
   # I do not know why the dtype got converted to object, but convert it back
   # to complex
-  return subduced.apply(pd.to_numeric).sort_index()
+  return projected_correlators.apply(pd.to_numeric).sort_index()
 
