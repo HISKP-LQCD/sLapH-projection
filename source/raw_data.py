@@ -80,7 +80,7 @@ def set_lookup_g(gammas, diagram):
 
     lookup_so = DataFrame([g for gamma in gammas for g in gamma[:-1]])
     lookup_so.index = np.repeat(0, len(lookup_so))
-    lookup_so.columns = pd.MultiIndex.from_tuples( [('\gamma', 0)] )
+    lookup_so.columns = ['\gamma^{0}']
 
     lookup_si = lookup_so
 
@@ -88,7 +88,7 @@ def set_lookup_g(gammas, diagram):
 
     lookup_so = DataFrame([5])
     lookup_so.index = np.repeat(0, len(lookup_so))
-    lookup_so.columns = pd.MultiIndex.from_tuples( [('\gamma', 0)] )
+    lookup_so.columns = ['\gamma^{0}']
 
     lookup_si = lookup_so
 
@@ -98,11 +98,11 @@ def set_lookup_g(gammas, diagram):
     lookup.index = np.repeat(0, len(lookup))
 
     lookup_so = pd.merge(lookup, lookup, left_index=True, right_index=True)
-    lookup_so.columns = pd.MultiIndex.from_tuples( [('\gamma', 0), ('\gamma', 1) ] )
+    lookup_so.columns = ['\gamma^{0}', '\gamma^{1}']
 
     lookup_si = DataFrame([g for gamma in gammas for g in gamma[:-1]])
     lookup_si.index = np.repeat(0, len(lookup_si))
-    lookup_si.columns = pd.MultiIndex.from_tuples( [('\gamma', 0)] )
+    lookup_si.columns = ['\gamma^{0}']
 
   elif diagram.startswith('C4'):
 
@@ -110,7 +110,7 @@ def set_lookup_g(gammas, diagram):
     lookup.index = np.repeat(0, len(lookup))
 
     lookup_so = pd.merge(lookup, lookup, left_index=True, right_index=True)
-    lookup_so.columns = pd.MultiIndex.from_tuples( [('\gamma', 0), ('\gamma', 1) ] )
+    lookup_so.columns = ['\gamma^{0}', '\gamma^{1}']
 
     lookup_si = lookup_so
 
@@ -197,28 +197,42 @@ def set_groupname(diagram, s):
   Function takes a series as argument in order to be called in DataFrame.apply()
   """
 
-  p_so = s['p_{so}'].apply(eval)
-  g_so = s['\gamma_{so}']
-
-  p_si = s['p_{si}'].apply(eval).apply(_minus)
-  g_si = s['\gamma_{si}']
-
   if diagram.startswith('C2'):
+    p_so = eval(s['p^{0}_{so}'])
+    g_so = s['\gamma^{0}_{so}']
+    p_si = eval(s['p^{0}_{si}'])
+    g_si = s['\gamma^{0}_{si}']
+
     groupname = diagram \
-                  + '_uu_p%1i%1i%1i.d000.g%i' % ( p_so[0] + (g_so[0],) ) \
-                  +    '_p%1i%1i%1i.d000.g%i' % ( p_si[0] + (g_si[0],) ) 
+                  + '_uu_p%1i%1i%1i.d000.g%i' % ( p_so + (g_so,) ) \
+                  +    '_p%1i%1i%1i.d000.g%i' % ( p_si + (g_si,) ) 
   elif diagram.startswith('C3'):
+    p_so = np.array(eval(s['p^{0}_{so}']), eval(s['p^{1}_{so}']))
+    g_so = np.array(s['\gamma^{0}_{so}'], s['\gamma^{1}_{so}'])
+    p_si = eval(s['p^{0}_{si}'])
+    g_si = s['\gamma^{0}_{si}']
+
     groupname = diagram \
                   + '_uuu_p%1i%1i%1i.d000.g%1i' % ( p_so[0] + (g_so[0],) ) \
-                  +     '_p%1i%1i%1i.d000.g%1i' % ( p_si[0] + (g_si[0],) ) \
+                  +     '_p%1i%1i%1i.d000.g%1i' % ( p_si +    (g_si,) ) \
                   +     '_p%1i%1i%1i.d000.g%1i' % ( p_so[1] + (g_so[1],) )
   elif diagram == 'C4+D' or diagram == 'C4+C':
+    p_so = np.array(eval(s['p^{0}_{so}']), eval(s['p^{1}_{so}']))
+    g_so = np.array(s['\gamma^{0}_{so}'], s['\gamma^{1}_{so}'])
+    p_si = np.array(eval(s['p^{0}_{si}']), eval(s['p^{1}_{si}']))
+    g_si = np.array(s['\gamma^{0}_{si}'], s['\gamma^{1}_{si}'])
+
     groupname = diagram \
                   + '_uuuu_p%1i%1i%1i.d000.g%1i' % ( p_so[0] + (g_so[0],) ) \
                   +      '_p%1i%1i%1i.d000.g%1i' % ( p_si[0] + (g_si[0],) ) \
                   +      '_p%1i%1i%1i.d000.g%1i' % ( p_so[1] + (g_so[1],) ) \
                   +      '_p%1i%1i%1i.d000.g%1i' % ( p_si[1] + (g_si[1],) )
   elif diagram == 'C4+B':
+    p_so = np.array(eval(s['p^{0}_{so}']), eval(s['p^{1}_{so}']))
+    g_so = np.array(s['\gamma^{0}_{so}'], s['\gamma^{1}_{so}'])
+    p_si = np.array(eval(s['p^{0}_{si}']), eval(s['p^{1}_{si}']))
+    g_si = np.array(s['\gamma^{0}_{si}'], s['\gamma^{1}_{si}'])
+
     groupname = diagram \
                   + '_uuuu_p%1i%1i%1i.d000.g%1i' % ( p_so[0] + (g_so[0],) ) \
                   +      '_p%1i%1i%1i.d000.g%1i' % ( p_si[0] + (g_si[0],) ) \

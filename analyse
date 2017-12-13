@@ -173,6 +173,7 @@ def main():
       else:
         pion_data = raw_data.read(lookup_cnfg, pion_qn, diagram, T, 
                                                              directory, verbose)
+
       # write data
       path = '%s/%s/0_raw-data/' % (outpath, ensemble)
       filename = '%s_p%1i.h5' % ('pi', p_cm)

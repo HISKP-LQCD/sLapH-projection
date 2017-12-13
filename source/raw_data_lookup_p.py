@@ -29,10 +29,10 @@ def set_lookup_p_for_one_particle(lookup_p3, p_cm):
   # Restrict set of 3-momenta to those with the correct abulute value
   # Set multiindex to allow combination with two-particle operators
   lookup = DataFrame.copy(lookup_p3[lookup_p3['p'].apply(_abs2) == p_cm])
-  lookup.columns = pd.MultiIndex.from_tuples([('p',0)])
+  lookup.columns = ['p^{0}']
 
   # Total momentum is equal to the particle's momentum
-  lookup['p_{cm}'] = lookup[('p',0)]
+  lookup['p_{cm}'] = lookup['p^{0}']
 
   return lookup.applymap(str)
 
@@ -65,11 +65,11 @@ def set_lookup_p_for_two_particles(lookup_p3, p_max, p_cm, skip=False):
   # DataFrame with all combinations of 3-momenta
   lookup = pd.merge(lookup_p3, lookup_p3, how='outer', \
                        left_index=True, right_index=True)
-  lookup.columns = pd.MultiIndex.from_tuples([('p',0), ('p',1)])
+  lookup.columns = ['p^{0}', 'p^{0}']
 
   # Total momentum is equal to the sum of the particle's momenta
   lookup['p_{cm}'] = map(lambda k1, k2: tuple([sum(x) for x in zip(k1,k2)]), \
-                                lookup[('p',0)], lookup[('p',1)])
+                                lookup['p^{0}'], lookup['p^{0}'])
 
   # Restrict set of 3-momenta to those with the correct abulute value
   lookup = lookup[lookup['p_{cm}'].apply(_abs2) == p_cm]
@@ -80,7 +80,7 @@ def set_lookup_p_for_two_particles(lookup_p3, p_max, p_cm, skip=False):
   # \pi(0,0,0) + \pi(0,0,0) -> \rho(0,0,0) forbidden by angular momentum 
   # conservation
   if skip:
-    lookup = lookup[(lookup[('p',0)] != (0,0,0)) | (lookup[('p',1)] != (0,0,0))]
+    lookup = lookup[(lookup['p^{0}'] != (0,0,0)) | (lookup['p^{0}'] != (0,0,0))]
 
   return lookup.applymap(str)
 
