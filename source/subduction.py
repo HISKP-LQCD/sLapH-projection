@@ -43,7 +43,7 @@ def select_irrep(df, irrep):
 
   See
   ---
-    get_lattice_basis()
+    read_sc()
   """
 
   return select_irrep_mult(df, irrep, 1)
@@ -72,7 +72,7 @@ def select_irrep_mult(df, irrep, mult):
 
   See
   ---
-    get_lattice_basis()
+    read_sc()
   """
 
   return df.xs((irrep,mult), level=('Irrep','mult'), drop_level=False)
@@ -216,7 +216,7 @@ def read_sc(p_cm_vecs, path, verbose=True, j=1):
     "lattice-basis_J%d_P%1i%1i%1i_Msum.dataframe"
   """
 
-  lattice_basis = DataFrame()
+  subduction_coefficients = DataFrame()
 
   for p_cm_vec in p_cm_vecs:
 
@@ -243,12 +243,12 @@ def read_sc(p_cm_vecs, path, verbose=True, j=1):
     df = df[['p^{0}','J^{0}','M^{0}','subduction-coefficient']]
 
     if verbose:
-      print 'lattice_basis for {}'.format(p_cm_vec)
+      print 'subduction_coefficients for {}'.format(p_cm_vec)
       print df, '\n'
 
-    lattice_basis = pd.concat([lattice_basis, df])
+    subduction_coefficients = pd.concat([subduction_coefficients, df])
 
-  return lattice_basis.sort_index()
+  return subduction_coefficients.sort_index()
 
 # TODO: properly read that from infile and pass to get_clebsch_gordan
 # TODO: actually use names to restrict basis_table to what was in the infile
@@ -381,58 +381,55 @@ def project_operators(di, sc, continuum_operators, verbose):
   sc = select_irrep(sc, di.irrep)
 
   if di.diagram.startswith('C2'):
-    cg_table_so = sc
-    cg_table_si = sc.copy()
-    names_of_sc_columns = ['J^{0}','M^{0}']
+    continuum_labels_so = ['J^{0}','M^{0}']
+    continuum_labels_si = ['J^{0}','M^{0}']
     continuum_basis_table = continuum_operators.rename(columns={'\gamma' : '\gamma^{0}'})
-#    cg_table_si['p'] = ((-1)*cg_table_si['p'].apply(np.array)).apply(tuple)
+#    operator_si['p'] = ((-1)*operator_si['p'].apply(np.array)).apply(tuple)
   elif di.diagram.startswith('C3'):
     # get factors for the desired irreps
     cg_one_operator = basis
     cg_two_operators = return_cg(p_cm, irrep)
     # for 3pt function we have pipi operator at source and rho operator at sink
-    cg_table_so, cg_table_si = cg_two_operators, cg_one_operator
-#    cg_table_si['p'] = (cg_table_si['p'].apply(np.array)*(-1)).apply(tuple)
+    operator_so, operator_si = cg_two_operators, cg_one_operator
+#    operator_si['p'] = (operator_si['p'].apply(np.array)*(-1)).apply(tuple)
   elif di.diagram.startswith('C4'):
-    cg_table_so = return_cg(p_cm, irrep)
-    cg_table_si = cg_table_so.copy()
+    operator_so = return_cg(p_cm, irrep)
+    operator_si = operator_so.copy()
 #    def to_tuple(list):
 #      return tuple([tuple(l) for l in list])
-#    cg_table_si['p'] = (cg_table_si['p'].apply(np.array)*(-1)).apply(to_tuple)
+#    operator_si['p'] = (operator_si['p'].apply(np.array)*(-1)).apply(to_tuple)
 
   else:
     print 'in get_coefficients: diagram unknown! Quantum numbers corrupted.'
     return
 
   
-  # express the subduced eigenstates in terms of Dirac operators.
-  cg_table_so = pd.merge(cg_table_so, continuum_basis_table, 
-                         how='left', left_on=names_of_sc_columns, right_index=True)
-  cg_table_si = pd.merge(cg_table_si, continuum_basis_table, 
-                         how='left', left_on=names_of_sc_columns, right_index=True)
-
-  print cg_table_so
-
-  print 'cg_table_so'
-  print cg_table_so
+  # Project operators 
+  # :math: `O^{\Gamma, \mu} = S^{\Gamma J}_{\mu, m} \cdot O^{J, m}`
+  operator_so = pd.merge(sc, continuum_basis_table, 
+                         how='left', left_on=continuum_labels_so, right_index=True)
+  operator_si = pd.merge(sc, continuum_basis_table, 
+                         how='left', left_on=continuum_labels_si, right_index=True)
 
   # Munging the result: Delete rows with coefficient 0, combine coefficients 
-  # and clean columns no longer needed.
-  cg_table_so = cg_table_so[cg_table_so['subduction-coefficient'] != 0]
-  cg_table_so['coefficient'] = \
-           cg_table_so['subduction-coefficient'] * cg_table_so['coordinate']
-  cg_table_so.drop(['J^{0}','M^{0}', 'subduction-coefficient', 'coordinate'], \
-                                                           axis=1, inplace=True)
-  cg_table_si = cg_table_si[cg_table_si['subduction-coefficient'] != 0]
-  cg_table_si['coefficient'] = \
-           cg_table_si['subduction-coefficient'] * cg_table_si['coordinate']
+  # and clean columns no longer needed: Labels for continuum basis and factors 
+  # entering the final coefficient
+  operator_so = operator_so[operator_so['subduction-coefficient'] != 0]
+  operator_so['coefficient'] = \
+           operator_so['subduction-coefficient'] * operator_so['coordinate']
+  operator_so.drop(continuum_labels_so + ['subduction-coefficient', 'coordinate'],
+                   axis=1, inplace=True)
 
-  cg_table_si.drop(['J^{0}','M^{0}', 'subduction-coefficient', 'coordinate'], \
-                                                           axis=1, inplace=True)
+  operator_si = operator_si[operator_si['subduction-coefficient'] != 0]
+  operator_si['coefficient'] = \
+           operator_si['subduction-coefficient'] * operator_si['coordinate']
+  operator_si.drop(continuum_labels_si + ['subduction-coefficient', 'coordinate'],
+                   axis=1, inplace=True)
 
   # combine clebsch-gordan coefficients for source and sink into one DataFrame
-  lattice_operators = pd.merge(cg_table_so, cg_table_si, how='inner', \
-      left_index=True, right_index=True, suffixes=['_{so}', '_{si}']) 
+  lattice_operators = pd.merge(operator_so, operator_si, 
+                               how='inner', left_index=True, right_index=True, 
+                               suffixes=['_{so}', '_{si}']) 
 
   if verbose:
     print 'lattice_operators'
