@@ -80,20 +80,7 @@ def main():
     print ensemble
     print T
   
-  # gamma structure wich shall be averaged. Last entry of gamma must contain all
-  # names in LaTeX compatible notation for plot labels
-  gamma_dictionary = {
-  'gamma_i' :   [1, 2, 3, \
-                ['\gamma_1', '\gamma_2', '\gamma_3', '\gamma_i']],
-  'gamma_0i' :  [10, 11, 12, \
-                ['\gamma_0\gamma_1', '\gamma_0\gamma_2', '\gamma_0\gamma_3', \
-                 '\gamma_0\gamma_i']],
-  'gamma_50i' : [13, 14, 15, \
-                ['\gamma_5\gamma_0\gamma_1', '\gamma_5\gamma_0\gamma_2', \
-                 '\gamma_5\gamma_0\gamma_3', '\gamma_5\gamma_0\gamma_i']],
-  'gamma_5' :   [5, ['\gamma_5']]
-  }
-  
+ 
   p_max = config.getint('gevp parameters', 'p_max')
   p = config.get('gevp parameters', 'p_cm')
   p = [int(k) for k in p.split(',')]
@@ -101,7 +88,9 @@ def main():
   # translates list of names for gamma structures to indices used in contraction 
   # code
   gamma_input = gamma_input.replace(" ", "").split(',')
-  gammas = [gamma_dictionary[g] for g in gamma_input]
+  gamma_input = {0 : ['gamma_5'],
+                 1 : gamma_input
+                }
   
   if verbose >= 2:
     print p_max
@@ -164,7 +153,7 @@ def main():
 
       lookup_cnfg = raw_data.set_lookup_cnfg(sta_cnfg, end_cnfg, del_cnfg, \
                                                        missing_configs, verbose)
-      pion_qn = raw_data.set_lookup_qn(diagram, p_cm, p_max, gammas, process=process,
+      pion_qn = raw_data.set_lookup_qn(diagram, p_cm, p_max, gamma_input, process=process,
           verbose=verbose)
     
       if flag_old:
@@ -202,7 +191,7 @@ def main():
         # TODO: That needs to be refactored when going to a larger operator 
         #       basis
         lookup_qn[diagram] = raw_data.set_lookup_qn(diagram, p_cm, p_max, 
-                                         gammas, process=process, verbose=verbose)
+                                         gamma_input, process=process, verbose=verbose)
     
         if flag_old:
           data[diagram] = raw_data.read_old(lookup_cnfg, lookup_qn[diagram], diagram, T, 
@@ -464,6 +453,7 @@ def main():
 
 ################################################################################
 if __name__ == '__main__':
+  pd.set_option('display.width',None)
   try:
     main()
   except KeyboardInterrupt:

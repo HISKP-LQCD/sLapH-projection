@@ -252,6 +252,7 @@ def read_sc(p_cm_vecs, path, verbose=True, j=1):
 
 # TODO: properly read that from infile and pass to get_clebsch_gordan
 # TODO: actually use names to restrict basis_table to what was in the infile
+# TODO: Unify that with set_lookup_g
 # Bug: flag for wanted gamma structures is not used
 def set_continuum_basis(names, basis_type, verbose):
   """
@@ -280,9 +281,9 @@ def set_continuum_basis(names, basis_type, verbose):
                         'coordinate' : [1]})
 
   gamma_5 = DataFrame({'\gamma' : [5],
-                         'gevp' : '\gamma_{5}  '})
+                         'operator_label' : '\gamma_{5}  '})
 
-  gamma = gamma_5
+  gamma = pd.concat([eval(n) for n in names[0]])
 
   basis_J0 = pd.merge(basis_J0, gamma, how='left', left_on=['gamma_id'], right_index=True)
   del(basis_J0['gamma_id'])
@@ -325,11 +326,11 @@ def set_continuum_basis(names, basis_type, verbose):
                         'coordinate' : np.array(ladder_operators).flatten()})
 
   gamma_i   = DataFrame({'\gamma' : [1,2,3],
-                         'gevp' : '\gamma_{i}  '})
+                         'operator_label' : '\gamma_{i}  '})
   gamma_50i = DataFrame({'\gamma' : [13,14,15],
-                         'gevp' : '\gamma_{50i}'})
+                         'operator_label' : '\gamma_{50i}'})
 
-  gamma = pd.concat([eval(n) for n in names])
+  gamma = pd.concat([eval(n) for n in names[1]])
 
   basis_J1 = pd.merge(basis_J1, gamma, how='left', left_on=['gamma_id'], right_index=True)
   del(basis_J1['gamma_id'])
@@ -465,37 +466,22 @@ def set_lookup_qn_irrep(coefficients_irrep, qn, verbose):
   """
 
   # associate clebsch-gordan coefficients with the correct qn index
-
-#  print coefficients_irrep[coefficients_irrep['p_{so}'] == tuple([(2,0,0),(-1,0,0)])] 
-#  print qn[qn['p_{so}'] == tuple([(0,0,0),(0,0,1)])]
-#  return
-  qn_irrep = pd.merge(coefficients_irrep.reset_index(), qn.reset_index(), 
-                      how='left', 
-                      left_on=['p^{0}_{so}', '\gamma^{0}_{so}', 'p^{0}_{si}', '\gamma^{0}_{si}'],
-                      right_on=[('p_{so}',0), ('\gamma_{so}',0), ('p_{si}',0), ('\gamma_{si}',0)])
   # TODO: Check whether left merge results in nan somewhere as in this case data is missing
-  del(qn_irrep[('p_{so}',0)])
-  del(qn_irrep[('p_{si}',0)])
-  del(qn_irrep[('\gamma_{so}',0)])
-  del(qn_irrep[('\gamma_{si}',0)])
-  del(qn_irrep[('p_{cm}','')])
-  qn_irrep = qn_irrep.rename(columns = {('index', '') : 'index'})
-
-#  print qn_irrep[qn_irrep['p_{so}_x'] == qn_irrep['p_{so}_y']]
+  qn_irrep = pd.merge(coefficients_irrep.reset_index(), qn.reset_index(), 
+                      how='left')
 
   # Add two additional columns with the same string if the quantum numbers 
   # describe equivalent physical constellations: gevp_row and gevp_col
-  qn_irrep['gevp_row'] = 'p: ' + qn_irrep['p_{cm}'].astype(str) \
-                         + ', g: ' + qn_irrep['gevp_{so}']
-  qn_irrep['gevp_col'] = 'p: ' + qn_irrep['p_{cm}'].astype(str) \
-                          + ', g: ' + qn_irrep['gevp_{si}']
+  qn_irrep['gevp_row'] = 'p: ' + qn_irrep['p_{cm}'] \
+                         + ', g: ' + qn_irrep['operator_label_{so}']
+  qn_irrep['gevp_col'] = 'p: ' + qn_irrep['p_{cm}'] \
+                          + ', g: ' + qn_irrep['operator_label_{si}']
 
-  del(qn_irrep['gevp_{so}'])
-  del(qn_irrep['gevp_{si}'])
+  qn_irrep.drop(['operator_label_{so}', 'operator_label_{si}'], axis=1, inplace=True)
 
   if verbose:
     print 'qn_irrep'
-    print qn_irrep
+    print qn_irrep.set_index(qn_irrep.columns[qn_irrep.columns!='index'])
     utils.write_hdf5_correlators('./', 'qn_irrep.h5', qn_irrep, 'data', verbose=False)
 
   return qn_irrep
