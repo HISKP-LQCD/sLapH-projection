@@ -265,10 +265,11 @@ def main():
           lattice_operators = subduction.project_operators(
                                 di, sbdctn_coeffs, continuum_operators, verbose)
 
-          lookup_qn_irrep = subduction.set_lookup_qn_irrep(lattice_operators, \
-                                                 lookup_qn[di.diagram], verbose)
-          subduced_data[di] = subduction.ensembles(data[di.diagram], \
-                                                                lookup_qn_irrep)
+          lookup_corr = subduction.set_lookup_corr(lattice_operators,
+                                                   lookup_qn[di.diagram], 
+                                                   verbose)
+          subduced_data[di] = subduction.project_correlators(data[di.diagram], 
+                                                             lookup_corr)
 
           # write data to disc
           path = '%s/%s/1_subduced-data/' % (outpath, ensemble)

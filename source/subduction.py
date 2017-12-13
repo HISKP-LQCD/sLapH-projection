@@ -438,7 +438,7 @@ def project_operators(di, sc, continuum_operators, verbose):
 
   return lattice_operators
 
-def set_lookup_qn_irrep(coefficients_irrep, qn, verbose):
+def set_lookup_corr(coefficients_irrep, qn, verbose):
   """
   Calculate table with all required coefficients and quantum numbers of the 
   states needed to obtain eigenstates under a certain irreducible representation
@@ -457,7 +457,7 @@ def set_lookup_qn_irrep(coefficients_irrep, qn, verbose):
 
   Returns
   ------- 
-  qn_irrep : pd.DataFrame
+  lookup_corr: pd.DataFrame
       Table with a column for each quantum number at source and sink, the
       Clebsch-Gordan coefficients at source and sink and a column decoding
       the row and column of the gevp these quantum numbers enter into:
@@ -467,27 +467,32 @@ def set_lookup_qn_irrep(coefficients_irrep, qn, verbose):
 
   # associate clebsch-gordan coefficients with the correct qn index
   # TODO: Check whether left merge results in nan somewhere as in this case data is missing
-  qn_irrep = pd.merge(coefficients_irrep.reset_index(), qn.reset_index(), 
+  lookup_corr = pd.merge(coefficients_irrep.reset_index(), qn.reset_index(), 
                       how='left')
 
   # Add two additional columns with the same string if the quantum numbers 
   # describe equivalent physical constellations: gevp_row and gevp_col
-  qn_irrep['gevp_row'] = 'p: ' + qn_irrep['p_{cm}'] \
-                         + ', g: ' + qn_irrep['operator_label_{so}']
-  qn_irrep['gevp_col'] = 'p: ' + qn_irrep['p_{cm}'] \
-                          + ', g: ' + qn_irrep['operator_label_{si}']
+  lookup_corr['gevp_row'] = 'p: ' + lookup_corr['p_{cm}'] \
+                         + ', g: ' + lookup_corr['operator_label_{so}']
+  lookup_corr['gevp_col'] = 'p: ' + lookup_corr['p_{cm}'] \
+                          + ', g: ' + lookup_corr['operator_label_{si}']
 
-  qn_irrep.drop(['operator_label_{so}', 'operator_label_{si}'], axis=1, inplace=True)
+  lookup_corr.drop(['operator_label_{so}', 'operator_label_{si}'], axis=1, inplace=True)
+
+  index = lookup_corr.columns.difference(['index', 'coefficient_{so}', 'coefficient_{si}']).tolist()
+  print index
+  exit(0)
+  lookup_corr.set_index(index, inplace=True)
 
   if verbose:
-    print 'qn_irrep'
-    print qn_irrep.set_index(qn_irrep.columns[qn_irrep.columns!='index'])
-    utils.write_hdf5_correlators('./', 'qn_irrep.h5', qn_irrep, 'data', verbose=False)
+    print 'lookup_corr'
+    print lookup_corr
+    utils.write_hdf5_correlators('./', 'lookup_corr.h5', lookup_corr, 'data', verbose=False)
 
-  return qn_irrep
+  return lookup_corr
 
 
-def ensembles(data, qn_irrep):
+def project_correlators(data, qn_irrep):
   """
   Combine physical operators to transform like a given irreducible 
   representation and combine equivalent physical quantum numbers
@@ -524,8 +529,8 @@ def ensembles(data, qn_irrep):
   del subduced['index']
   # construct hierarchical multiindex to be able to sum over momenta, average
   # over rows and reference gevp elements
-  subduced = subduced.set_index([ 'Irrep', 'mult', 'gevp_row', 'gevp_col', 'p_{cm}', '\mu', \
-                      'p^{0}_{so}', '\gamma^{0}_{so}', 'p^{0}_{si}', '\gamma^{0}_{si}'])
+#  subduced = subduced.set_index([ 'Irrep', 'mult', 'gevp_row', 'gevp_col', 'p_{cm}', '\mu', \
+#                      'p^{0}_{so}', '\gamma^{0}_{so}', 'p^{0}_{si}', '\gamma^{0}_{si}'])
   subduced = subduced[subduced.columns.difference(['coefficient_{so}','coefficient_{si}'])].\
               multiply(subduced['coefficient_{so}']*\
                        np.conj(subduced['coefficient_{si}']), axis=0)
@@ -534,6 +539,7 @@ def ensembles(data, qn_irrep):
                                                          names=('cnfg', 'T'))
 
   subduced = subduced.sort_index()
+  print subduced
 
   # I do not know why the dtype got converted to object, but convert it back
   # to complex
