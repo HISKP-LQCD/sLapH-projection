@@ -327,14 +327,15 @@ def main():
           utils.write_hdf5_correlators(path, filename, \
                              contracted_data[ci], 'data', verbose)
 
+          # TODO Use explicit names as this will not work for multi-hadron operators
           # sum over gamma structures. 
           # Only real part is physically relevant at that point
           contracted_data_avg[ci] = \
-              contracted_data[ci].apply(np.real).sum(level=[0,1,2,3,4,5,7])
+              contracted_data[ci].apply(np.real).sum(level=[0,1,2,3,4,5,6,7])
           # sum over equivalent momenta
-          contracted_data_avg[ci] = contracted_data_avg[ci].sum(level=[0,1,2,3,4])
-          # average over rows
-          contracted_data_avg[ci] = contracted_data_avg[ci].mean(level=[0,1,2,3])
+          contracted_data_avg[ci] = contracted_data_avg[ci].sum(level=[0,1,2,3,4,5])
+          # average over rows.
+          contracted_data_avg[ci] = contracted_data_avg[ci].mean(level=[0,1,2,3,4])
 
           print contracted_data_avg[ci]
 
