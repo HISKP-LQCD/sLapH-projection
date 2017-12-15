@@ -14,7 +14,7 @@ def get_parameters():
                                                  help="increase output verbosity")
   # TODO: Only allow certain options, specify standard behavior, etc.
   parser.add_argument("-b", "--basis", choices=['cartesian', 'cyclic', \
-                        'cyclic-i', 'cyclic-christian', 'dudek'], \
+                        'cyclic-christian', 'dudek', 'test'], \
                         default='cyclic',
                         help="continuum basis to be used in the program")
   

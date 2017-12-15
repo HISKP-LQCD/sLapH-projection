@@ -308,14 +308,14 @@ def set_continuum_basis(names, basis_type, verbose):
     ladder_operators = [[1./sqrt2, -1j/sqrt2, 0], 
                         [0,         0,        -1.], 
                         [-1./sqrt2, -1j/sqrt2, 0]]
-  elif basis_type == "cyclic-i":
-    ladder_operators = [[1./sqrt2,  -1j/sqrt2, 0], 
-                        [0,         0,        -1j], 
-                        [-1./sqrt2, -1j/sqrt2, 0]]
+  elif basis_type == "test":
+    ladder_operators = [[1/sqrt2,   -1j/sqrt2, 0], 
+                        [0,          0,        1], 
+                        [-1/sqrt2,  -1j/sqrt2,  0]]
   elif basis_type == "dudek":
-    ladder_operators = [[1j/sqrt2,  -1/sqrt2, 0], 
+    ladder_operators = [[1j/sqrt2,  -1./sqrt2, 0], 
                         [0,         0,         1j], 
-                        [-1j/sqrt2, -1/sqrt2, 0]]
+                        [-1j/sqrt2, -1./sqrt2, 0]]
   else:
     print "In get_continuum_basis: continuum_basis type ", basis_type, " not known!"
     exit()
@@ -538,8 +538,9 @@ def project_correlators(data, qn_irrep):
 
   projected_correlators = projected_correlators[
         projected_correlators.columns.difference(['coefficient_{so}','coefficient_{si}'])].\
-       multiply(projected_correlators['coefficient_{so}'] * \
-       np.conj(projected_correlators['coefficient_{si}']), axis=0)
+       multiply(
+       np.conj(projected_correlators['coefficient_{so}']) * \
+       projected_correlators['coefficient_{si}'], axis=0)
 
   projected_correlators.columns=pd.MultiIndex.from_tuples(projected_correlators.columns, \
                                                          names=('cnfg', 'T'))
