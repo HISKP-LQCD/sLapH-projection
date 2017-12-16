@@ -481,11 +481,11 @@ def set_lookup_corr(coefficients_irrep, qn, verbose):
 
   # Set index as it shall appear in projected correlators
   index = lookup_corr.columns.difference(['index', 'coefficient_{so}', 'coefficient_{si}']).tolist()
-  order = { 'p_{cm}' : 0, 
-            'gevp_row' : 1, 
-            'gevp_col' : 2, 
-            'Irrep' : 3, 
-            'mult' : 4, 
+  order = { 'Irrep' : 0, 
+            'mult' : 1,             
+            'gevp_row' : 2, 
+            'gevp_col' : 3, 
+            'p_{cm}' : 4, 
             '\mu' : 5, 
             'p^{0}_{so}' : 6, 
             'p^{1}_{so}' : 7, 

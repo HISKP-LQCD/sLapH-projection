@@ -241,7 +241,7 @@ def main():
 
         print lookup_qn[diagram].columns
 
-        list_p_cm = lookup_qn[diagram]['p_{cm}'].unique()
+        list_of_pcm = lookup_qn[diagram]['p_{cm}'].unique()
 
         # Express :math:`O^{J,M}` in terms of physical Dirac operators specified 
         # in `gamma_input`
@@ -249,7 +249,7 @@ def main():
                                 gamma_input, continuum_basis_string, verbose)
 
         # Read subduction coefficients for all momenta in list_p_cm
-        sbdctn_coeffs = subduction.read_sc(list_p_cm, path_to_sc, verbose, j=j)
+        sbdctn_coeffs = subduction.read_sc(list_of_pcm, path_to_sc, verbose, j=j)
 
         # List with the names of all contributing irreducible representations and 
         # their multiplicity
@@ -280,12 +280,9 @@ def main():
     elif flag['contract'] or flag['create gevp'] or flag['plot']:
 
       # helper function to read all subduced data from disk
-      list_p_cm = lookup_qn[diagram]['p_{cm}'].unique()
-      basis = subduction.get_lattice_basis(p_cm, list_p_cm, verbose, j=j)
-
-      # List with the names of all contributing irreducible representations and 
-      # their multiplicity
-      list_of_irreps = basis.index.get_level_values('Irrep').unique()
+      list_of_pcm = lookup_qn[diagram]['p_{cm}'].unique()
+      sbdctn_coeffs = subduction.read_sc(list_of_pcm, path_to_sc, verbose, j=j)
+      list_of_irreps = sbdctn_coeffs.index.get_level_values('Irrep').unique()
 
       path = '%s/%s/1_subduced-data/' % (outpath, ensemble)
   
@@ -335,6 +332,8 @@ def main():
           # sum over equivalent momenta
           contracted_data_avg[ci] = contracted_data_avg[ci].sum(level=[0,1,2,3,4,5])
           # average over rows.
+          contracted_data_avg[ci] = contracted_data_avg[ci].mean(level=[0,1,2,3,4])
+          # average over p_cm.
           contracted_data_avg[ci] = contracted_data_avg[ci].mean(level=[0,1,2,3,4])
 
           print contracted_data_avg[ci]
@@ -406,19 +405,17 @@ def main():
         for correlator in correlators:
 
           ci = ContractionType(correlator, irrep)
-          plotdata = contracted_data[ci].xs(irrep)
+          plotdata = contracted_data[ci].xs((irrep, 1), level=('Irrep', 'mult'))
 
           if sep_rows_sum_mom:
-            filename = '/%s_rows_p%1i_%s_%s.pdf' % (correlator, p_cm, \
-                                                                            irrep, continuum_basis)
+            filename = '/%s_rows_p%1i_%s_%s.pdf' % (correlator, p_cm, irrep, continuum_basis_string)
             pdfplot = utils.create_pdfplot(path, filename)
             plot.sep_rows_sum_mom(plotdata, \
                             correlator, bootstrapsize, pdfplot, logscale, verbose)
             pdfplot.close()
   
           if avg_rows_sep_mom:
-            filename = '%s_moms_p%1i_%s.pdf' % (correlator, p_cm, \
-                                                                            irrep)
+            filename = '%s_moms_p%1i_%s.pdf' % (correlator, p_cm, irrep)
             pdfplot = utils.create_pdfplot(path, filename)
             plot.avg_rows_sep_mom(plotdata, \
                             correlator, bootstrapsize, pdfplot, logscale, verbose)
