@@ -189,7 +189,7 @@ def main():
         # read diagrams for correlators contributing to rho
         if flag['read']:
             data = {}
-e           lookup_qn = {}
+            lookup_qn = {}
             for diagram, directory in zip(diagrams, directories):
 
                 if verbose:
@@ -353,29 +353,23 @@ e           lookup_qn = {}
                     utils.write_hdf5_correlators(
                         path, filename, contracted_data[ci], 'data', verbose)
 
-                    # TODO Use explicit names as this will not work for
-                    # multi-hadron operators
-
-                    levels = [
-                        'Irrep', 'mult', 'gevp_row', 'gevp_col', 'p_{cm}',
-                        '\mu', 'p^{0}_{so}', 'p^{0}_{si}'
-                    ]
+                    # TODO Generalize labels for multi-hadron operators
+                    gevp_labels = ['Irrep', 'mult', 'gevp_row', 'gevp_col']
+                    momentum_labels = ['p^{0}_{so}','p^{0}_{si}']
+                    gamma_labels = ['\gamma^{0}_{so}','\gamma^{0}_{si}']
                     # sum over gamma structures.
                     # Only real part is physically relevant at that point
-                    print 'la'
                     contracted_data_avg[ci] = contracted_data[ci].apply(
-                        np.real).groupby(levels).sum()
-                    print contrated_data_avg[ci]
-                    exit(0)
+                        np.real).sum(level=gevp_labels + ['p_{cm}','\mu'] + momentum_labels)
                     # sum over equivalent momenta
                     contracted_data_avg[ci] = contracted_data_avg[ci].sum(
-                        level=[0, 1, 2, 3, 4, 5])
+                        level=gevp_labels + ['p_{cm}','\mu'])
                     # average over rows.
                     contracted_data_avg[ci] = contracted_data_avg[ci].mean(
-                        level=[0, 1, 2, 3, 4])
+                        level=gevp_labels + ['p_{cm}'])
                     # average over p_cm.
                     contracted_data_avg[ci] = contracted_data_avg[ci].mean(
-                        level=[0, 1, 2, 3, 4])
+                        level=gevp_labels)
 
                     print contracted_data_avg[ci]
 
