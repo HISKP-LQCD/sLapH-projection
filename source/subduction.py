@@ -281,7 +281,7 @@ def set_continuum_basis(names, basis_type, verbose):
                         'coordinate' : [1]})
 
   gamma_5 = DataFrame({'\gamma' : [5],
-                         'operator_label' : '\gamma_{5}  '})
+                         'operator_label' : '\gamma_{5}'})
 
   gamma = pd.concat([eval(n) for n in names[0]])
 
@@ -326,7 +326,7 @@ def set_continuum_basis(names, basis_type, verbose):
                         'coordinate' : np.array(ladder_operators).flatten()})
 
   gamma_i   = DataFrame({'\gamma' : [1,2,3],
-                         'operator_label' : '\gamma_{i}  '})
+                         'operator_label' : '\gamma_{i}'})
   gamma_50i = DataFrame({'\gamma' : [13,14,15],
                          'operator_label' : '\gamma_{50i}'})
 
@@ -472,10 +472,10 @@ def set_lookup_corr(coefficients_irrep, qn, verbose):
 
   # Add two additional columns with the same string if the quantum numbers 
   # describe equivalent physical constellations: gevp_row and gevp_col
-  lookup_corr['gevp_row'] = 'p: ' + lookup_corr['p_{cm}'] \
-                         + ', g: ' + lookup_corr['operator_label_{so}']
-  lookup_corr['gevp_col'] = 'p: ' + lookup_corr['p_{cm}'] \
-                          + ', g: ' + lookup_corr['operator_label_{si}']
+  lookup_corr['gevp_row'] = 'p: ' + lookup_corr['p_{cm}'].apply(eval).apply(utils._abs2).apply(str) + \
+                              ', g: ' + lookup_corr['operator_label_{so}']
+  lookup_corr['gevp_col'] = 'p: ' + lookup_corr['p_{cm}'].apply(eval).apply(utils._abs2).apply(str) + \
+                              ', g: ' + lookup_corr['operator_label_{si}']
 
   lookup_corr.drop(['operator_label_{so}', 'operator_label_{si}'], axis=1, inplace=True)
 

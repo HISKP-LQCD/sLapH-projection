@@ -357,10 +357,12 @@ def main():
                     gevp_labels = ['Irrep', 'mult', 'gevp_row', 'gevp_col']
                     momentum_labels = ['p^{0}_{so}','p^{0}_{si}']
                     gamma_labels = ['\gamma^{0}_{so}','\gamma^{0}_{si}']
-                    # sum over gamma structures.
                     # Only real part is physically relevant at that point
                     contracted_data_avg[ci] = contracted_data[ci].apply(
-                        np.real).sum(level=gevp_labels + ['p_{cm}','\mu'] + momentum_labels)
+                        np.real)
+                    # sum over gamma structures.
+                    contracted_data_avg[ci] = contracted_data_avg[ci].sum(
+                        level=gevp_labels + ['p_{cm}','\mu'] + momentum_labels)
                     # sum over equivalent momenta
                     contracted_data_avg[ci] = contracted_data_avg[ci].sum(
                         level=gevp_labels + ['p_{cm}','\mu'])
@@ -370,8 +372,6 @@ def main():
                     # average over p_cm.
                     contracted_data_avg[ci] = contracted_data_avg[ci].mean(
                         level=gevp_labels)
-
-                    print contracted_data_avg[ci]
 
                     # write data to disc
                     path = '%s/%s/2_contracted-data/' % (outpath, ensemble)
@@ -395,19 +395,25 @@ def main():
                     contracted_data[ci] = \
                         utils.read_hdf5_correlators(path+filename, 'data')
 
-                    # sum over gamma structures.
+                    # TODO Generalize labels for multi-hadron operators
+                    gevp_labels = ['Irrep', 'mult', 'gevp_row', 'gevp_col']
+                    momentum_labels = ['p^{0}_{so}','p^{0}_{si}']
+                    gamma_labels = ['\gamma^{0}_{so}','\gamma^{0}_{si}']
                     # Only real part is physically relevant at that point
                     contracted_data_avg[ci] = contracted_data[ci].apply(
-                        np.real).sum(level=[0, 1, 2, 3, 4, 5, 6, 7])
+                        np.real)
+                    # sum over gamma structures.
+                    contracted_data_avg[ci] = contracted_data_avg[ci].sum(
+                        level=gevp_labels + ['p_{cm}','\mu'] + momentum_labels)
                     # sum over equivalent momenta
                     contracted_data_avg[ci] = contracted_data_avg[ci].sum(
-                        level=[0, 1, 2, 3, 4, 5])
+                        level=gevp_labels + ['p_{cm}','\mu'])
                     # average over rows.
                     contracted_data_avg[ci] = contracted_data_avg[ci].mean(
-                        level=[0, 1, 2, 3, 4])
+                        level=gevp_labels + ['p_{cm}'])
                     # average over p_cm.
                     contracted_data_avg[ci] = contracted_data_avg[ci].mean(
-                        level=[0, 1, 2, 3, 4])
+                        level=gevp_labels)
 
         ########################################################################
         # Gevp construction
@@ -447,14 +453,24 @@ def main():
                 for correlator in correlators:
 
                     ci = ContractionType(correlator, irrep)
+
+                    gevp_labels = ['gevp_row', 'gevp_col']
+                    momentum_labels = ['p^{0}_{so}','p^{0}_{si}']
+                    gamma_labels = ['\gamma^{0}_{so}','\gamma^{0}_{si}']
+                    # Select irrep and discard imaginary part (noise)
+                    # :warning: multiplicty 1 hardcoded
                     plotdata = contracted_data[ci].xs(
-                        (irrep, 1), level=('Irrep', 'mult'))
+                        (irrep, 1), level=('Irrep', 'mult')).apply(np.real)
 
                     if sep_rows_sum_mom:
+                        # sum over equivalent momenta
+                        plotdata_tmp = plotdata.sum(
+                            level=gevp_labels + ['p_{cm}','\mu'] + gamma_labels)
+
                         filename = '/%s_rows_p%1i_%s_%s.pdf' % (
                             correlator, p_cm, irrep, continuum_basis_string)
                         pdfplot = utils.create_pdfplot(path, filename)
-                        plot.sep_rows_sum_mom(plotdata, correlator,
+                        plot.sep_rows_sum_mom(plotdata_tmp, correlator,
                                               bootstrapsize, pdfplot, logscale,
                                               verbose)
                         pdfplot.close()

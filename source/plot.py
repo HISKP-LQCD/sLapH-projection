@@ -1,6 +1,7 @@
 import matplotlib
 #matplotlib.use('QT4Agg')
 import matplotlib.pyplot as plt
+plt.rc('text', usetex=True)
 from matplotlib.backends.backend_pdf import PdfPages
 
 import numpy as np
@@ -270,78 +271,73 @@ def sep_rows_sep_mom(data,
         plt.clf()
 
 
-def sep_rows_sum_mom(data,
+def sep_rows_sum_mom(plotdata,
                      diagram,
                      bootstrapsize,
                      pdfplot,
                      logscale=False,
                      verbose=False):
     """
-  Create a multipage plot with a page for every element of the rho gevp. Each
-  page contains one graph for each row of the irrep, summed over all momenta.
+    Create a multipage plot with a page for every element of the rho gevp. Each
+    page contains one graph for each row of the irrep, summed over all momenta.
 
-  Parameters
-  ----------
+    Parameters
+    ----------
 
-  data : pd.DataFrame
+    data : pd.DataFrame
 
-      Table with physical quantum numbers as rows 'gevp_row' x 'gevp_col' x \
-      '\mu' x 'p_{so}' x '\gamma_{so}' x 'p_{si}' x '\gamma_{si}' and columns
-      'cnfg' x 'T'.
-      Contains the linear combinations of correlation functions transforming
-      like what the parameters qn_irrep was created with, i.e. the subduced 
-      data
+        Table with physical quantum numbers as rows 'gevp_row' x 'gevp_col' x \
+        '\mu' x 'p_{so}' x '\gamma_{so}' x 'p_{si}' x '\gamma_{si}' and columns
+        'cnfg' x 'T'.
+        Contains the linear combinations of correlation functions transforming
+        like what the parameters qn_irrep was created with, i.e. the subduced 
+        data
 
-  diagram : string
-      The diagram as it will appear in the plot labels.
+    diagram : string
+        The diagram as it will appear in the plot labels.
 
-  bootstrapsize : int
+    bootstrapsize : int
 
-      The number of bootstrap samples being drawn from `gevp_data`.
+        The number of bootstrap samples being drawn from `gevp_data`.
 
-  pdfplot : mpl.PdfPages object
-      
-      Plots will be written to the path `pdfplot` was created with.
+    pdfplot : mpl.PdfPages object
+        
+        Plots will be written to the path `pdfplot` was created with.
 
-  See also
-  --------
+    See also
+    --------
 
-  utils.create_pdfplot()
-  """
+    utils.create_pdfplot()
+    """
 
-    # discard imaginary part (noise)
-    data = data.apply(np.real)
-    # sum over all gamma structures to get the full Dirac operator transforming
-    # like a row of the desired irrep
-    data = data.sum(level=[0, 1, 2, 3, 4, 6])
-    # sum over equivalent momenta
-    data = data.sum(level=[0, 1, 2, 3])
-    # mean over equivalent cm-momenta
-    data = data.mean(level=[0, 1, 3])
+    plotdata = mean_and_std(plotdata, bootstrapsize)
 
-    data = mean_and_std(data, bootstrapsize)
+    # abs of smallest positive value
+    linthreshy = plotdata['mean'][plotdata['mean'] > 0].min().min()
+    # abs of value closest to zero
+    #linthreshy = plotdata['mean'].iloc[plotdata.loc[:,('mean',0)].nonzero()].abs().min().min()
 
     # create list of gevp elements to loop over
-    gevp_index = list(set([(g[0], g[1]) for g in data.index.values]))
-    for gevp_el_name in gevp_index:
+    plotlabel = list(set([(i[0], i[1], i[2], i[3]) for i in plotdata.index.values]))
+    for graphlabel in plotlabel:
 
         if verbose:
-            print '\tplotting ', gevp_el_name[0], ' - ', gevp_el_name[1]
+            print '\tplotting ', graphlabel[0], ' - ', graphlabel[1]
+
+        # prepare data to plot
+        graphdata = plotdata.xs(graphlabel, level=['gevp_row', 'gevp_col', 'p_{cm}', '\mu'])
 
         # prepare plot
-        plt.title(r'Gevp Element ${} - {}$'.format(gevp_el_name[0],
-                                                   gevp_el_name[1]))
+        plt.title(r'Gevp Element ${}$ - ${}$, $\vec{{P}}_\textnormal{{cm}} = {}$, $\mu = {}$'.format(
+            graphlabel[0], graphlabel[1], graphlabel[2], graphlabel[3]))
         plt.xlabel(r'$t/a$', fontsize=12)
         plt.ylabel(r'$%s(t/a)$' % diagram, fontsize=12)
 
         if logscale:
-            plt.yscale('log')
-
-        # prepare data to plot
-        gevp_el = data.xs(gevp_el_name, level=[0, 1])
+            plt.yscale('symlog', linthreshy=linthreshy)
 
         # plot
-        plot_gevp_el(gevp_el, r'$\mu = {}$')
+        plot_gevp_el(graphdata, r'$\gamma_{{so}} = {}$, $\gamma_{{si}} = {}$', multiindex=True)
 
         # clean up for next plot
         plt.legend(numpoints=1, loc='best', fontsize=6)
