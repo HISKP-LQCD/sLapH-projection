@@ -137,7 +137,7 @@ def plot_gevp_el(data, label_template, multiindex=False):
 
         # plot
         plt.errorbar(
-            T + shift * counter,
+            T - 1./5 + shift * counter,
             mean,
             std,
             fmt=symbol[counter % len(symbol)],
@@ -150,6 +150,98 @@ def plot_gevp_el(data, label_template, multiindex=False):
             markeredgecolor=cmap_brg[counter],
             linewidth='0.0')
 
+def plot_mean(data):
+
+        # prepare data to plot
+        T = data.index.levels[1].astype(int)
+        mean = data['mean'].values
+        std = data['std'].values
+
+        # plot
+        plt.errorbar(
+            T,
+            mean,
+            std,
+            fmt='o',
+            color='black',
+            label='mean',
+            markersize=3,
+            capsize=3,
+            capthick=0.75,
+            elinewidth=0.75,
+            markeredgecolor='black',
+            linewidth='0.0')
+
+def pcm_and_mu(plotdata,
+                    bootstrapsize,
+                    pdfplot,
+                    logscale=False,
+                    verbose=False):
+    """
+    Create a multipage plot with a page for every element of the rho gevp
+  
+    Parameters
+    ----------
+  
+    gevp_data : pd.DataFrame
+  
+        Table with a row for each gevp element (sorted by gevp column running
+        faster than gevp row) and hierarchical columns for gauge configuration 
+        number and timeslice
+  
+    bootstrapsize : int
+  
+        The number of bootstrap samples being drawn from `gevp_data`.
+  
+    pdfplot : mpl.PdfPages object
+        
+        Plots will be written to the path `pdfplot` was created with.
+  
+    See also
+    --------
+  
+    utils.create_pdfplot()
+    """
+
+    plotdata = mean_and_std(plotdata, bootstrapsize)
+
+    if logscale:
+        # abs of smallest positive value
+        linthreshy = plotdata['mean'][plotdata['mean'] > 0].min().min()
+        # abs of value closest to zero
+        #linthreshy = plotdata['mean'].iloc[plotdata.loc[:,('mean',0)].nonzero()].abs().min().min()
+        plt.yscale('symlog', linthreshy=linthreshy)
+
+    # create list of gevp elements to loop over
+    plotlabel = list(set([(i[0], i[1]) for i in plotdata.index.values]))
+    for graphlabel in plotlabel:
+
+        if verbose:
+            print '\tplotting ', graphlabel[0], ' - ', graphlabel[1]
+
+        # prepare data to plot
+        graphdata = plotdata.xs(graphlabel, level=['gevp_row', 'gevp_col'])
+        # This takes the mean over all operators for the mean and std over 
+        # bootstrapsamples. That is not entirelly correct. The operations should 
+        # be the over way round. good enough for a consistency check.
+        graphdata_mean = graphdata.mean(axis=0)
+
+        # prepare plot
+        plt.title(r'Gevp Element ${}$ - ${}$'.format(
+            graphlabel[0], graphlabel[1]))
+        plt.xlabel(r'$t/a$', fontsize=12)
+        plt.ylabel(r'$C(t/a)$', fontsize=12)
+
+        # plot
+        plot_gevp_el(graphdata, r'$\vec{{P}}_\textnormal{{cm}} = {}$, $\mu = {}$', multiindex=True)
+        plot_mean(graphdata_mean)
+
+        # clean up for next plot
+        plt.legend(numpoints=1, loc='best', fontsize=6)
+        pdfplot.savefig()
+        plt.clf()
+
+    return
 
 def avg_row_sum_mom(gevp_data,
                     bootstrapsize,
@@ -271,12 +363,7 @@ def sep_rows_sep_mom(data,
         plt.clf()
 
 
-def sep_rows_sum_mom(plotdata,
-                     diagram,
-                     bootstrapsize,
-                     pdfplot,
-                     logscale=False,
-                     verbose=False):
+def gammas(plotdata, diagram, bootstrapsize, pdfplot, logscale=True, verbose=False):
     """
     Create a multipage plot with a page for every element of the rho gevp. Each
     page contains one graph for each row of the irrep, summed over all momenta.
@@ -284,11 +371,10 @@ def sep_rows_sum_mom(plotdata,
     Parameters
     ----------
 
-    data : pd.DataFrame
+    plotdata : pd.DataFrame
 
-        Table with physical quantum numbers as rows 'gevp_row' x 'gevp_col' x \
-        '\mu' x 'p_{so}' x '\gamma_{so}' x 'p_{si}' x '\gamma_{si}' and columns
-        'cnfg' x 'T'.
+        Table with physical quantum numbers as rows 'gevp_row' x 'gevp_col' x
+        'p_{cm}' x \mu' '\gamma_{so}' x '\gamma_{si}' and columns 'cnfg' x 'T'.
         Contains the linear combinations of correlation functions transforming
         like what the parameters qn_irrep was created with, i.e. the subduced 
         data

@@ -127,6 +127,8 @@ def main():
                                          'Plot avg_rows_sep_mom')
     avg_rows_sum_mom = config.getboolean('plot details',
                                          'Plot avg_rows_sum_mom')
+    plot_gammas = config.getboolean('plot details', 'Plot gammas')
+    plot_pcm_and_mu = config.getboolean('plot details', 'Plot P_cm and row')
 
     logscale = config.getboolean('plot details', 'Logscale')
 
@@ -462,17 +464,28 @@ def main():
                     plotdata = contracted_data[ci].xs(
                         (irrep, 1), level=('Irrep', 'mult')).apply(np.real)
 
-                    if sep_rows_sum_mom:
+                    if plot_gammas:
                         # sum over equivalent momenta
                         plotdata_tmp = plotdata.sum(
                             level=gevp_labels + ['p_{cm}','\mu'] + gamma_labels)
 
-                        filename = '/%s_rows_p%1i_%s_%s.pdf' % (
+                        filename = '/%s_p%1i_%s_gammas_%s.pdf' % (
                             correlator, p_cm, irrep, continuum_basis_string)
                         pdfplot = utils.create_pdfplot(path, filename)
-                        plot.sep_rows_sum_mom(plotdata_tmp, correlator,
-                                              bootstrapsize, pdfplot, logscale,
-                                              verbose)
+                        plot.gammas(plotdata_tmp, correlator, bootstrapsize, 
+                                    pdfplot, logscale, verbose)
+                        pdfplot.close()
+
+                    if plot_pcm_and_mu:
+                        # sum over momenta and gamma structures
+                        plotdata_tmp = plotdata.sum(
+                            level=gevp_labels + ['p_{cm}','\mu'])
+
+                        filename = '/%s_p%1i_%s_pcm-and-mu_%s.pdf' % (
+                            correlator, p_cm, irrep, continuum_basis_string)
+                        pdfplot = utils.create_pdfplot(path, filename)
+                        plot.pcm_and_mu(plotdata_tmp, bootstrapsize, pdfplot, 
+                                        logscale, verbose)
                         pdfplot.close()
 
                     if avg_rows_sep_mom:
