@@ -4,13 +4,13 @@ import numpy as np
 import collections
 import sys
 
-import source.infile_handler as infile_handler
-import source.raw_data as raw_data
-import source.utils as utils
-import source.wick as wick
-import source.subduction as subduction
-import source.setup_gevp as setup_gevp
-import source.plot as plot
+import src.infile_handler as infile_handler
+import src.raw_data as raw_data
+import src.utils as utils
+import src.wick as wick
+import src.subduction as subduction
+import src.setup_gevp as setup_gevp
+import src.plot as plot
 
 import pandas as pd
 from pandas import Series, DataFrame

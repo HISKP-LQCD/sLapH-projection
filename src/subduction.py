@@ -213,15 +213,19 @@ def read_sc(p_cm_vecs, path, verbose=True, j=1):
   Note
   ----
     Filename of subduction coefficients hardcoded. Expected to be 
-    "lattice-basis_J%d_P%1i%1i%1i_Msum.dataframe"
+    "J%d-P%1i%1i%1i-operators.txt"
+    # "lattice-basis_J%d_P%1i%1i%1i_Msum.dataframe"
   """
 
   subduction_coefficients = DataFrame()
 
   for p_cm_vec in p_cm_vecs:
 
-    name = path +'/' + 'lattice-basis_J{0}_P{1}_Msum.dataframe'.format(\
+#    name = path +'/' + 'lattice-basis_J{0}_P{1}_Msum.dataframe'.format(\
+#           j, "".join([str(p) for p in eval(p_cm_vec)]))
+    name = path +'/' + 'J{0}-P{1}-operators.txt'.format(\
            j, "".join([str(p) for p in eval(p_cm_vec)]))
+
     if not os.path.exists(name):
       print 'Warning: Could not find {}'.format(name)
       continue
@@ -308,7 +312,7 @@ def set_continuum_basis(names, basis_type, verbose):
     ladder_operators = [[1./sqrt2, -1j/sqrt2, 0], 
                         [0,         0,        -1.], 
                         [-1./sqrt2, -1j/sqrt2, 0]]
-  elif basis_type == "test":
+  elif basis_type == "marcus-cov":
     ladder_operators = [[1/sqrt2,   -1j/sqrt2, 0], 
                         [0,          0,        1], 
                         [-1/sqrt2,  -1j/sqrt2,  0]]
