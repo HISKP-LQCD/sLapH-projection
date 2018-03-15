@@ -39,7 +39,7 @@ def select_irrep(df, irrep):
   Returns
   -------
         df restricted to *irrep* and *mult*=1. 
-        Has columns p, J, M, subduction-coefficient, index \mu
+        Has columns p, J, M, coefficient, index \mu
 
   See
   ---
@@ -68,7 +68,7 @@ def select_irrep_mult(df, irrep, mult):
   Returns
   -------
         df restricted to *irrep* and *mult*. 
-        Has columns p, J, M, subduction-coefficient, index \mu
+        Has columns p, J, M, coefficient, index \mu
 
   See
   ---
@@ -200,7 +200,7 @@ def read_sc_2(p_cm_vecs, path, verbose=True, j=1):
     df : pd.DataFrame
         Contains subduction coefficients for going from continuum to discete
         space. 
-        Has columns Irrep, mult, J, M, subduction-coefficient, p, \mu and unnamed 
+        Has columns Irrep, mult, J, M, coefficient, p, \mu and unnamed 
         indices
 
   Note
@@ -231,7 +231,7 @@ def read_sc_2(p_cm_vecs, path, verbose=True, j=1):
     df = df.set_index(['p_{cm}', 'Irrep', '\mu', 'mult'])
 
     df['coefficient'] = df['coefficient'].apply(aeval)
-    df.rename(columns={'p^1' : 'p^{0}', 'p^2' : 'p^{1}'})
+    df.rename(columns={'p^1' : 'p^{0}', 'p^2' : 'p^{1}'}, inplace=True)
     del df['abs(p1)']
     del df['abs(p2)']
 
@@ -274,7 +274,7 @@ def read_sc(p_cm_vecs, path, verbose=True, j=1):
     df : pd.DataFrame
         Contains subduction coefficients for going from continuum to discete
         space. 
-        Has columns Irrep, mult, J, M, subduction-coefficient, p, \mu and unnamed 
+        Has columns Irrep, mult, J, M, coefficient, p, \mu and unnamed 
         indices
 
   Note
@@ -303,15 +303,15 @@ def read_sc(p_cm_vecs, path, verbose=True, j=1):
                   right_index=True)
 
     # Munging of column names
-    df.columns = ['M^{0}', 'subduction-coefficient', 'Irrep', '\mu']
+    df.columns = ['M^{0}', 'coefficient', 'Irrep', '\mu']
     df['mult'] = 1
     df['p_{cm}'] = [p_cm_vec] * len(df)
-    df['subduction-coefficient'] = df['subduction-coefficient'].apply(aeval)
+    df['coefficient'] = df['coefficient'].apply(aeval)
     df['M^{0}'] = df['M^{0}'].apply(int)
     df = df.set_index(['p_{cm}', 'Irrep', '\mu', 'mult'])
     df['p^{0}'] = [p_cm_vec] * len(df)
     df['J^{0}'] = j
-    df = df[['p^{0}','J^{0}','M^{0}','subduction-coefficient']]
+    df = df[['p^{0}','J^{0}','M^{0}','coefficient']]
 
     if verbose:
       print 'subduction_coefficients for {}'.format(p_cm_vec)
@@ -433,7 +433,7 @@ def project_operators(di, sc, sc_2, continuum_operators, verbose):
           Name of the irreducible representation of the little group the operator
           is required to transform under.
   sc : pd.DataFrame      
-      Subduction coefficients. Has column subduction-coefficient and MultiIndex 
+      Subduction coefficients. Has column coefficient and MultiIndex 
       p_{cm} Irrep \mu mult
   continuum_operators: pd.DataFrame
       Basis of SO(3) eigenstates (Spin-J basis). Has columns 
@@ -451,7 +451,6 @@ def project_operators(di, sc, sc_2, continuum_operators, verbose):
   # Restrict subduction coefficients to irredicible representation specified 
   # in di
 
-  continuum_basis_table = continuum_operators.rename(columns={'\gamma' : '\gamma^{0}'})
 
   if di.diagram.startswith('C2'):
     continuum_labels_so = [['J^{0}','M^{0}']]
@@ -482,33 +481,40 @@ def project_operators(di, sc, sc_2, continuum_operators, verbose):
   # Project operators 
   # :math: `O^{\Gamma, \mu} = S^{\Gamma J}_{\mu, m} \cdot O^{J, m}`
   for cl_so in continuum_labels_so:
-    operator_so = pd.merge(sc, continuum_basis_table, 
-                           how='left', left_on=cl_so, right_index=True)
+    operator_so = pd.merge(operator_so, continuum_operators, 
+                           how='left', left_on=cl_so, right_index=True,
+                           suffixes=['^{0}', '^{1}']) 
+    # Combine coefficients and clean columns no longer needed: Labels for continuum 
+    # basis and factors entering the final coefficient
+    operator_so['coefficient'] = \
+             operator_so['coefficient'] * operator_so['coordinate']
+    operator_so.drop(cl_so + ['coordinate'],
+                     axis=1, inplace=True)
 
   for cl_si in continuum_labels_si:
-    operator_si = pd.merge(operator_si, continuum_basis_table, 
-                           how='left', left_on=cl_si, right_index=True)
+    operator_si = pd.merge(operator_si, continuum_operators, 
+                           how='left', left_on=cl_si, right_index=True,
+                           suffixes=['^{0}', '^{1}']) 
+    # Combine coefficients and clean columns no longer needed: Labels for continuum 
+    # basis and factors entering the final coefficient
+    operator_si['coefficient'] = \
+             operator_si['coefficient'] * operator_si['coordinate']
+    operator_si.drop(cl_si + ['coordinate'],
+                     axis=1, inplace=True)
 
-  # flatten continuum_labels. After multiple merges are performed, the particles
-  # do not need to be seperated into multiple lists.
-  # https://stackoverflow.com/questions/952914/making-a-flat-list-out-of-list-of-lists-in-python
-  continuum_labels_so = [item for sublist in continuum_labels_so for item in sublist]
-  continuum_labels_si = [item for sublist in continuum_labels_si for item in sublist]
+  # Rename if merge has not appended a suffix
+  operator_so.rename(columns={'\gamma' : '\gamma^{0}', 'p^{1}' : 'p^{1}_{so}'}, inplace=True)
+  operator_so['operator_label'] = operator_so[[col for col in operator_so.columns if 'label' in col]].apply(lambda x: ', '.join(x), axis=1)
+  operator_so.drop(['operator_label^{0}', 'operator_label^{1}'], 
+                    axis=1, inplace=True, errors='ignore')
+  operator_si.rename(columns={'\gamma' : '\gamma^{0}', 'p^{1}' : 'p^{1}_{so}'}, inplace=True)
+  operator_si['operator_label'] = operator_si[[col for col in operator_si.columns if 'label' in col]].apply(lambda x: ', '.join(x), axis=1)
+  operator_si.drop(['operator_label^{0}', 'operator_label^{1}'], 
+                    axis=1, inplace=True, errors='ignore')
 
-  # Munging the result: Delete rows with coefficient 0, combine coefficients 
-  # and clean columns no longer needed: Labels for continuum basis and factors 
-  # entering the final coefficient
-  operator_so = operator_so[operator_so['subduction-coefficient'] != 0]
-  operator_so['coefficient'] = \
-           operator_so['subduction-coefficient'] * operator_so['coordinate']
-  operator_so.drop(continuum_labels_so + ['subduction-coefficient', 'coordinate'],
-                   axis=1, inplace=True)
-
-  operator_si = operator_si[operator_si['subduction-coefficient'] != 0]
-  operator_si['coefficient'] = \
-           operator_si['subduction-coefficient'] * operator_si['coordinate']
-  operator_si.drop(continuum_labels_si + ['subduction-coefficient', 'coordinate'],
-                   axis=1, inplace=True)
+  # Munging the result: Delete rows with coefficient 0, 
+  operator_so = operator_so[operator_so['coefficient'] != 0]
+  operator_si = operator_si[operator_si['coefficient'] != 0]
 
   # combine clebsch-gordan coefficients for source and sink into one DataFrame
   lattice_operators = pd.merge(operator_so, operator_si, 
