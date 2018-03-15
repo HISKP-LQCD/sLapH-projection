@@ -517,6 +517,10 @@ def project_operators(di, sc, sc_2, continuum_operators, verbose):
   operator_si = operator_si[operator_si['coefficient'] != 0]
 
   # combine clebsch-gordan coefficients for source and sink into one DataFrame
+  operator_so.rename(columns={'\gamma^{0}' : '\gamma^{0}_{so}', 
+                              '\gamma^{1}' : '\gamma^{1}_{so}'}, inplace=True)
+  operator_si.rename(columns={'\gamma^{0}' : '\gamma^{0}_{si}', 
+                              '\gamma^{1}' : '\gamma^{1}_{si}'}, inplace=True)
   lattice_operators = pd.merge(operator_so, operator_si, 
                                how='inner', left_index=True, right_index=True, 
                                suffixes=['_{so}', '_{si}']) 
