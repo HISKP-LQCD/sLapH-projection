@@ -12,6 +12,9 @@
 # swap files
 *.swp
 
+# Spam files on Ubuntu 17
+*~
+
 # untracked files
 3pt_non_hermitian/
 analyse_lattice2015/
