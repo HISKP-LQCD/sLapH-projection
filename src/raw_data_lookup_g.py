@@ -68,10 +68,10 @@ def set_lookup_g(gamma_labels, diagram):
 
     gamma_so = pd.concat([gamma_dic[gl_so] for gl_so in gamma_labels[J_so]])
     gamma_so = gamma_so.rename(columns={'\gamma' : '\gamma^{0}_{so}'})
+    gamma_so['\gamma^{1}_{so}'] = gamma_so['\gamma^{0}_{so}']
 
     gamma_si = pd.concat([gamma_dic[gl_si] for gl_si in gamma_labels[J_si]])
     gamma_si = gamma_si.rename(columns={'\gamma' : '\gamma^{0}_{si}'})
-    gamma_si['\gamma^{1}_{si}'] = gamma_si['\gamma^{0}_{si}']
 
   elif diagram.startswith('C4'):
 
