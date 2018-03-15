@@ -361,12 +361,15 @@ def main():
                         path, filename, contracted_data[ci], 'data', verbose)
 
                     # TODO Generalize labels for multi-hadron operators
-                    gevp_labels = ['Irrep', 'mult', 'gevp_row', 'gevp_col']
-                    momentum_labels = ['p^{0}_{so}','p^{0}_{si}']
-                    gamma_labels = ['\gamma^{0}_{so}','\gamma^{0}_{si}']
                     # Only real part is physically relevant at that point
                     contracted_data_avg[ci] = contracted_data[ci].apply(
                         np.real)
+                    gevp_labels = ['Irrep', 'mult', 'gevp_row', 'gevp_col']
+#                    momentum_labels = ['p^{0}_{so}','p^{0}_{si}']
+                    momentum_labels = [col for col in contracted_data_avg[ci].columns if 'p^{' in col]
+#                    gamma_labels = ['\gamma^{0}_{so}','\gamma^{0}_{si}']
+                    gamma_labels = [col for col in contracted_data_avg[ci].columns if 'gamma' in col]
+
                     # sum over gamma structures.
                     contracted_data_avg[ci] = contracted_data_avg[ci].sum(
                         level=gevp_labels + ['p_{cm}','\mu'] + momentum_labels)

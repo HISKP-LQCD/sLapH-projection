@@ -17,6 +17,8 @@ from asteval import Interpreter
 aeval = Interpreter()
 aeval.symtable['I'] = 1j
 
+from ast import literal_eval
+
 #import clebsch_gordan_2pt as cg_2pt
 #import clebsch_gordan_4pt as cg_4pt
 import utils
@@ -231,7 +233,10 @@ def read_sc_2(p_cm_vecs, path, verbose=True, j=1):
     df = df.set_index(['p_{cm}', 'Irrep', '\mu', 'mult'])
 
     df['coefficient'] = df['coefficient'].apply(aeval)
+    df['p^1'] = df['p^1'].apply(literal_eval).apply(str)
+    df['p^2'] = df['p^2'].apply(literal_eval).apply(str)
     df.rename(columns={'p^1' : 'p^{0}', 'p^2' : 'p^{1}'}, inplace=True)
+    df = df[(df['p^{0}'] != str((0,0,0))) | (df['p^{1}'] != str((0,0,0)))]
     del df['abs(p1)']
     del df['abs(p2)']
 
@@ -562,6 +567,7 @@ def set_lookup_corr(coefficients_irrep, qn, verbose):
   # TODO: Check whether left merge results in nan somewhere as in this case data is missing
   lookup_corr = pd.merge(coefficients_irrep.reset_index(), qn.reset_index(), 
                       how='left')
+
 
   # Add two additional columns with the same string if the quantum numbers 
   # describe equivalent physical constellations: gevp_row and gevp_col

@@ -141,9 +141,9 @@ def rho_3pt(data, irrep, verbose=0):
   wick = data[('C3+',irrep)]
 
   # Warning: 1j hardcoded
-  wick.loc[idx[:,:,:,:,:,:,:,gamma_i],  :] *= ( 2.)   *(-1j)
-  wick.loc[idx[:,:,:,:,:,:,:,gamma_0i], :] *= (-2.)   *(-1j) 
-  wick.loc[idx[:,:,:,:,:,:,:,gamma_50i],:] *= ( 2.*1j)*(-1j)
+  wick.loc[idx[:,:,:,:,:,:,:,:,:,:,:,gamma_i],  :] *= ( 2.)   *(-1j)
+  wick.loc[idx[:,:,:,:,:,:,:,:,:,:,:,gamma_0i], :] *= (-2.)   *(-1j) 
+  wick.loc[idx[:,:,:,:,:,:,:,:,:,:,:,gamma_50i],:] *= ( 2.*1j)*(-1j)
 
   return wick
 
