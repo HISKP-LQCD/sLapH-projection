@@ -152,9 +152,10 @@ def set_lookup_p(p_max, p_cm, diagram, skip=False):
   else:
     print 'in set_lookup_p: diagram unknown! Quantum numbers corrupted.'
  
+  lookup_so.rename(columns=lambda x: x + '_{so}' if '^' in x else x, inplace=True)
+  lookup_si.rename(columns=lambda x: x + '_{si}' if '^' in x else x, inplace=True)
   # DataFrame with all combinations of source and sink with same total momentum
-  lookup_p = pd.merge(lookup_so, lookup_si, on=['p_{cm}'], \
-                      suffixes=['_{so}', '_{si}'])
+  lookup_p = pd.merge(lookup_so, lookup_si, on=['p_{cm}'])
 
   return lookup_p
 
