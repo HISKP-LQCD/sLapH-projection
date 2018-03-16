@@ -295,6 +295,7 @@ def main():
 
                     lookup_corr = subduction.set_lookup_corr(
                         lattice_operators, lookup_qn[di.diagram], verbose)
+
                     subduced_data[di] = subduction.project_correlators(
                         data[di.diagram], lookup_corr)
 

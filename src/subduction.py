@@ -504,7 +504,8 @@ def set_lookup_corr(coefficients_irrep, qn, verbose):
 
   if verbose:
     print 'lookup_corr'
-    print lookup_corr
+    with pd.option_context('display.max_rows', None, 'display.max_columns', 3):
+      print lookup_corr
     utils.write_hdf5_correlators('./', 'lookup_corr.h5', lookup_corr, 'data', verbose=False)
 
   return lookup_corr
@@ -535,7 +536,7 @@ def project_correlators(data, qn_irrep):
       like what the parameters qn_irrep was created with
   """
 
-  # actual subduction step. sum cg_so * conj(cg_si) * corr
+  # actual subduction step. sum conj(cg_so) * cg_si * corr
   projected_correlators = pd.merge(qn_irrep, data.T, 
                                    how='left', left_on=['index'], right_index=True)
   del projected_correlators['index']
