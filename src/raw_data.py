@@ -129,15 +129,17 @@ def set_groupname(diagram, s):
                   + '_uu_p%1i%1i%1i.d000.g%i' % ( p_so + (g_so,) ) \
                   +    '_p%1i%1i%1i.d000.g%i' % ( p_si + (g_si,) ) 
   elif diagram.startswith('C3'):
-    p_so = np.array(eval(s['p^{0}_{so}']), eval(s['p^{1}_{so}']))
-    g_so = np.array(s['\gamma^{0}_{so}'], s['\gamma^{1}_{so}'])
+    p_so_0 = eval(s['p^{0}_{so}'])
+    p_so_1 = eval(s['p^{1}_{so}'])
+    g_so_0 = s['\gamma^{0}_{so}']
+    g_so_1 = s['\gamma^{1}_{so}']
     p_si = eval(s['p^{0}_{si}'])
     g_si = s['\gamma^{0}_{si}']
 
     groupname = diagram \
-                  + '_uuu_p%1i%1i%1i.d000.g%1i' % ( p_so[0] + (g_so[0],) ) \
+                  + '_uuu_p%1i%1i%1i.d000.g%1i' % ( p_so_0 + (g_so_0,) ) \
                   +     '_p%1i%1i%1i.d000.g%1i' % ( p_si +    (g_si,) ) \
-                  +     '_p%1i%1i%1i.d000.g%1i' % ( p_so[1] + (g_so[1],) )
+                  +     '_p%1i%1i%1i.d000.g%1i' % ( p_so_1 + (g_so_1,) )
   elif diagram == 'C4+D' or diagram == 'C4+C':
     p_so = np.array(eval(s['p^{0}_{so}']), eval(s['p^{1}_{so}']))
     g_so = np.array(s['\gamma^{0}_{so}'], s['\gamma^{1}_{so}'])

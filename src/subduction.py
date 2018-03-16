@@ -17,6 +17,8 @@ from asteval import Interpreter
 aeval = Interpreter()
 aeval.symtable['I'] = 1j
 
+from ast import literal_eval
+
 #import clebsch_gordan_2pt as cg_2pt
 #import clebsch_gordan_4pt as cg_4pt
 import utils
@@ -39,7 +41,7 @@ def select_irrep(df, irrep):
   Returns
   -------
         df restricted to *irrep* and *mult*=1. 
-        Has columns p, J, M, subduction-coefficient, index \mu
+        Has columns p, J, M, coefficient, index \mu
 
   See
   ---
@@ -68,7 +70,7 @@ def select_irrep_mult(df, irrep, mult):
   Returns
   -------
         df restricted to *irrep* and *mult*. 
-        Has columns p, J, M, subduction-coefficient, index \mu
+        Has columns p, J, M, coefficient, index \mu
 
   See
   ---
@@ -181,6 +183,76 @@ def return_cg(p_cm, irrep):
 
   return df
 
+def read_sc_2(p_cm_vecs, path, verbose=True, j=1):
+  """
+  Read subduction coefficients from SO(3) to irreducible representations of 
+  appropriate little group of rotational symmetry for lattice in a reference 
+  frame moving with momentum p_cm \in list_p_cm
+
+  Parameters
+  ----------
+    p_cm_vecs : list
+        Center of mass momentum of the lattice. Used to specify the appropriate
+        little group of rotational symmetry. Contains integer 3-vectors
+    path : string
+        Path to files with subduction coefficients
+
+  Returns
+  -------
+    df : pd.DataFrame
+        Contains subduction coefficients for going from continuum to discete
+        space. 
+        Has columns Irrep, mult, J, M, coefficient, p, \mu and unnamed 
+        indices
+
+  Note
+  ----
+    Filename of subduction coefficients hardcoded. Expected to be 
+    "J%d-P%1i%1i%1i-operators.txt"
+    # "lattice-basis_J%d_P%1i%1i%1i_Msum.dataframe"
+  """
+
+  subduction_coefficients = DataFrame()
+
+  for p_cm_vec in p_cm_vecs:
+    name = path +'/' + 'J{0}-P{1}-operators.txt'.format(\
+           j, "".join([str(p) for p in eval(p_cm_vec)]))
+
+    if not os.path.exists(name):
+      print 'Warning: Could not find {}'.format(name)
+      continue
+
+    df = pd.read_csv(name, sep="\t", dtype=str)
+    df.rename(columns=lambda x: x.strip(), inplace=True)
+
+    df['p_{cm}'] = [p_cm_vec] * len(df)
+    df.rename(columns={'alpha' : '\mu'}, inplace=True)
+    del df['beta']
+    df['mult'] = 1
+    print df
+    df = df.set_index(['p_{cm}', 'Irrep', '\mu', 'mult'])
+
+    df['coefficient'] = df['coefficient'].apply(aeval)
+    df['p^1'] = df['p^1'].apply(literal_eval).apply(str)
+    df['p^2'] = df['p^2'].apply(literal_eval).apply(str)
+    df.rename(columns={'p^1' : 'p^{0}', 'p^2' : 'p^{1}'}, inplace=True)
+    df = df[(df['p^{0}'] != str((0,0,0))) | (df['p^{1}'] != str((0,0,0)))]
+    del df['abs(p1)']
+    del df['abs(p2)']
+
+    df['J^{0}'] = 0
+    df['J^{1}'] = 0
+    df['M^{0}'] = 0
+    df['M^{1}'] = 0
+
+    if verbose:
+      print 'subduction_coefficients for {}'.format(p_cm_vec)
+      print df, '\n'
+
+    subduction_coefficients = pd.concat([subduction_coefficients, df])
+
+  return subduction_coefficients.sort_index()
+
 
 # TODO: Write a function to calculate cross product if basis is not 
 #       complete and orthonormalize basis states
@@ -207,7 +279,7 @@ def read_sc(p_cm_vecs, path, verbose=True, j=1):
     df : pd.DataFrame
         Contains subduction coefficients for going from continuum to discete
         space. 
-        Has columns Irrep, mult, J, M, subduction-coefficient, p, \mu and unnamed 
+        Has columns Irrep, mult, J, M, coefficient, p, \mu and unnamed 
         indices
 
   Note
@@ -236,15 +308,15 @@ def read_sc(p_cm_vecs, path, verbose=True, j=1):
                   right_index=True)
 
     # Munging of column names
-    df.columns = ['M^{0}', 'subduction-coefficient', 'Irrep', '\mu']
+    df.columns = ['M^{0}', 'coefficient', 'Irrep', '\mu']
     df['mult'] = 1
     df['p_{cm}'] = [p_cm_vec] * len(df)
-    df['subduction-coefficient'] = df['subduction-coefficient'].apply(aeval)
+    df['coefficient'] = df['coefficient'].apply(aeval)
     df['M^{0}'] = df['M^{0}'].apply(int)
     df = df.set_index(['p_{cm}', 'Irrep', '\mu', 'mult'])
     df['p^{0}'] = [p_cm_vec] * len(df)
     df['J^{0}'] = j
-    df = df[['p^{0}','J^{0}','M^{0}','subduction-coefficient']]
+    df = df[['p^{0}','J^{0}','M^{0}','coefficient']]
 
     if verbose:
       print 'subduction_coefficients for {}'.format(p_cm_vec)
@@ -351,7 +423,7 @@ def set_continuum_basis(names, basis_type, verbose):
 
 # TODO: find a better name for diagram after Wick contraction
 # TODO: No restriction to multiplicacy currently done
-def project_operators(di, sc, continuum_operators, verbose):
+def project_operators(di, sc, sc_2, continuum_operators, verbose):
   """
   Project continuum operators to lattice using subduction coefficients 
 
@@ -366,7 +438,7 @@ def project_operators(di, sc, continuum_operators, verbose):
           Name of the irreducible representation of the little group the operator
           is required to transform under.
   sc : pd.DataFrame      
-      Subduction coefficients. Has column subduction-coefficient and MultiIndex 
+      Subduction coefficients. Has column coefficient and MultiIndex 
       p_{cm} Irrep \mu mult
   continuum_operators: pd.DataFrame
       Basis of SO(3) eigenstates (Spin-J basis). Has columns 
@@ -383,19 +455,22 @@ def project_operators(di, sc, continuum_operators, verbose):
 
   # Restrict subduction coefficients to irredicible representation specified 
   # in di
-  sc = select_irrep(sc, di.irrep)
+
 
   if di.diagram.startswith('C2'):
-    continuum_labels_so = ['J^{0}','M^{0}']
-    continuum_labels_si = ['J^{0}','M^{0}']
-    continuum_basis_table = continuum_operators.rename(columns={'\gamma' : '\gamma^{0}'})
+    continuum_labels_so = [['J^{0}','M^{0}']]
+    operator_so = select_irrep(sc, di.irrep)
+
+    continuum_labels_si = [['J^{0}','M^{0}']]
+    operator_si = select_irrep(sc, di.irrep)
 #    operator_si['p'] = ((-1)*operator_si['p'].apply(np.array)).apply(tuple)
   elif di.diagram.startswith('C3'):
-    # get factors for the desired irreps
-    cg_one_operator = basis
-    cg_two_operators = return_cg(p_cm, irrep)
     # for 3pt function we have pipi operator at source and rho operator at sink
-    operator_so, operator_si = cg_two_operators, cg_one_operator
+    continuum_labels_so = [['J^{0}','M^{0}'], ['J^{1}','M^{1}']]
+    operator_so = select_irrep(sc_2, di.irrep)
+
+    continuum_labels_si = [['J^{0}','M^{0}']]
+    operator_si = select_irrep(sc, di.irrep)
 #    operator_si['p'] = (operator_si['p'].apply(np.array)*(-1)).apply(tuple)
   elif di.diagram.startswith('C4'):
     operator_so = return_cg(p_cm, irrep)
@@ -408,30 +483,49 @@ def project_operators(di, sc, continuum_operators, verbose):
     print 'in get_coefficients: diagram unknown! Quantum numbers corrupted.'
     return
 
-  
   # Project operators 
   # :math: `O^{\Gamma, \mu} = S^{\Gamma J}_{\mu, m} \cdot O^{J, m}`
-  operator_so = pd.merge(sc, continuum_basis_table, 
-                         how='left', left_on=continuum_labels_so, right_index=True)
-  operator_si = pd.merge(sc, continuum_basis_table, 
-                         how='left', left_on=continuum_labels_si, right_index=True)
+  for cl_so in continuum_labels_so:
+    operator_so = pd.merge(operator_so, continuum_operators, 
+                           how='left', left_on=cl_so, right_index=True,
+                           suffixes=['^{0}', '^{1}']) 
+    # Combine coefficients and clean columns no longer needed: Labels for continuum 
+    # basis and factors entering the final coefficient
+    operator_so['coefficient'] = \
+             operator_so['coefficient'] * operator_so['coordinate']
+    operator_so.drop(cl_so + ['coordinate'],
+                     axis=1, inplace=True)
 
-  # Munging the result: Delete rows with coefficient 0, combine coefficients 
-  # and clean columns no longer needed: Labels for continuum basis and factors 
-  # entering the final coefficient
-  operator_so = operator_so[operator_so['subduction-coefficient'] != 0]
-  operator_so['coefficient'] = \
-           operator_so['subduction-coefficient'] * operator_so['coordinate']
-  operator_so.drop(continuum_labels_so + ['subduction-coefficient', 'coordinate'],
-                   axis=1, inplace=True)
+  for cl_si in continuum_labels_si:
+    operator_si = pd.merge(operator_si, continuum_operators, 
+                           how='left', left_on=cl_si, right_index=True,
+                           suffixes=['^{0}', '^{1}']) 
+    # Combine coefficients and clean columns no longer needed: Labels for continuum 
+    # basis and factors entering the final coefficient
+    operator_si['coefficient'] = \
+             operator_si['coefficient'] * operator_si['coordinate']
+    operator_si.drop(cl_si + ['coordinate'],
+                     axis=1, inplace=True)
 
-  operator_si = operator_si[operator_si['subduction-coefficient'] != 0]
-  operator_si['coefficient'] = \
-           operator_si['subduction-coefficient'] * operator_si['coordinate']
-  operator_si.drop(continuum_labels_si + ['subduction-coefficient', 'coordinate'],
-                   axis=1, inplace=True)
+  # Rename if merge has not appended a suffix
+  operator_so.rename(columns={'\gamma' : '\gamma^{0}', 'p^{1}' : 'p^{1}_{so}'}, inplace=True)
+  operator_so['operator_label'] = operator_so[[col for col in operator_so.columns if 'label' in col]].apply(lambda x: ', '.join(x), axis=1)
+  operator_so.drop(['operator_label^{0}', 'operator_label^{1}'], 
+                    axis=1, inplace=True, errors='ignore')
+  operator_si.rename(columns={'\gamma' : '\gamma^{0}', 'p^{1}' : 'p^{1}_{so}'}, inplace=True)
+  operator_si['operator_label'] = operator_si[[col for col in operator_si.columns if 'label' in col]].apply(lambda x: ', '.join(x), axis=1)
+  operator_si.drop(['operator_label^{0}', 'operator_label^{1}'], 
+                    axis=1, inplace=True, errors='ignore')
+
+  # Munging the result: Delete rows with coefficient 0, 
+  operator_so = operator_so[operator_so['coefficient'] != 0]
+  operator_si = operator_si[operator_si['coefficient'] != 0]
 
   # combine clebsch-gordan coefficients for source and sink into one DataFrame
+  operator_so.rename(columns={'\gamma^{0}' : '\gamma^{0}_{so}', 
+                              '\gamma^{1}' : '\gamma^{1}_{so}'}, inplace=True)
+  operator_si.rename(columns={'\gamma^{0}' : '\gamma^{0}_{si}', 
+                              '\gamma^{1}' : '\gamma^{1}_{si}'}, inplace=True)
   lattice_operators = pd.merge(operator_so, operator_si, 
                                how='inner', left_index=True, right_index=True, 
                                suffixes=['_{so}', '_{si}']) 
@@ -473,6 +567,7 @@ def set_lookup_corr(coefficients_irrep, qn, verbose):
   # TODO: Check whether left merge results in nan somewhere as in this case data is missing
   lookup_corr = pd.merge(coefficients_irrep.reset_index(), qn.reset_index(), 
                       how='left')
+
 
   # Add two additional columns with the same string if the quantum numbers 
   # describe equivalent physical constellations: gevp_row and gevp_col

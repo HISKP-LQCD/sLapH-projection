@@ -33,6 +33,7 @@ def set_lookup_g(gamma_labels, diagram):
   """
 
   gamma_dic = { 'gamma_5' :   DataFrame({'\gamma' : [5]}),
+                'gamma_05':   DataFrame({'\gamma' : [6]}),
                 'gamma_i' :   DataFrame({'\gamma' : [1,2,3]}),
                 'gamma_50i' : DataFrame({'\gamma' : [13,14,15]})
               }
@@ -54,21 +55,23 @@ def set_lookup_g(gamma_labels, diagram):
     J_si = 0
 
     gamma_so = pd.concat([gamma_dic[gl_so] for gl_so in gamma_labels[J_so]])
-    gamma_so = gamma_so.rename(columns={'\gamma' : '\gamma^{0}'})
+    gamma_so = gamma_so.rename(columns={'\gamma' : '\gamma^{0}_{so}'})
 
-    gamma_si = gamma_so 
+    gamma_si = pd.concat([gamma_dic[gl_si] for gl_si in gamma_labels[J_si]])
+    gamma_si = gamma_si.rename(columns={'\gamma' : '\gamma^{0}_{si}'})
+
 
   elif diagram == 'C3+':
 
-    lookup = DataFrame([5])
-    lookup.index = np.repeat(0, len(lookup))
+    J_so = 0
+    J_si = 1
 
-    lookup_so = pd.merge(lookup, lookup, left_index=True, right_index=True)
-    lookup_so.columns = ['\gamma^{0}', '\gamma^{1}']
+    gamma_so = pd.concat([gamma_dic[gl_so] for gl_so in gamma_labels[J_so]])
+    gamma_so = gamma_so.rename(columns={'\gamma' : '\gamma^{0}_{so}'})
+    gamma_so['\gamma^{1}_{so}'] = gamma_so['\gamma^{0}_{so}']
 
-    lookup_si = DataFrame([g for gamma in gammas for g in gamma[:-1]])
-    lookup_si.index = np.repeat(0, len(lookup_si))
-    lookup_si.columns = ['\gamma^{0}']
+    gamma_si = pd.concat([gamma_dic[gl_si] for gl_si in gamma_labels[J_si]])
+    gamma_si = gamma_si.rename(columns={'\gamma' : '\gamma^{0}_{si}'})
 
   elif diagram.startswith('C4'):
 
@@ -86,10 +89,13 @@ def set_lookup_g(gamma_labels, diagram):
 
   gamma_so['tmp'] = 0
   gamma_si['tmp'] = 0
+#  lookup_g = pd.merge(gamma_so, gamma_si, 
+#                      how='outer',
+#                      on=['tmp'],
+#                      suffixes=['_{so}', '_{si}'])
   lookup_g = pd.merge(gamma_so, gamma_si, 
                       how='outer',
-                      on=['tmp'],
-                      suffixes=['_{so}', '_{si}'])
+                      on=['tmp'])
   del(lookup_g['tmp'])
 
   print diagram

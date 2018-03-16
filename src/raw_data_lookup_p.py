@@ -4,6 +4,8 @@ import numpy as np
 import pandas as pd
 from pandas import Series, DataFrame
 
+from ast import literal_eval
+
 from utils import _abs2
 
 def set_lookup_p_for_one_particle(lookup_p3, p_cm):
@@ -65,22 +67,22 @@ def set_lookup_p_for_two_particles(lookup_p3, p_max, p_cm, skip=False):
   # DataFrame with all combinations of 3-momenta
   lookup = pd.merge(lookup_p3, lookup_p3, how='outer', \
                        left_index=True, right_index=True)
-  lookup.columns = ['p^{0}', 'p^{0}']
+  lookup.columns = ['p^{0}', 'p^{1}']
 
   # Total momentum is equal to the sum of the particle's momenta
   lookup['p_{cm}'] = map(lambda k1, k2: tuple([sum(x) for x in zip(k1,k2)]), \
-                                lookup['p^{0}'], lookup['p^{0}'])
+                                lookup['p^{0}'], lookup['p^{1}'])
 
   # Restrict set of 3-momenta to those with the correct abulute value
   lookup = lookup[lookup['p_{cm}'].apply(_abs2) == p_cm]
   # Restrict set of 3-momenta to those where |p1|+|p2| <= p_max
-  lookup = lookup[lookup['p'].applymap(_abs2).sum(axis=1) <= p_max]
+  lookup = lookup[lookup['p^{0}'].apply(_abs2) + lookup['p^{1}'].apply(_abs2) <= p_max]
 
   # For rho analysis, explicitely exclude S-wave:
   # \pi(0,0,0) + \pi(0,0,0) -> \rho(0,0,0) forbidden by angular momentum 
   # conservation
   if skip:
-    lookup = lookup[(lookup['p^{0}'] != (0,0,0)) | (lookup['p^{0}'] != (0,0,0))]
+    lookup = lookup[(lookup['p^{0}'] != (0,0,0)) | (lookup['p^{1}'] != (0,0,0))]
 
   return lookup.applymap(str)
 
@@ -150,9 +152,10 @@ def set_lookup_p(p_max, p_cm, diagram, skip=False):
   else:
     print 'in set_lookup_p: diagram unknown! Quantum numbers corrupted.'
  
+  lookup_so.rename(columns=lambda x: x + '_{so}' if '^' in x else x, inplace=True)
+  lookup_si.rename(columns=lambda x: x + '_{si}' if '^' in x else x, inplace=True)
   # DataFrame with all combinations of source and sink with same total momentum
-  lookup_p = pd.merge(lookup_so, lookup_si, on=['p_{cm}'], \
-                      suffixes=['_{so}', '_{si}'])
+  lookup_p = pd.merge(lookup_so, lookup_si, on=['p_{cm}'])
 
   return lookup_p
 
