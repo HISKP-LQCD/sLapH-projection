@@ -404,18 +404,18 @@ def gammas(plotdata, diagram, bootstrapsize, pdfplot, logscale=True, verbose=Fal
     #linthreshy = plotdata['mean'].iloc[plotdata.loc[:,('mean',0)].nonzero()].abs().min().min()
 
     # create list of gevp elements to loop over
-    plotlabel = list(set([(i[0], i[1], i[2], i[3]) for i in plotdata.index.values]))
+    plotlabel = list(set([(i[0], i[1], i[2], i[3], i[4]) for i in plotdata.index.values]))
     for graphlabel in plotlabel:
 
         if verbose:
             print '\tplotting ', graphlabel[0], ' - ', graphlabel[1]
 
         # prepare data to plot
-        graphdata = plotdata.xs(graphlabel, level=['gevp_row', 'gevp_col', 'p_{cm}', '\mu'])
+        graphdata = plotdata.xs(graphlabel, level=['gevp_row', 'gevp_col', 'p_{cm}', 'q_{so}', '\mu'])
 
         # prepare plot
-        plt.title(r'Gevp Element ${}$ - ${}$, $\vec{{P}}_\textnormal{{cm}} = {}$, $\mu = {}$'.format(
-            graphlabel[0], graphlabel[1], graphlabel[2], graphlabel[3]))
+        plt.title(r'Gevp Element ${}$ - ${}$, $\vec{{P}}_\textnormal{{cm}} = {}$, $\vec{{q}}_\textnormal{{rel}} = {}$, $\mu = {}$'.format(
+            graphlabel[0], graphlabel[1], graphlabel[2], graphlabel[3], graphlabel[4]))
         plt.xlabel(r'$t/a$', fontsize=12)
         plt.ylabel(r'$%s(t/a)$' % diagram, fontsize=12)
 

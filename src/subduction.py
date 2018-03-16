@@ -234,6 +234,7 @@ def read_sc_2(p_cm_vecs, path, verbose=True, j=1):
     df['coefficient'] = df['coefficient'].apply(aeval)
     df['p^1'] = df['p^1'].apply(literal_eval).apply(str)
     df['p^2'] = df['p^2'].apply(literal_eval).apply(str)
+    df['q'] = df['q'].apply(literal_eval).apply(str)
     df.rename(columns={'p^1' : 'p^{0}', 'p^2' : 'p^{1}'}, inplace=True)
     df = df[(df['p^{0}'] != str((0,0,0))) | (df['p^{1}'] != str((0,0,0)))]
     del df['abs(p1)']
@@ -387,6 +388,10 @@ def set_continuum_basis(names, basis_type, verbose):
     ladder_operators = [[1/sqrt2,   -1j/sqrt2, 0], 
                         [0,          0,        1], 
                         [-1/sqrt2,  -1j/sqrt2,  0]]
+  elif basis_type == "marcus-con":
+    ladder_operators = [[1/sqrt2,   1j/sqrt2, 0], 
+                        [0,          0,        1], 
+                        [-1/sqrt2,  1j/sqrt2,  0]]
   elif basis_type == "dudek":
     ladder_operators = [[1j/sqrt2,  -1./sqrt2, 0], 
                         [0,         0,         1j], 
@@ -518,7 +523,8 @@ def project_operators(di, sc, sc_2, continuum_operators, verbose):
 
   # combine clebsch-gordan coefficients for source and sink into one DataFrame
   operator_so.rename(columns={'\gamma^{0}' : '\gamma^{0}_{so}', 
-                              '\gamma^{1}' : '\gamma^{1}_{so}'}, inplace=True)
+                              '\gamma^{1}' : '\gamma^{1}_{so}',
+                              'q' : 'q_{so}'}, inplace=True)
   operator_si.rename(columns={'\gamma^{0}' : '\gamma^{0}_{si}', 
                               '\gamma^{1}' : '\gamma^{1}_{si}'}, inplace=True)
   lattice_operators = pd.merge(operator_so, operator_si, 
@@ -539,16 +545,22 @@ def project_operators(di, sc, sc_2, continuum_operators, verbose):
             'p^{1}_{so}' : 5, 
             'p^{0}_{si}' : 6, 
             'p^{1}_{si}' : 7, 
-            '\gamma^{0}_{so}' : 8, 
-            '\gamma^{1}_{so}' : 9, 
-            '\gamma^{0}_{si}' : 10, 
-            '\gamma^{1}_{si}' : 11,
-            'operator_label_{so}' : 12,
-            'operator_label_{si}' : 13} 
+            'q_{so}' : 8, 
+            'q_{si}' : 9, 
+            '\gamma^{0}_{so}' : 10, 
+            '\gamma^{1}_{so}' : 11, 
+            '\gamma^{0}_{si}' : 12, 
+            '\gamma^{1}_{si}' : 13,
+            'operator_label_{so}' : 14,
+            'operator_label_{si}' : 15} 
   index = sorted(index, key=lambda x : order[x])
   lattice_operators.set_index(index, inplace=True)
 
-  lattice_operators = lattice_operators.sum(axis=0, level=lattice_operators.index.names)
+  print lattice_operators.sort_index()
+
+  lattice_operators = lattice_operators.sum(axis=0, level=index)
+
+  print lattice_operators.sort_index()
 
   # Munging the result: Delete rows with coefficient 0, 
   lattice_operators = lattice_operators[lattice_operators['coefficient'] != 0]
@@ -614,10 +626,12 @@ def set_lookup_corr(coefficients_irrep, qn, verbose):
             'p^{1}_{so}' : 7, 
             'p^{0}_{si}' : 8, 
             'p^{1}_{si}' : 9, 
-            '\gamma^{0}_{so}' : 10, 
-            '\gamma^{1}_{so}' : 11, 
-            '\gamma^{0}_{si}' : 12, 
-            '\gamma^{1}_{si}' : 13} 
+            'q_{so}' : 10, 
+            'q_{si}' : 11, 
+            '\gamma^{0}_{so}' : 12, 
+            '\gamma^{1}_{so}' : 13, 
+            '\gamma^{0}_{si}' : 14, 
+            '\gamma^{1}_{si}' : 15} 
   index = sorted(index, key=lambda x : order[x])
   lookup_corr.set_index(index, inplace=True)
 

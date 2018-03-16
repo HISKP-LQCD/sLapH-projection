@@ -137,9 +137,14 @@ def set_groupname(diagram, s):
     g_si = s['\gamma^{0}_{si}']
 
     groupname = diagram \
-                  + '_uuu_p%1i%1i%1i.d000.g%1i' % ( p_so_0 + (g_so_0,) ) \
-                  +     '_p%1i%1i%1i.d000.g%1i' % ( p_si +    (g_si,) ) \
-                  +     '_p%1i%1i%1i.d000.g%1i' % ( p_so_1 + (g_so_1,) )
+                  + '_uuu_p%1i%1i%1i.d000.g%1i' % ( p_so_1 + (g_so_0,) ) \
+                  +     '_p%1i%1i%1i.d000.g%1i' % ( p_so_0 + (g_si,) ) \
+                  +     '_p%1i%1i%1i.d000.g%1i' % ( tuple([-1*p for p in p_si]) + (g_so_1,) )
+
+#    groupname = diagram \
+#                  + '_uuu_p%1i%1i%1i.d000.g%1i' % ( p_so_0 + (g_so_0,) ) \
+#                  +     '_p%1i%1i%1i.d000.g%1i' % ( p_si +    (g_si,) ) \
+#                  +     '_p%1i%1i%1i.d000.g%1i' % ( p_so_1 + (g_so_1,) )
   elif diagram == 'C4+D' or diagram == 'C4+C':
     p_so = np.array(eval(s['p^{0}_{so}']), eval(s['p^{1}_{so}']))
     g_so = np.array(s['\gamma^{0}_{so}'], s['\gamma^{1}_{so}'])
