@@ -229,7 +229,6 @@ def read_sc_2(p_cm_vecs, path, verbose=True, j=1):
     df.rename(columns={'alpha' : '\mu'}, inplace=True)
     del df['beta']
     df['mult'] = 1
-    print df
     df = df.set_index(['p_{cm}', 'Irrep', '\mu', 'mult'])
 
     df['coefficient'] = df['coefficient'].apply(aeval)
@@ -517,10 +516,6 @@ def project_operators(di, sc, sc_2, continuum_operators, verbose):
   operator_si.drop(['operator_label^{0}', 'operator_label^{1}'], 
                     axis=1, inplace=True, errors='ignore')
 
-  # Munging the result: Delete rows with coefficient 0, 
-  operator_so = operator_so[operator_so['coefficient'] != 0]
-  operator_si = operator_si[operator_si['coefficient'] != 0]
-
   # combine clebsch-gordan coefficients for source and sink into one DataFrame
   operator_so.rename(columns={'\gamma^{0}' : '\gamma^{0}_{so}', 
                               '\gamma^{1}' : '\gamma^{1}_{so}'}, inplace=True)
@@ -530,9 +525,38 @@ def project_operators(di, sc, sc_2, continuum_operators, verbose):
                                how='inner', left_index=True, right_index=True, 
                                suffixes=['_{so}', '_{si}']) 
 
+  lattice_operators['coefficient'] = lattice_operators['coefficient_{so}'].apply(np.conj) \
+                                        * lattice_operators['coefficient_{si}']
+  lattice_operators.drop(['coefficient_{so}', 'coefficient_{si}'], axis=1, inplace=True)
+
+  lattice_operators.reset_index(inplace=True)
+  index = lattice_operators.columns.difference(['coefficient']).tolist()
+  order = { 'Irrep' : 0, 
+            'mult' : 1,             
+            'p_{cm}' : 2, 
+            '\mu' : 3, 
+            'p^{0}_{so}' : 4, 
+            'p^{1}_{so}' : 5, 
+            'p^{0}_{si}' : 6, 
+            'p^{1}_{si}' : 7, 
+            '\gamma^{0}_{so}' : 8, 
+            '\gamma^{1}_{so}' : 9, 
+            '\gamma^{0}_{si}' : 10, 
+            '\gamma^{1}_{si}' : 11,
+            'operator_label_{so}' : 12,
+            'operator_label_{si}' : 13} 
+  index = sorted(index, key=lambda x : order[x])
+  lattice_operators.set_index(index, inplace=True)
+
+  lattice_operators = lattice_operators.sum(axis=0, level=lattice_operators.index.names)
+
+  # Munging the result: Delete rows with coefficient 0, 
+  lattice_operators = lattice_operators[lattice_operators['coefficient'] != 0]
+
   if verbose:
     print 'lattice_operators'
-    print lattice_operators
+    with pd.option_context('display.max_rows', None, 'display.max_columns', None):
+        print lattice_operators
 
   return lattice_operators
 
@@ -579,7 +603,7 @@ def set_lookup_corr(coefficients_irrep, qn, verbose):
   lookup_corr.drop(['operator_label_{so}', 'operator_label_{si}'], axis=1, inplace=True)
 
   # Set index as it shall appear in projected correlators
-  index = lookup_corr.columns.difference(['index', 'coefficient_{so}', 'coefficient_{si}']).tolist()
+  index = lookup_corr.columns.difference(['index', 'coefficient']).tolist()
   order = { 'Irrep' : 0, 
             'mult' : 1,             
             'gevp_row' : 2, 
@@ -599,8 +623,7 @@ def set_lookup_corr(coefficients_irrep, qn, verbose):
 
   if verbose:
     print 'lookup_corr'
-    with pd.option_context('display.max_rows', None, 'display.max_columns', 3):
-      print lookup_corr
+    print lookup_corr
     utils.write_hdf5_correlators('./', 'lookup_corr.h5', lookup_corr, 'data', verbose=False)
 
   return lookup_corr
@@ -637,10 +660,8 @@ def project_correlators(data, qn_irrep):
   del projected_correlators['index']
 
   projected_correlators = projected_correlators[
-        projected_correlators.columns.difference(['coefficient_{so}','coefficient_{si}'])].\
-       multiply(
-       np.conj(projected_correlators['coefficient_{so}']) * \
-       projected_correlators['coefficient_{si}'], axis=0)
+        projected_correlators.columns.difference(['coefficient'])].\
+       multiply(projected_correlators['coefficient'], axis=0)
 
   projected_correlators.columns=pd.MultiIndex.from_tuples(projected_correlators.columns, \
                                                          names=('cnfg', 'T'))
