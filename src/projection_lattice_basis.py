@@ -1,12 +1,7 @@
 import numpy as np
 import pandas as pd
 from pandas import Series, DataFrame
-import itertools as it
-import cmath
-import functools
 import os
-import operator
-import collections
 
 from asteval import Interpreter
 aeval = Interpreter()
@@ -15,110 +10,6 @@ aeval.symtable['I'] = 1j
 from ast import literal_eval
 
 from utils import _scalar_mul, _abs2, _minus
-
-# TODO: path for groups is hardcoded here. Shift that into clebsch-gordan module
-def return_cg(p_cm, irrep):
-  """
-  Creates table with eigenstates of an irreducible representation created from
-  a Clebsch-Gordan decomposition of two pseudoscalar particles with momenta 
-  k_1 and k_2
-
-  Parameters
-  ----------
-
-    p_cm : int, {0,1,2,3,4}
-        Center of mass momentum of the lattice. Used to specify the appropriate
-        little group of rotational symmetry. Absolute value of an integer 
-        3-vector
-    irrep : string
-        Specifying the irreducible representation operators should transform 
-        under
-
-  Returns
-  -------
-
-    pd.DataFrame
-        Table with cg-coefficients for each momentum combination p=(k_1, k_2)
-        and row \mu
-        Has columns J, M, cg-coefficient, p, \mu and unnamed indices
-
-  Notes
-  -----
-
-    J, M are both hardcoded to (0,0) referring to scattering of two 
-    (pseudo)scalars
-
-  See
-  ---
-
-    clebsch_gordan.example_cg
-  """
-
-  prefs = [[0.,0.,0.], [0.,0.,1.], [0.,1.,1.], [1.,1.,1.], [0.,0.,2.]]
-#           [0.,1.,2.], [1.,1.,2.]]
-  p2max = len(prefs)
-
-  # initialize groups
-  S = 1./np.sqrt(2.)
-  # tells clebsch_gordan to use cartesian basis
-  U3 = np.asarray([[0,0,-1.],[1.j,0,0],[0,1,0]])
-  U2 = np.asarray([[S,S],[1.j*S,-1.j*S]])
-
-  path = os.path.normpath(os.path.join(os.getcwd(), "groups/"))
-  groups = group.init_groups(prefs=prefs, p2max=p2max, U2=U2, U3=U3,
-          path=path)
-
-  # define the particles to combine
-  j1 = 0 # J quantum number of particle 1
-  j2 = 0 # J quantum number of particle 2
-  ir1 = [ g.subduction_SU2(int(j1*2+1)) for g in groups]
-  ir2 = [ g.subduction_SU2(int(j2*2+1)) for g in groups]
-
-  # calc coefficients
-  df = DataFrame()
-  for (i, i1), (j, i2) in it.product(zip(range(p2max), ir1), zip(range(p2max), ir2)):
-    for _i1, _i2 in it.product(i1, i2):
-      try:
-
-        cgs = group.TOhCG(p_cm, i, j, groups, ir1=_i1, ir2=_i2)
-
-        # TODO: irreps explizit angeben. TOh gibt Liste der beitragenden irreps 
-        # zurueck TOh.subduction_SU2(j) mit j = 2j+1
-        #cgs = group.TOhCG(0, p, p, groups, ir1="A2g", ir2="T2g")
-        #print("pandas")
-        df = pd.concat([df, cgs.to_pandas()], ignore_index=True)
-      except RuntimeError:
-        continue
-
-  df.rename(columns={'row' : '\mu', 'multi' : 'mult', 
-                                       'cg' : 'cg-coefficient'}, inplace=True)
-  df['cg-coefficient'] = df['cg-coefficient'].apply(aeval)
-
-
-  # Create new column 'p' with tuple of momenta 
-  # ( (p1x, p1y, p1z), (p2x, p2y, p2z) )
-  # TODO warning for imaginary parts
-  def to_tuple(list, sign=+1):
-      return tuple([int(sign*l.real) for l in list])
-  df['p1'] = df['p1'].apply(to_tuple)
-  df['p2'] = df['p2'].apply(to_tuple)
-  df['p'] = list(zip(df['p1'], df['p2']))
-  df.drop(['p1', 'p2', 'ptot'], axis=1, inplace=True)
-
-  # Inserting J, M to merge with basis and obtain gamma structure
-  # Hardcoded: Scattering of two (pseudo)scalars (|J,M> = |0,0>)
-  df['J'] = [(0,0)]*len(df.index) 
-  df['M'] = [(0,0)]*len(df.index)
-
-#  print df[((df['p'] == tuple([(0,-1,0),(0,1,1)])) | (df['p'] == tuple([(0,1,1),(0,-1,0)])) | (df['p'] == tuple([(0,1,0),(0,-1,1)])) | (df['p'] == tuple([(0,-1,1),(0,1,0)])) | (df['p'] == tuple([(-1,0,0),(1,0,1)])) | (df['p'] == tuple([(1,0,1),(-1,0,0)])) | (df['p'] == tuple([(1,0,0),(-1,0,1)])) | (df['p'] == tuple([(-1,0,1),(1,0,0)]))) & df['cg-coefficient'] != 0]
-#  print df['Irrep'].unique()
-#  print df[(df['Irrep'] == 'Ep1g')]
-
-  # we want all possible irreps for pipi, only the combinations possible for
-  # C2 for the rho
-  #df = select_irrep(df, irrep)
-
-  return df
 
 def read_sc_2(p_cm_vecs, path, verbose=True, j=1):
   """
