@@ -281,7 +281,7 @@ def main():
                 # and irreducible representation given by diagram, p_cm
                 # irrep and mult
                 lattice_operators_so, lattice_operators_si = projection.read_lattice_basis(
-                        diagram, list_of_pcm, path_to_sc, path_to_sc_2, j, verbose)
+                    diagram, list_of_pcm, path_to_sc, path_to_sc_2, j, verbose)
 
                 list_of_irreps = projection.get_list_of_irreps(list_of_pcm, path_to_sc, j)
 
@@ -289,9 +289,12 @@ def main():
                     print '\t  subducing into %s' % irrep
                     di = ContractionType(diagram, irrep)
 
-                    lattice_operators = projection.project_operators(
+                    operators_so, operators_si = projection.project_operators(
                         di, lattice_operators_so, lattice_operators_si, 
                         continuum_operators, verbose)
+
+                    lattice_operators = projection.correlate_operators(
+                        operators_so, operators_si, verbose)
 
                     lookup_corr = subduction.set_lookup_corr(
                         lattice_operators, lookup_qn[di.diagram], verbose)

@@ -37,7 +37,6 @@ def read_sc_2(p_cm_vecs, path, verbose=True, j=1):
   ----
     Filename of subduction coefficients hardcoded. Expected to be 
     "J%d-P%1i%1i%1i-operators.txt"
-    # "lattice-basis_J%d_P%1i%1i%1i_Msum.dataframe"
   """
 
   subduction_coefficients = DataFrame()

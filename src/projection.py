@@ -277,10 +277,6 @@ def project_operators(di, lattice_operators_so, lattice_operators_si,
   elif di.diagram.startswith('C4'):
     print 'in get_coefficients: C4 broken!'
     return
-
-#    def to_tuple(list):
-#      return tuple([tuple(l) for l in list])
-#    operator_si['p'] = (operator_si['p'].apply(np.array)*(-1)).apply(to_tuple)
   else:
     print 'in project_operators: diagram unknown! Quantum numbers corrupted.'
     return
@@ -309,7 +305,7 @@ def project_operators(di, lattice_operators_so, lattice_operators_si,
     operator_si.drop(cl_si + ['coordinate'],
                      axis=1, inplace=True)
 
-  # Rename if merge has not appended a suffix
+  # Munging for C3: Rename if merge has not appended a suffix
   operator_so.rename(columns={'\gamma' : '\gamma^{0}', 'p^{1}' : 'p^{1}_{so}'}, inplace=True)
   operator_so['operator_label'] = operator_so[[col for col in operator_so.columns if 'label' in col]].apply(lambda x: ', '.join(x), axis=1)
   operator_so.drop(['operator_label^{0}', 'operator_label^{1}'], 
@@ -318,13 +314,17 @@ def project_operators(di, lattice_operators_so, lattice_operators_si,
   operator_si['operator_label'] = operator_si[[col for col in operator_si.columns if 'label' in col]].apply(lambda x: ', '.join(x), axis=1)
   operator_si.drop(['operator_label^{0}', 'operator_label^{1}'], 
                     axis=1, inplace=True, errors='ignore')
-
-  # combine clebsch-gordan coefficients for source and sink into one DataFrame
   operator_so.rename(columns={'\gamma^{0}' : '\gamma^{0}_{so}', 
                               '\gamma^{1}' : '\gamma^{1}_{so}',
                               'q' : 'q_{so}'}, inplace=True)
   operator_si.rename(columns={'\gamma^{0}' : '\gamma^{0}_{si}', 
                               '\gamma^{1}' : '\gamma^{1}_{si}'}, inplace=True)
+
+  return operator_so, operator_si
+
+def correlate_operators(operator_so, operator_si, verbose):
+
+  # inner merge to get linear combinations of contributing correlation functions 
   lattice_operators = pd.merge(operator_so, operator_si, 
                                how='inner', left_index=True, right_index=True, 
                                suffixes=['_{so}', '_{si}']) 
@@ -354,11 +354,7 @@ def project_operators(di, lattice_operators_so, lattice_operators_si,
   index = sorted(index, key=lambda x : order[x])
   lattice_operators.set_index(index, inplace=True)
 
-  print lattice_operators.sort_index()
-
   lattice_operators = lattice_operators.sum(axis=0, level=index)
-
-  print lattice_operators.sort_index()
 
   # Munging the result: Delete rows with coefficient 0, 
   lattice_operators = lattice_operators[lattice_operators['coefficient'] != 0]
