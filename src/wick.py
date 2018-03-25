@@ -127,13 +127,11 @@ def rho_3pt(data, irrep, verbose=0):
 
   # TODO: change the gamma structures
   gamma_i =   [1, 2, 3, 'gi']
-  gamma_0i =  [10, 11, 12, 'g0gi']
   gamma_50i = [13, 14, 15, 'g5g0gi']
   
-  gammas = [gamma_i, gamma_0i, gamma_50i]
+  gammas = [gamma_i, gamma_50i]
   
   gamma_i = [(g,) for g in gamma_i[:-1]]
-  gamma_0i = [(g,) for g in gamma_0i[:-1]]
   gamma_50i = [(g,) for g in gamma_50i[:-1]]
 
   idx = pd.IndexSlice
@@ -141,9 +139,8 @@ def rho_3pt(data, irrep, verbose=0):
   wick = data[('C3+',irrep)]
 
   # Warning: 1j hardcoded
-  wick.loc[idx[:,:,:,:,:,:,:,:,:,:,:,gamma_i],  :] *= ( 2.)   *(-1j)
-  wick.loc[idx[:,:,:,:,:,:,:,:,:,:,:,gamma_0i], :] *= (-2.)   *(-1j) 
-  wick.loc[idx[:,:,:,:,:,:,:,:,:,:,:,gamma_50i],:] *= ( 2.*1j)*(-1j)
+  wick[wick.index.get_level_values('\gamma^{0}_{si}').isin([1,2,3])]    *= ( 2.)   *(-1j)
+  wick[wick.index.get_level_values('\gamma^{0}_{si}').isin([13,14,15])] *= ( 2.*1j)*(-1j)
 
   return wick
 
