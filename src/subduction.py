@@ -56,16 +56,16 @@ def set_lookup_corr(coefficients_irrep, qn, verbose):
             'gevp_col' : 3, 
             'p_{cm}' : 4, 
             '\mu' : 5, 
-            'p^{0}_{so}' : 6, 
-            'p^{1}_{so}' : 7, 
-            'p^{0}_{si}' : 8, 
-            'p^{1}_{si}' : 9, 
-            'q_{so}' : 10, 
-            'q_{si}' : 11, 
-            '\gamma^{0}_{so}' : 12, 
-            '\gamma^{1}_{so}' : 13, 
-            '\gamma^{0}_{si}' : 14, 
-            '\gamma^{1}_{si}' : 15} 
+            'q_{so}' : 6, 
+            'q_{si}' : 7, 
+            'p^{0}_{so}' : 8, 
+            'p^{1}_{so}' : 9, 
+            'p^{0}_{si}' : 10, 
+            'p^{1}_{si}' : 11, 
+            '\gamma^{0}_{so}' : 14, 
+            '\gamma^{1}_{so}' : 15, 
+            '\gamma^{0}_{si}' : 16, 
+            '\gamma^{1}_{si}' : 17} 
   index = sorted(index, key=lambda x : order[x])
   lookup_corr.set_index(index, inplace=True)
 
