@@ -89,13 +89,10 @@ def set_lookup_g(gamma_labels, diagram):
 
   gamma_so['tmp'] = 0
   gamma_si['tmp'] = 0
-#  lookup_g = pd.merge(gamma_so, gamma_si, 
-#                      how='outer',
-#                      on=['tmp'],
-#                      suffixes=['_{so}', '_{si}'])
   lookup_g = pd.merge(gamma_so, gamma_si, 
                       how='outer',
-                      on=['tmp'])
+                      on=['tmp'],
+                      suffixes=['_{so}', '_{si}'])
   del(lookup_g['tmp'])
 
   print diagram

@@ -8,6 +8,7 @@ import src.infile_handler as infile_handler
 import src.raw_data as raw_data
 import src.utils as utils
 import src.wick as wick
+import src.projection as projection
 import src.subduction as subduction
 import src.setup_gevp as setup_gevp
 import src.plot as plot
@@ -273,15 +274,11 @@ def main():
 
                 # Express :math:`O^{J,M}` in terms of physical Dirac operators
                 # specified in `gamma_input`
-                continuum_operators = subduction.set_continuum_basis(
+                continuum_operators = projection.set_continuum_basis(
                     gamma_input, continuum_basis_string, verbose)
 
-                # Read subduction coefficients for all momenta in list_p_cm
-                sbdctn_coeffs = subduction.read_sc(
-                    list_of_pcm, path_to_sc, verbose, j=j)
-
-                sbdctn_coeffs_2 = subduction.read_sc_2(
-                    list_of_pcm, path_to_sc_2, verbose, j=j)
+                sbdctn_coeffs, sbdctn_coeffs_2 = projection.read_lattice_basis(
+                    list_of_pcm, path_to_sc, path_to_sc_2, j, verbose)
 
                 # List with the names of all contributing irreducible
                 # representations and their multiplicity
@@ -296,7 +293,7 @@ def main():
                     # and irreducible representation given by diagram, p_cm
                     # irrep and mult
                     # TODO: Refactor exploiting namedtuple
-                    lattice_operators = subduction.project_operators(
+                    lattice_operators = projection.project_operators(
                         di, sbdctn_coeffs, sbdctn_coeffs_2, continuum_operators, verbose)
 
                     lookup_corr = subduction.set_lookup_corr(
