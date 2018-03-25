@@ -58,18 +58,78 @@ def select_irrep_mult(df, irrep, mult):
 
   return df.xs((irrep,mult), level=('Irrep','mult'), drop_level=False)
 
+def get_list_of_irreps(p_cm_vecs, path_to_one_particle_coeffs, j):
+  """
+  Get list of all irreducible representations appearing in the subduction step
+  
+  Parameters
+  ----------
+    p_cm_vecs : list
+        Center of mass momentum of the lattice. Used to specify the appropriate little 
+        group of rotational symmetry. Contains integer 3-vectors
+    path_to_one_particle_coeffs : string
+        Path to files with subduction coefficients
+    j: int
+        Angular momentum quantum number defining representation of SO(3) from which to 
+        subduce
+    
+  Returns
+  -------
+    List with the names of all contributing lattice irreducible representations
+  """
+
+  sbdctn_coeffs = read_sc(p_cm_vecs, path_to_one_particle_coeffs, verbose=False, j=j)
+
+  return sbdctn_coeffs.index.get_level_values('Irrep').unique()
 
 # The coefficients are read again for each diagram, but that is not the 
 # performance-critical part
-def read_lattice_basis(p_cm_vecs, path_one_particle_coeffs, path_two_particle_coeffs, 
-        j=1, verbose=True):
+def read_lattice_basis(diagram, p_cm_vecs, path_to_one_particle_coeffs, 
+        path_to_two_particle_coeffs, j=1, verbose=True):
+  """
+  Distinguish by diagram whether one- or two-particle diagrams are needed at source and 
+  sink and read projection coefficients
+
+  Parameters
+  ----------
+    diagram: string
+        The name of the diagram from wick contractions. 
+    p_cm_vecs : list
+        Center of mass momentum of the lattice. Used to specify the appropriate little 
+        group of rotational symmetry. Contains integer 3-vectors
+    path_to_one_particle_coeffs : string
+        Path to files with projection coefficients for one-particle operators
+    path_to_two_particle_coeffs : string
+        Path to files with projection coefficients for two-particle operators
+
+  Returns
+  -------
+    pd.DataFrame, pd.DataFrame
+        Tables with hierarchical MultiIndex ('p_{cm}', 'Irrep', '\mu', 'mult'), 
+        a column 'coefficient' and columns 'p', 'J' and 'M' for every particle
+        and a column 'q' in case of two particles. 
+
+  Note
+  ----
+    The coefficients express the basis states of lattice irreducible representations as
+    linear combination of angular momentum eigenstates. 
+  """
 
   # Read subduction coefficients for all momenta in list_p_cm
-  sbdctn_coeffs = read_sc(p_cm_vecs, path_one_particle_coeffs, verbose, j=j)
+  if diagram.startswith(('C2','C3')):
+    sbdctn_coeffs = read_sc(p_cm_vecs, path_to_one_particle_coeffs, verbose, j=j)
+  if diagram.startswith(('C3','C4')):
+    sbdctn_coeffs_2 = read_sc_2(p_cm_vecs, path_to_two_particle_coeffs, verbose, j=j)
 
-  sbdctn_coeffs_2 = read_sc_2(p_cm_vecs, path_two_particle_coeffs, verbose, j=j)
-
-  return sbdctn_coeffs, sbdctn_coeffs_2
+  if diagram.startswith('C2'):
+    return sbdctn_coeffs, sbdctn_coeffs
+  if diagram.startswith('C3'):
+    return sbdctn_coeffs_2, sbdctn_coeffs
+  if diagram.startswith('C4'):
+    return sbdctn_coeffs_2, sbdctn_coeffs_2
+  else:
+    print 'in get_coefficients: diagram unknown! Quantum numbers corrupted.'
+    return
 
 # TODO: properly read that from infile and pass to get_clebsch_gordan
 # TODO: actually use names to restrict basis_table to what was in the infile
@@ -172,7 +232,8 @@ def set_continuum_basis(names, basis_type, verbose):
 
 # TODO: find a better name for diagram after Wick contraction
 # TODO: No restriction to multiplicacy currently done
-def project_operators(di, sc, sc_2, continuum_operators, verbose):
+def project_operators(di, lattice_operators_so, lattice_operators_si, 
+        continuum_operators, verbose):
   """
   Project continuum operators to lattice using subduction coefficients 
 
@@ -201,33 +262,27 @@ def project_operators(di, sc, sc_2, continuum_operators, verbose):
       with the appropriate Clebsch Gordan coefficient for all these quantum
       numbers
   """
-  # Restrict subduction coefficients to irredicible representation specified 
-  # in di
+
+  # Restrict subduction coefficients to irredicible representation specified in di
+  operator_so = select_irrep(lattice_operators_so, di.irrep)
+  operator_si = select_irrep(lattice_operators_si, di.irrep)
 
   if di.diagram.startswith('C2'):
     continuum_labels_so = [['J^{0}','M^{0}']]
-    operator_so = select_irrep(sc, di.irrep)
-
     continuum_labels_si = [['J^{0}','M^{0}']]
-    operator_si = select_irrep(sc, di.irrep)
-#    operator_si['p'] = ((-1)*operator_si['p'].apply(np.array)).apply(tuple)
   elif di.diagram.startswith('C3'):
     # for 3pt function we have pipi operator at source and rho operator at sink
     continuum_labels_so = [['J^{0}','M^{0}'], ['J^{1}','M^{1}']]
-    operator_so = select_irrep(sc_2, di.irrep)
-
     continuum_labels_si = [['J^{0}','M^{0}']]
-    operator_si = select_irrep(sc, di.irrep)
-#    operator_si['p'] = (operator_si['p'].apply(np.array)*(-1)).apply(tuple)
   elif di.diagram.startswith('C4'):
-    operator_so = return_cg(p_cm, irrep)
-    operator_si = operator_so.copy()
+    print 'in get_coefficients: C4 broken!'
+    return
+
 #    def to_tuple(list):
 #      return tuple([tuple(l) for l in list])
 #    operator_si['p'] = (operator_si['p'].apply(np.array)*(-1)).apply(to_tuple)
-
   else:
-    print 'in get_coefficients: diagram unknown! Quantum numbers corrupted.'
+    print 'in project_operators: diagram unknown! Quantum numbers corrupted.'
     return
 
   # Project operators 

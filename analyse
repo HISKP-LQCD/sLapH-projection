@@ -277,24 +277,21 @@ def main():
                 continuum_operators = projection.set_continuum_basis(
                     gamma_input, continuum_basis_string, verbose)
 
-                sbdctn_coeffs, sbdctn_coeffs_2 = projection.read_lattice_basis(
-                    list_of_pcm, path_to_sc, path_to_sc_2, j, verbose)
+                # read coefficients for correlation function, little group
+                # and irreducible representation given by diagram, p_cm
+                # irrep and mult
+                lattice_operators_so, lattice_operators_si = projection.read_lattice_basis(
+                        diagram, list_of_pcm, path_to_sc, path_to_sc_2, j, verbose)
 
-                # List with the names of all contributing irreducible
-                # representations and their multiplicity
-                list_of_irreps = sbdctn_coeffs.index.get_level_values(
-                    'Irrep').unique()
+                list_of_irreps = projection.get_list_of_irreps(list_of_pcm, path_to_sc, j)
 
                 for irrep in list_of_irreps:
                     print '\t  subducing into %s' % irrep
                     di = ContractionType(diagram, irrep)
 
-                    # read coefficients for correlation function, little group
-                    # and irreducible representation given by diagram, p_cm
-                    # irrep and mult
-                    # TODO: Refactor exploiting namedtuple
                     lattice_operators = projection.project_operators(
-                        di, sbdctn_coeffs, sbdctn_coeffs_2, continuum_operators, verbose)
+                        di, lattice_operators_so, lattice_operators_si, 
+                        continuum_operators, verbose)
 
                     lookup_corr = subduction.set_lookup_corr(
                         lattice_operators, lookup_qn[di.diagram], verbose)
