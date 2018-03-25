@@ -313,10 +313,7 @@ def main():
 
             # helper function to read all subduced data from disk
             list_of_pcm = lookup_qn[diagram]['p_{cm}'].unique()
-            sbdctn_coeffs = subduction.read_sc(
-                list_of_pcm, path_to_sc, verbose, j=j)
-            list_of_irreps = sbdctn_coeffs.index.get_level_values(
-                'Irrep').unique()
+            list_of_irreps = projection.get_list_of_irreps(list_of_pcm, path_to_sc, j)
 
             path = '%s/%s/1_subduced-data/' % (outpath, ensemble)
 
@@ -371,13 +368,14 @@ def main():
 
                     # sum over gamma structures.
                     contracted_data_avg[ci] = contracted_data_avg[ci].sum(
-                        level=gevp_labels + ['p_{cm}','q_{so}', '\mu'] + momentum_labels)
+                        level=gevp_labels + list(set(contracted_data[ci].index.names).intersection(['p_{cm}','q_{so}', 'q_{si}', '\mu'])) + momentum_labels)
                     # sum over equivalent momenta
                     contracted_data_avg[ci] = contracted_data_avg[ci].sum(
-                        level=gevp_labels + ['p_{cm}','q_{so}','\mu'])
+                        level=gevp_labels + list(set(contracted_data[ci].index.names).intersection(['p_{cm}','q_{so}', 'q_{si}', '\mu'])))
+                    print contracted_data_avg[ci]
                     # average over rows.
                     contracted_data_avg[ci] = contracted_data_avg[ci].mean(
-                        level=gevp_labels + ['p_{cm}','q_{so}'])
+                        level=gevp_labels + list(set(contracted_data[ci].index.names).intersection(['p_{cm}','q_{so}', 'q_{si}'])))
                     # average over p_cm.
                     contracted_data_avg[ci] = contracted_data_avg[ci].mean(
                         level=gevp_labels)
