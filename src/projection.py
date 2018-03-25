@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from pandas import Series, DataFrame
 
-from projection_lattice_basis import read_sc, read_sc_2
+from projection_interface_maple import read_sc, read_sc_2
 
 def select_irrep(df, irrep):
   """
@@ -338,19 +338,19 @@ def correlate_operators(operator_so, operator_si, verbose):
   order = { 'Irrep' : 0, 
             'mult' : 1,             
             'p_{cm}' : 2, 
-            '\mu' : 3, 
-            'p^{0}_{so}' : 4, 
-            'p^{1}_{so}' : 5, 
-            'p^{0}_{si}' : 6, 
-            'p^{1}_{si}' : 7, 
-            'q_{so}' : 8, 
-            'q_{si}' : 9, 
-            '\gamma^{0}_{so}' : 10, 
-            '\gamma^{1}_{so}' : 11, 
-            '\gamma^{0}_{si}' : 12, 
-            '\gamma^{1}_{si}' : 13,
-            'operator_label_{so}' : 14,
-            'operator_label_{si}' : 15} 
+            'q_{so}' : 3, 
+            'q_{si}' : 4, 
+            'operator_label_{so}' : 5,
+            'operator_label_{si}' : 6,
+            '\mu' : 7, 
+            'p^{0}_{so}' : 8, 
+            'p^{1}_{so}' : 9, 
+            'p^{0}_{si}' : 10, 
+            'p^{1}_{si}' : 11, 
+            '\gamma^{0}_{so}' : 12, 
+            '\gamma^{1}_{so}' : 13, 
+            '\gamma^{0}_{si}' : 14, 
+            '\gamma^{1}_{si}' : 15} 
   index = sorted(index, key=lambda x : order[x])
   lattice_operators.set_index(index, inplace=True)
 
@@ -363,7 +363,7 @@ def correlate_operators(operator_so, operator_si, verbose):
     print 'lattice_operators'
     with pd.option_context('display.max_rows', None, 'display.max_columns', None):
         print lattice_operators
-
+    
   return lattice_operators
 
 
