@@ -11,7 +11,7 @@ def rho_2pt(data, irrep, verbose=0):
   Parameters
   ----------
   data : Dictionary of pd.DataFrame, keys in 
-      ({'C20', 'C3c', 'C4cB', 'C4cD'}, 'irrep')
+      ({'C20', 'C3c', 'C4cB', 'C4cD'}, `irrep`)
 
       For each diagram constituting the given `corrrelator` `data` must contain
       an associated pd.DataFrame with its subduced lattice data
@@ -34,31 +34,20 @@ def rho_2pt(data, irrep, verbose=0):
   The gamma strucures that can appear in \rho(t) are hardcoded
   """
 
-  # TODO: change the gamma structures
-  gamma_i =   [1, 2, 3, 'gi']
-  gamma_0i =  [10, 11, 12, 'g0gi']
-  gamma_50i = [13, 14, 15, 'g5g0gi']
-  
-  gammas = [gamma_i, gamma_0i, gamma_50i]
-  
-  gamma_i = [(g,) for g in gamma_i[:-1]]
-  gamma_0i = [(g,) for g in gamma_0i[:-1]]
-  gamma_50i = [(g,) for g in gamma_50i[:-1]]
-
+  gamma_i =   [1, 2, 3]
+  gamma_50i = [13, 14, 15]
 
   wick = data[('C20',irrep)]
 
-  idx = pd.IndexSlice
-
-  wick.loc[idx[:,:,:,:,:,gamma_i,  :,gamma_i],  :] *= ( 2.)
-  wick.loc[idx[:,:,:,:,:,gamma_i,  :,gamma_0i], :] *= (-2.)
-  wick.loc[idx[:,:,:,:,:,gamma_i,  :,gamma_50i],:] *= ( 2.*1j)
-  wick.loc[idx[:,:,:,:,:,gamma_0i, :,gamma_i],  :] *= ( 2.)
-  wick.loc[idx[:,:,:,:,:,gamma_0i, :,gamma_0i], :] *= (-2.)
-  wick.loc[idx[:,:,:,:,:,gamma_0i, :,gamma_50i],:] *= ( 2.*1j)
-  wick.loc[idx[:,:,:,:,:,gamma_50i,:,gamma_i],  :] *= ( 2.*1j)
-  wick.loc[idx[:,:,:,:,:,gamma_50i,:,gamma_0i], :] *= (-2.*1j)
-  wick.loc[idx[:,:,:,:,:,gamma_50i,:,gamma_50i],:] *= ( 2.)
+  # Warning: 1j hardcoded
+  wick[wick.index.get_level_values('\gamma^{0}_{so}').isin(gamma_i) & \
+       wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_i)]   *= (2.)
+  wick[wick.index.get_level_values('\gamma^{0}_{so}').isin(gamma_i) & \
+       wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_50i)] *= (2.*1j)
+  wick[wick.index.get_level_values('\gamma^{0}_{so}').isin(gamma_50i) & \
+       wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_i)]   *= (2.*1j)
+  wick[wick.index.get_level_values('\gamma^{0}_{so}').isin(gamma_50i) & \
+       wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_50i)] *= (2.)
 
   return wick
 
@@ -120,27 +109,24 @@ def rho_3pt(data, irrep, verbose=0):
   Notes
   -----
   The rho 3pt function is given by the contraction.
-  C^\text{2pt} = \langle \pi\pi(t_{so})^\dagger \rho(t_si) \rangle
+  C^\text{3pt} = \langle \pi\pi(t_{so})^\dagger \rho(t_si) \rangle
 
   The gamma strucures that can appear in \rho(t) are hardcoded
   """
 
-  # TODO: change the gamma structures
-  gamma_i =   [1, 2, 3, 'gi']
-  gamma_50i = [13, 14, 15, 'g5g0gi']
-  
-  gammas = [gamma_i, gamma_50i]
-  
-  gamma_i = [(g,) for g in gamma_i[:-1]]
-  gamma_50i = [(g,) for g in gamma_50i[:-1]]
-
-  idx = pd.IndexSlice
+  gamma_5 =   [5]
+  gamma_i =   [1, 2, 3]
+  gamma_50i = [13, 14, 15]
 
   wick = data[('C3c',irrep)]
 
   # Warning: 1j hardcoded
-  wick[wick.index.get_level_values('\gamma^{0}_{si}').isin([1,2,3])]    *= ( 2.)   *(-1j)
-  wick[wick.index.get_level_values('\gamma^{0}_{si}').isin([13,14,15])] *= ( 2.*1j)*(-1j)
+  wick[wick.index.get_level_values('\gamma^{0}_{so}').isin(gamma_5) & \
+       wick.index.get_level_values('\gamma^{1}_{so}').isin(gamma_5) & \
+       wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_i)]   *= ( 2.)   *(-1j)
+  wick[wick.index.get_level_values('\gamma^{0}_{so}').isin(gamma_5) & \
+       wick.index.get_level_values('\gamma^{1}_{so}').isin(gamma_5) & \
+       wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_50i)] *= ( 2.*1j)*(-1j)
 
   return wick
 
