@@ -6,7 +6,7 @@ from pandas import Series, DataFrame
 
 import utils
 
-def set_lookup_corr(coefficients_irrep, qn, verbose):
+def set_lookup_corr(coefficients_irrep, qn, verbose=1):
   """
   Calculate table with all required coefficients and quantum numbers of the 
   states needed to obtain eigenstates under a certain irreducible representation
@@ -69,10 +69,12 @@ def set_lookup_corr(coefficients_irrep, qn, verbose):
   index = sorted(index, key=lambda x : order[x])
   lookup_corr.set_index(index, inplace=True)
 
-  if verbose:
+  if verbose >= 1:
     print 'lookup_corr'
+  if verbose == 1:
+    print lookup_corr.head()
+  if verbose >= 2:
     print lookup_corr
-    utils.write_hdf5_correlators('./', 'lookup_corr.h5', lookup_corr, 'data', verbose=False)
 
   return lookup_corr
 

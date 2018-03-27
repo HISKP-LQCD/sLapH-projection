@@ -4,7 +4,7 @@ from pandas import Series, DataFrame
 
 import utils
 
-def rho_2pt(data, irrep, verbose=0):
+def rho_2pt(data, irrep, verbose=1):
   """
   Perform Wick contraction for 2pt function
 
@@ -49,9 +49,16 @@ def rho_2pt(data, irrep, verbose=0):
   wick[wick.index.get_level_values('\gamma^{0}_{so}').isin(gamma_50i) & \
        wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_50i)] *= (2.)
 
+  if verbose >= 2:
+    print "wick[('C2', ", irrep, ")]"
+  if verbose == 2:
+    print wick.head()
+  if verbose == 3:
+    print wick
+
   return wick
 
-def pipi_2pt(data, irrep, verbose=0):
+def pipi_2pt(data, irrep, verbose=1):
   """
   Perform Wick contraction for 2pt function
 
@@ -83,7 +90,7 @@ def pipi_2pt(data, irrep, verbose=0):
 
 ################################################################################
 
-def rho_3pt(data, irrep, verbose=0):
+def rho_3pt(data, irrep, verbose=1):
   """
   Perform Wick contraction for 3pt function
 
@@ -127,6 +134,13 @@ def rho_3pt(data, irrep, verbose=0):
   wick[wick.index.get_level_values('\gamma^{0}_{so}').isin(gamma_5) & \
        wick.index.get_level_values('\gamma^{1}_{so}').isin(gamma_5) & \
        wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_50i)] *= ( 2.*1j)*(-1j)
+
+  if verbose >= 2:
+    print "wick[('C3', ", irrep, ")]"
+  if verbose == 2:
+    print wick.head()
+  if verbose == 3:
+    print wick
 
   return wick
 
@@ -174,6 +188,13 @@ def rho_4pt(data, irrep, verbose=0):
 #  data_dia = pd.read_hdf('readdata/%s_p%1i.h5' % (diagrams[1], p_cm), 'data')
 
   wick = ((-2.)*data_box).add(data_dia, fill_value=0)
+
+  if verbose >= 2:
+    print "wick[('C4', ", irrep, ")]"
+  if verbose == 2:
+    print wick.head()
+  if verbose == 3:
+    print wick
 
   return wick
 

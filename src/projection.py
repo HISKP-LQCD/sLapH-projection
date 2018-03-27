@@ -78,14 +78,14 @@ def get_list_of_irreps(p_cm_vecs, path_to_one_particle_coeffs, j):
     List with the names of all contributing lattice irreducible representations
   """
 
-  sbdctn_coeffs = read_sc(p_cm_vecs, path_to_one_particle_coeffs, verbose=False, j=j)
+  sbdctn_coeffs = read_sc(p_cm_vecs, path_to_one_particle_coeffs, verbose=0, j=j)
 
   return sbdctn_coeffs.index.get_level_values('Irrep').unique()
 
 # The coefficients are read again for each diagram, but that is not the 
 # performance-critical part
 def read_lattice_basis(diagram, p_cm_vecs, path_to_one_particle_coeffs, 
-        path_to_two_particle_coeffs, j=1, verbose=True):
+        path_to_two_particle_coeffs, j=1, verbose=1):
   """
   Distinguish by diagram whether one- or two-particle diagrams are needed at source and 
   sink and read projection coefficients
@@ -128,7 +128,7 @@ def read_lattice_basis(diagram, p_cm_vecs, path_to_one_particle_coeffs,
   if diagram.startswith('C4'):
     return sbdctn_coeffs_2, sbdctn_coeffs_2
   else:
-    print 'in get_coefficients: diagram unknown! Quantum numbers corrupted.'
+    print 'in read_lattice_basis: diagram unknown! Quantum numbers corrupted.'
     return
 
 # TODO: properly read that from infile and pass to get_clebsch_gordan
@@ -206,7 +206,7 @@ def set_continuum_basis(names, basis_type, verbose):
                         [0,           0,        1], 
                         [ 1j/sqrt2,  -1/sqrt2,  0]]
   else:
-    print "In get_continuum_basis: continuum_basis type ", basis_type, " not known!"
+    print "In set_continuum_basis: continuum_basis type ", basis_type, " not known!"
     exit()
 
   basis_J1 = DataFrame({'J' : [1]*9,
@@ -227,8 +227,11 @@ def set_continuum_basis(names, basis_type, verbose):
 
   basis = pd.concat([basis_J0, basis_J1])
 
-  if verbose:
+  if verbose >= 1:
     print 'basis'
+  if verbose == 1:
+    print basis.head()
+  if verbose >= 2:
     print basis
 
   return basis[basis['coordinate'] != 0]
@@ -279,7 +282,7 @@ def project_operators(di, lattice_operators_so, lattice_operators_si,
     continuum_labels_so = [['J^{0}','M^{0}'], ['J^{1}','M^{1}']]
     continuum_labels_si = [['J^{0}','M^{0}']]
   elif di.diagram.startswith('C4'):
-    print 'in get_coefficients: C4 broken!'
+    print 'in project_operators: C4 broken!'
     return
   else:
     print 'in project_operators: diagram unknown! Quantum numbers corrupted.'
@@ -363,11 +366,15 @@ def correlate_operators(operator_so, operator_si, verbose):
   # Munging the result: Delete rows with coefficient 0, 
   lattice_operators = lattice_operators[lattice_operators['coefficient'] != 0]
 
-  if verbose:
+  if verbose >= 1:
     print 'lattice_operators'
+  if verbose == 1:
+    with pd.option_context('display.max_rows', None, 'display.max_columns', None):
+        print lattice_operators.head()
+  if verbose >= 2:
     with pd.option_context('display.max_rows', None, 'display.max_columns', None):
         print lattice_operators
-    
+   
   return lattice_operators
 
 

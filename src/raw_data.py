@@ -43,7 +43,7 @@ def set_lookup_cnfg(sta_cnfg, end_cnfg, del_cnfg, missing_configs, verbose=0):
     if cnfg in missing_configs:
       continue
     lookup_cnfg.append(cnfg)
-  if(verbose):
+  if(verbose >= 1):
     print '\t\tNumber of configurations: %i' % len(lookup_cnfg)
 
   return lookup_cnfg
@@ -248,11 +248,15 @@ def read(lookup_cnfg, lookup_qn, diagram, T, directory, verbose=0):
  
   data.sort_index(level=[0,1], inplace=True)
 
-  if verbose >= 2:
-    print lookup_qn
-  if verbose:
+  if verbose >= 1:
     print '\tfinished reading\n'
+    print 'lookup_qn'
+    print lookup_qn.head()
+  if verbose >= 2:
+    print 'lookup_qn'
+    print lookup_qn
   if verbose >= 3:
+    print 'data'
     print data.mean(axis=1).apply(np.real)
 
   return data
@@ -330,11 +334,15 @@ def read_old(lookup_cnfg, lookup_qn, diagram, T, directory, verbose=0):
   data = pd.concat(data, keys=lookup_cnfg, axis=0, names=['cnfg', 'T'])
   data.sort_index(level=[0,1], inplace=True)
 
-  if verbose >= 2:
-    print lookup_qn
-  if verbose:
+  if verbose >= 1:
     print '\tfinished reading\n'
+    print 'lookup_qn'
+    print lookup_qn.head()
+  if verbose >= 2:
+    print 'lookup_qn'
+    print lookup_qn
   if verbose >= 3:
+    print 'data'
     print data.mean(axis=1).apply(np.real)
 
   return data

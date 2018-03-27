@@ -108,7 +108,7 @@ def main():
     if (len(directories) == 1):
         directories = directories * len(diagrams)
     if verbose >= 2:
-        for(i in range(len(diagrams))):
+        for i in range(len(diagrams)):
             print 'Read data for ', diagrams[i], ' from ', directories[i]
 
     path_to_sc = config.get('Environment details',
@@ -141,7 +141,7 @@ def main():
     if verbose >= 2:
         if plot_gammas:
             print 'Plotting gammas'
-        if plot_pcm_and_mu
+        if plot_pcm_and_mu:
             print 'Plotting p_cm_and_mu'
         print 'Logscale: ', logscale
 

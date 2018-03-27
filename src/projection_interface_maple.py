@@ -81,8 +81,8 @@ def read_sc_2(p_cm_vecs, path, verbose=True, j=1):
     df['M^{0}'] = 0
     df['M^{1}'] = 0
 
-    if verbose:
-      print 'subduction_coefficients for {}'.format(p_cm_vec)
+    if verbose >= 2:
+      print 'Two-particle projection coefficients for {}'.format(p_cm_vec)
       print df, '\n'
 
     subduction_coefficients = pd.concat([subduction_coefficients, df])
@@ -154,8 +154,8 @@ def read_sc(p_cm_vecs, path, verbose=True, j=1):
     df['J^{0}'] = j
     df = df[['p^{0}','J^{0}','M^{0}','coefficient']]
 
-    if verbose:
-      print 'subduction_coefficients for {}'.format(p_cm_vec)
+    if verbose >= 2:
+      print 'One-particle projection coefficients for {}'.format(p_cm_vec)
       print df, '\n'
 
     subduction_coefficients = pd.concat([subduction_coefficients, df])

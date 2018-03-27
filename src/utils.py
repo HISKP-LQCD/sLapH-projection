@@ -66,7 +66,7 @@ def read_hdf5_correlators(path, key):
   
   return data
   
-def write_hdf5_correlators(path, filename, data, key, verbose=False):
+def write_hdf5_correlators(path, filename, data, key, verbose=1):
   """
   write pd.DataFrame as hdf5 file
 
@@ -86,12 +86,12 @@ def write_hdf5_correlators(path, filename, data, key, verbose=False):
   ensure_dir(path)
   data.to_hdf(path+filename, key, mode='w')
  
-  if verbose:
-    print '\tfinished writing', filename
+  if verbose >= 1:
+    print '\tFinished writing', filename
 
 ################################################################################
 # TODO: write that for a pandas dataframe with hierarchical index nb_cnfg x T
-def write_data_ascii(data, filename, verbose=False):
+def write_data_ascii(data, filename, verbose=1):
   """
   Writes the data into a file.
   
@@ -110,7 +110,7 @@ def write_data_ascii(data, filename, verbose=False):
   has information about the number of samples and the length of each sample.
   """
   if verbose:
-    print("saving to file " + str(filename))
+    print("Saving to file " + str(filename))
   
   # in case the dimension is 1, treat the data as one sample
   # to make the rest easier we add an extra axis
@@ -151,7 +151,7 @@ def pd_series_to_np_array(series):
 
   return np.asarray(series.values).reshape(series.unstack().shape)
 
-def write_ascii_correlators(path, filename, data, verbose):
+def write_ascii_correlators(path, filename, data, verbose=1):
   """
   write pd.DataFrame as ascii file in Liuming's format
 
@@ -169,7 +169,7 @@ def write_ascii_correlators(path, filename, data, verbose):
   fname = os.path.join(path, filename)
   write_data_ascii(np.asarray(pd_series_to_np_array(data)), fname, verbose)
 
-def write_ascii_gevp(path, name, data, verbose):
+def write_ascii_gevp(path, name, data, verbose=1):
 
   assert np.all(data.notnull()), 'Gevp contains null entires'
   assert gmpy.is_square(len(data.index)), 'Gevp is not a square matrix'
@@ -177,7 +177,7 @@ def write_ascii_gevp(path, name, data, verbose):
   data_size = gmpy.sqrt(len(data.index))
 
   if verbose:
-    print 'creating a %d x %d Gevp' % (data_size, data_size)
+    print 'Creating a %d x %d Gevp' % (data_size, data_size)
 
   ensure_dir(path)
   f = open(os.path.join(path, name+'_indices.txt'), 'w')
