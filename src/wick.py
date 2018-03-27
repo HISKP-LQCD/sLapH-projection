@@ -11,7 +11,7 @@ def rho_2pt(data, irrep, verbose=0):
   Parameters
   ----------
   data : Dictionary of pd.DataFrame, keys in 
-      ({'C20', 'C3+', 'C4+B', 'C4+D'}, `irrep`)
+      ({'C20', 'C3c', 'C4cB', 'C4cD'}, 'irrep')
 
       For each diagram constituting the given `corrrelator` `data` must contain
       an associated pd.DataFrame with its subduced lattice data
@@ -69,7 +69,7 @@ def pipi_2pt(data, irrep, verbose=0):
   Parameters
   ----------
   data : Dictionary of pd.DataFrame, keys in 
-      ({'C20', 'C3+', 'C4+B', 'C4+D'}, `irrep`)
+      ({'C20', 'C3c', 'C4cB', 'C4cD'}, `irrep`)
 
       For each diagram constituting the given `corrrelator` `data` must contain
       an associated pd.DataFrame with its subduced lattice data
@@ -88,7 +88,7 @@ def pipi_2pt(data, irrep, verbose=0):
   -----
   The gamma strucures that can appear in \pi\pi(t) are hardcoded
   """
-  wick = data[('C2+',irrep)]
+  wick = data[('C2c',irrep)]
 
   return wick
 
@@ -101,7 +101,7 @@ def rho_3pt(data, irrep, verbose=0):
   Parameters
   ----------
   data : Dictionary of pd.DataFrame, keys in 
-      ({'C20', 'C3+', 'C4+B', 'C4+D'}, `irrep`)
+      ({'C20', 'C3c', 'C4cB', 'C4cD'}, `irrep`)
 
       For each diagram constituting the given `corrrelator` `data` must contain
       an associated pd.DataFrame with its subduced lattice data
@@ -136,7 +136,7 @@ def rho_3pt(data, irrep, verbose=0):
 
   idx = pd.IndexSlice
 
-  wick = data[('C3+',irrep)]
+  wick = data[('C3c',irrep)]
 
   # Warning: 1j hardcoded
   wick[wick.index.get_level_values('\gamma^{0}_{si}').isin([1,2,3])]    *= ( 2.)   *(-1j)
@@ -156,7 +156,7 @@ def rho_4pt(data, irrep, verbose=0):
   Parameters
   ----------
   data : Dictionary of pd.DataFrame, keys in 
-      ({'C20', 'C3+', 'C4+B', 'C4+D'}, `irrep`)
+      ({'C20', 'C3c', 'C4cB', 'C4cD'}, `irrep`)
 
       For each diagram constituting the given `corrrelator` `data` must contain
       an associated pd.DataFrame with its subduced lattice data
@@ -169,8 +169,8 @@ def rho_4pt(data, irrep, verbose=0):
   -------
   wick : pd.DataFrame
 
-      pd.DataFrame with indices like the union of indices in `data['C4+B']` and
-      `data['C4+D']` and Wick contractions performed.
+      pd.DataFrame with indices like the union of indices in `data['C4cB']` and
+      cdata['C4cD']` and Wick contractions performed.
 
   Notes
   -----
@@ -180,8 +180,8 @@ def rho_4pt(data, irrep, verbose=0):
   The gamma strucures that can appear in \rho(t) are hardcoded
   """
 
-  data_box = data[('C4+B', irrep)]
-  data_dia = data[('C4+D', irrep)]
+  data_box = data[('C4cB', irrep)]
+  data_dia = data[('C4cD', irrep)]
   
   # TODO: support read in if the passed data is incomplete
 #  data_box = pd.read_hdf('readdata/%s_p%1i.h5' % (diagrams[0], p_cm), 'data')
@@ -198,7 +198,7 @@ def pipi_4pt(data, irrep, verbose=0):
   Parameters
   ----------
   data : Dictionary of pd.DataFrame, keys in 
-      ({'C20', 'C3+', 'C4+B', 'C4+D'}, `irrep`)
+      ({'C20', 'C3c', 'C4cB', 'C4cD'}, `irrep`)
 
       For each diagram constituting the given `corrrelator` `data` must contain
       an associated pd.DataFrame with its subduced lattice data
@@ -211,8 +211,8 @@ def pipi_4pt(data, irrep, verbose=0):
   -------
   wick : pd.DataFrame
 
-      pd.DataFrame with indices like the union of indices in `data['C4+B']` and
-      `data['C4+D']` and Wick contractions performed.
+      pd.DataFrame with indices like the union of indices in `data['C4cB']` and
+      `data['C4cD']` and Wick contractions performed.
 
   Notes
   -----
@@ -222,8 +222,8 @@ def pipi_4pt(data, irrep, verbose=0):
   The gamma strucures that can appear in \rho(t) are hardcoded
   """
 
-  data_cro = data[('C4+C', irrep)]
-  data_dia = data[('C4+D', irrep)]
+  data_cro = data[('C4cC', irrep)]
+  data_dia = data[('C4cD', irrep)]
   
   wick = ((-1.)*data_cro).add(data_dia, fill_value=0)
 
@@ -237,7 +237,7 @@ def set_lookup_correlators(diagrams):
 
   Parameters
   ----------
-  diagrams : list of string {'C20', 'C3+', 'C4+B', 'C4+D'}
+  diagrams : list of string {'C20', 'C3c', 'C4cB', 'C4cD'}
       Diagram of wick contractions contributing the rho meson correlation 
       function
 
@@ -269,7 +269,7 @@ def rho(data, correlator, irrep, verbose=0):
 
   Parameters
   ----------
-  data : Dictionary of pd.DataFrame, keys in {'C20', 'C3+', 'C4+B', 'C4+D'}
+  data : Dictionary of pd.DataFrame, keys in {'C20', 'C3c', 'C4cB', 'C4cD'}
       For each diagram constituting the given `corrrelator` `data` must contain
       an associated pd.DataFrame with its subduced lattice data
   correlator : string {'C2', 'C3', 'C4'}
@@ -310,7 +310,7 @@ def pipi(data, correlator, irrep, verbose=0):
 
   Parameters
   ----------
-  data : Dictionary of pd.DataFrame, keys in {'C20', 'C4+C', 'C4+D'}
+  data : Dictionary of pd.DataFrame, keys in {'C20', 'C4cC', 'C4cD'}
       For each diagram constituting the given `corrrelator` `data` must contain
       an associated pd.DataFrame with its subduced lattice data
   correlator : string {'C2', 'C4'}

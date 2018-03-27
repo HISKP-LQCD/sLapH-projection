@@ -54,7 +54,7 @@ def set_lookup_qn(diagram, p_cm, p_max, gammas, process='pipi', verbose=0):
 
   Parameters
   ----------
-  diagram : string, {'C20', 'C2+', 'C3+', 'C4+B', 'C4+D'}
+  diagram : string, {'C20', 'C2c', 'C3c', 'C4cB', 'C4cD'}
       Diagram of wick contractions for the rho meson.
   p_cm : int, {0, 1, 2, 3, 4}
       Center of mass momentum.
@@ -98,7 +98,7 @@ def set_groupname(diagram, s):
 
   Parameters
   ----------
-  diagram : string, {'C20', 'C2+', 'C3+', 'C4+B', 'C4+D'}
+  diagram : string, {'C20', 'C2c', 'C3c', 'C4cB', 'C4cD'}
       Diagram of wick contractions for the rho meson.
   s : pd.Series
       Contains momenta and gamma structure the groupnames shall be built with.
@@ -140,28 +140,28 @@ def set_groupname(diagram, s):
 #                  + '_uuu_p%1i%1i%1i.d000.g%1i' % ( p_so_1 + (g_so_0,) ) \
 #                  +     '_p%1i%1i%1i.d000.g%1i' % ( p_so_0 + (g_si,) ) \
 #                  +     '_p%1i%1i%1i.d000.g%1i' % ( tuple([-1*p for p in p_si]) + (g_so_1,) )
-    groupname = diagram \
+    groupname = diagram.replace('c', '+') \
                   + '_uuu_p%1i%1i%1i.d000.g%1i' % ( p_so_1 + (g_so_1,) ) \
                   +     '_p%1i%1i%1i.d000.g%1i' % ( p_si +   (g_si,) ) \
                   +     '_p%1i%1i%1i.d000.g%1i' % ( p_so_0 + (g_so_0,) )
-  elif diagram == 'C4+D' or diagram == 'C4+C':
+  elif diagram == 'C4cD' or diagram == 'C4cC':
     p_so = np.array(eval(s['p^{0}_{so}']), eval(s['p^{1}_{so}']))
     g_so = np.array(s['\gamma^{0}_{so}'], s['\gamma^{1}_{so}'])
     p_si = np.array(eval(s['p^{0}_{si}']), eval(s['p^{1}_{si}']))
     g_si = np.array(s['\gamma^{0}_{si}'], s['\gamma^{1}_{si}'])
 
-    groupname = diagram \
+    groupname = diagram.replace('c', '+') \
                   + '_uuuu_p%1i%1i%1i.d000.g%1i' % ( p_so[0] + (g_so[0],) ) \
                   +      '_p%1i%1i%1i.d000.g%1i' % ( p_si[0] + (g_si[0],) ) \
                   +      '_p%1i%1i%1i.d000.g%1i' % ( p_so[1] + (g_so[1],) ) \
                   +      '_p%1i%1i%1i.d000.g%1i' % ( p_si[1] + (g_si[1],) )
-  elif diagram == 'C4+B':
+  elif diagram == 'C4cB':
     p_so = np.array(eval(s['p^{0}_{so}']), eval(s['p^{1}_{so}']))
     g_so = np.array(s['\gamma^{0}_{so}'], s['\gamma^{1}_{so}'])
     p_si = np.array(eval(s['p^{0}_{si}']), eval(s['p^{1}_{si}']))
     g_si = np.array(s['\gamma^{0}_{si}'], s['\gamma^{1}_{si}'])
 
-    groupname = diagram \
+    groupname = diagram.replace('c', '+') \
                   + '_uuuu_p%1i%1i%1i.d000.g%1i' % ( p_so[0] + (g_so[0],) ) \
                   +      '_p%1i%1i%1i.d000.g%1i' % ( p_si[0] + (g_si[0],) ) \
                   +      '_p%1i%1i%1i.d000.g%1i' % ( p_si[1] + (g_si[1],) ) \
@@ -186,7 +186,7 @@ def read(lookup_cnfg, lookup_qn, diagram, T, directory, verbose=0):
   lookup_qn : pd.DataFrame
       pd.DataFrame with every row being a set of physical quantum numbers to be 
       read
-  diagram : string, {'C20', 'C2+', 'C3+', 'C4+B', 'C4+D'}
+  diagram : string, {'C20', 'C2c', 'C3c', 'C4cB', 'C4cD'}
       Diagram of wick contractions for the rho meson.
   T : int
       Time extent of the lattice
@@ -200,7 +200,7 @@ def read(lookup_cnfg, lookup_qn, diagram, T, directory, verbose=0):
       the row numbers of `lookup_qn` 
   """
 
-  comb = True if diagram == 'C4+D' else False
+  comb = True if diagram == 'C4cD' else False
 
   groupname = lookup_qn.apply(functools.partial(set_groupname, diagram), axis=1)
 
@@ -268,7 +268,7 @@ def read_old(lookup_cnfg, lookup_qn, diagram, T, directory, verbose=0):
   lookup_qn : pd.DataFrame
       pd.DataFrame with every row being a set of physical quantum numbers to be 
       read
-  diagram : string, {'C20', 'C2+', 'C3+', 'C4+B', 'C4+D', 'C4+C'}
+  diagram : string, {'C20', 'C2c', 'C3c', 'C4cB', 'C4cD', 'C4cC'}
       Diagram of wick contractions for the rho meson.
   T : int
       Time extent of the lattice

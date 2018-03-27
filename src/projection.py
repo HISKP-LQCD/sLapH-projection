@@ -201,6 +201,10 @@ def set_continuum_basis(names, basis_type, verbose):
     ladder_operators = [[1j/sqrt2,  -1./sqrt2, 0], 
                         [0,         0,         1j], 
                         [-1j/sqrt2, -1./sqrt2, 0]]
+  elif basis_type == "test":
+    ladder_operators = [[-1j/sqrt2,  -1/sqrt2, 0], 
+                        [0,           0,        1], 
+                        [ 1j/sqrt2,  -1/sqrt2,  0]]
   else:
     print "In get_continuum_basis: continuum_basis type ", basis_type, " not known!"
     exit()

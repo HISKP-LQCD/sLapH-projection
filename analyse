@@ -157,7 +157,7 @@ def main():
         ########################################################################
         # read data for pion
         if flag_pion:
-            diagram = 'C2+'
+            diagram = 'C2c'
             directory = directories[0]
 
             lookup_cnfg = raw_data.set_lookup_cnfg(sta_cnfg, end_cnfg, del_cnfg,
@@ -356,26 +356,26 @@ def main():
                     utils.write_hdf5_correlators(
                         path, filename, contracted_data[ci], 'data', verbose)
 
-                    # TODO Generalize labels for multi-hadron operators
                     # Only real part is physically relevant at that point
                     contracted_data_avg[ci] = contracted_data[ci].apply(
                         np.real)
                     gevp_labels = ['Irrep', 'mult', 'gevp_row', 'gevp_col']
-#                    momentum_labels = ['p^{0}_{so}','p^{0}_{si}']
-                    momentum_labels = [col for col in contracted_data_avg[ci].columns if 'p^{' in col]
-#                    gamma_labels = ['\gamma^{0}_{so}','\gamma^{0}_{si}']
-                    gamma_labels = [col for col in contracted_data_avg[ci].columns if 'gamma' in col]
+                    group_labels = list(set(contracted_data[ci].index.names).intersection(
+                        ['p_{cm}','q_{so}', 'q_{si}']))
+                    momentum_labels = \
+                        [col for col in contracted_data_avg[ci].columns if 'p^{' in col]
+                    gamma_labels = \
+                        [col for col in contracted_data_avg[ci].columns if 'gamma' in col]
 
                     # sum over gamma structures.
                     contracted_data_avg[ci] = contracted_data_avg[ci].sum(
-                        level=gevp_labels + list(set(contracted_data[ci].index.names).intersection(['p_{cm}','q_{so}', 'q_{si}', '\mu'])) + momentum_labels)
+                        level=gevp_labels + group_labels + ['\mu'] + momentum_labels)
                     # sum over equivalent momenta
                     contracted_data_avg[ci] = contracted_data_avg[ci].sum(
-                        level=gevp_labels + list(set(contracted_data[ci].index.names).intersection(['p_{cm}','q_{so}', 'q_{si}', '\mu'])))
-                    print contracted_data_avg[ci]
+                        level=gevp_labels + group_labels + ['\mu'])
                     # average over rows.
                     contracted_data_avg[ci] = contracted_data_avg[ci].mean(
-                        level=gevp_labels + list(set(contracted_data[ci].index.names).intersection(['p_{cm}','q_{so}', 'q_{si}'])))
+                        level=gevp_labels + group_labels)
                     # average over p_cm.
                     contracted_data_avg[ci] = contracted_data_avg[ci].mean(
                         level=gevp_labels)
@@ -402,22 +402,26 @@ def main():
                     contracted_data[ci] = \
                         utils.read_hdf5_correlators(path+filename, 'data')
 
-                    # TODO Generalize labels for multi-hadron operators
-                    gevp_labels = ['Irrep', 'mult', 'gevp_row', 'gevp_col']
-                    momentum_labels = ['p^{0}_{so}','p^{0}_{si}']
-                    gamma_labels = ['\gamma^{0}_{so}','\gamma^{0}_{si}']
                     # Only real part is physically relevant at that point
                     contracted_data_avg[ci] = contracted_data[ci].apply(
                         np.real)
+                    gevp_labels = ['Irrep', 'mult', 'gevp_row', 'gevp_col']
+                    group_labels = list(set(contracted_data[ci].index.names).intersection(
+                        ['p_{cm}','q_{so}', 'q_{si}']))
+                    momentum_labels = \
+                        [col for col in contracted_data_avg[ci].columns if 'p^{' in col]
+                    gamma_labels = \
+                        [col for col in contracted_data_avg[ci].columns if 'gamma' in col]
+
                     # sum over gamma structures.
                     contracted_data_avg[ci] = contracted_data_avg[ci].sum(
-                        level=gevp_labels + ['p_{cm}','\mu'] + momentum_labels)
+                        level=gevp_labels + group_labels + ['\mu'] + momentum_labels)
                     # sum over equivalent momenta
                     contracted_data_avg[ci] = contracted_data_avg[ci].sum(
-                        level=gevp_labels + ['p_{cm}','\mu'])
+                        level=gevp_labels + group_labels + ['\mu'])
                     # average over rows.
                     contracted_data_avg[ci] = contracted_data_avg[ci].mean(
-                        level=gevp_labels + ['p_{cm}'])
+                        level=gevp_labels + group_labels)
                     # average over p_cm.
                     contracted_data_avg[ci] = contracted_data_avg[ci].mean(
                         level=gevp_labels)
@@ -455,24 +459,32 @@ def main():
         if flag['plot']:
             for irrep in list_of_irreps:
 
+                if verbose:
+                    print "Plotting irrep", irrep
+
                 path = '%s/%s/4_plots/p%1i/%s/' % (outpath, ensemble, p_cm,
                                                    irrep)
                 for correlator in correlators:
 
                     ci = ContractionType(correlator, irrep)
 
-                    gevp_labels = ['gevp_row', 'gevp_col']
-                    momentum_labels = ['p^{0}_{so}','p^{0}_{si}']
-                    gamma_labels = ['\gamma^{0}_{so}','\gamma^{0}_{si}']
                     # Select irrep and discard imaginary part (noise)
-                    # :warning: multiplicty 1 hardcoded
+                    # :warning: multiplicity 1 hardcoded
                     plotdata = contracted_data[ci].xs(
                         (irrep, 1), level=('Irrep', 'mult')).apply(np.real)
+
+                    gevp_labels = ['gevp_row', 'gevp_col']
+                    group_labels = list(set(plotdata.index.names).intersection(
+                        ['p_{cm}','q_{so}', 'q_{si}']))
+                    momentum_labels = \
+                        [col for col in plotdata.index.names if 'p^{' in col]
+                    gamma_labels = \
+                        [col for col in plotdata.index.names if 'gamma' in col]
 
                     if plot_gammas:
                         # sum over equivalent momenta
                         plotdata_tmp = plotdata.sum(
-                            level=gevp_labels + ['p_{cm}','q_{so}','\mu'] + gamma_labels)
+                            level=gevp_labels + group_labels + ['\mu'] + gamma_labels)
 
                         filename = '/%s_p%1i_%s_gammas_%s.pdf' % (
                             correlator, p_cm, irrep, continuum_basis_string)
@@ -484,7 +496,7 @@ def main():
                     if plot_pcm_and_mu:
                         # sum over momenta and gamma structures
                         plotdata_tmp = plotdata.sum(
-                            level=gevp_labels + ['p_{cm}','\mu'])
+                            level=gevp_labels + group_labels + ['\mu'])
 
                         filename = '/%s_p%1i_%s_pcm-and-mu_%s.pdf' % (
                             correlator, p_cm, irrep, continuum_basis_string)

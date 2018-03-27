@@ -19,7 +19,7 @@ def set_lookup_g(gamma_labels, diagram):
       A list which for each gamma structure coupling to the rho meson contains
       a list with the integer indices used in the contraction code and a 
       latex-style name for plotting labels.
-  diagram : string, {'C20', 'C2+', 'C3+', 'C4*'}
+  diagram : string, {'C20', 'C2c', 'C3c', 'C4*'}
       If one- and two-meson operators contribute, the appearing Dirac operators
       change because the mesons in a two-meson operator can couple to different
       quantum numbers individually
@@ -49,7 +49,7 @@ def set_lookup_g(gamma_labels, diagram):
 
     gamma_si = gamma_so 
 
-  elif diagram == 'C2+':
+  elif diagram == 'C2c':
 
     J_so = 0
     J_si = 0
@@ -61,7 +61,7 @@ def set_lookup_g(gamma_labels, diagram):
     gamma_si = gamma_si.rename(columns={'\gamma' : '\gamma^{0}_{si}'})
 
 
-  elif diagram == 'C3+':
+  elif diagram == 'C3c':
 
     J_so = 0
     J_si = 1

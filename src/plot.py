@@ -233,7 +233,8 @@ def pcm_and_mu(plotdata,
         plt.ylabel(r'$C(t/a)$', fontsize=12)
 
         # plot
-        plot_gevp_el(graphdata, r'$\vec{{P}}_\textnormal{{cm}} = {}$, $\mu = {}$', multiindex=True)
+        plot_gevp_el(graphdata, r'$\vec{{P}}_\textnormal{{cm}} = {}$, $q = {}$, $\mu = {}$', multiindex=True)
+
         plot_mean(graphdata_mean)
 
         # clean up for next plot
@@ -408,11 +409,12 @@ def gammas(plotdata, diagram, bootstrapsize, pdfplot, logscale=True, verbose=Fal
     for graphlabel in plotlabel:
 
         if verbose:
-            print '\tplotting ', graphlabel[0], ' - ', graphlabel[1]
+            print '\tplotting p_cm = ', graphlabel[2], \
+                ', q = ', graphlabel[3], \
+                ', \mu = ', graphlabel[4]
 
         # prepare data to plot
         graphdata = plotdata.xs(graphlabel, level=['gevp_row', 'gevp_col', 'p_{cm}', 'q_{so}', '\mu'])
-
         # prepare plot
         plt.title(r'Gevp Element ${}$ - ${}$, $\vec{{P}}_\textnormal{{cm}} = {}$, $\vec{{q}}_\textnormal{{rel}} = {}$, $\mu = {}$'.format(
             graphlabel[0], graphlabel[1], graphlabel[2], graphlabel[3], graphlabel[4]))
@@ -423,7 +425,7 @@ def gammas(plotdata, diagram, bootstrapsize, pdfplot, logscale=True, verbose=Fal
             plt.yscale('symlog', linthreshy=linthreshy)
 
         # plot
-        plot_gevp_el(graphdata, r'$\gamma_{{so}} = {}$, $\gamma_{{si}} = {}$', multiindex=True)
+        plot_gevp_el(graphdata, r'$\gamma_{{so}} = {},{}$ -  $\gamma_{{si}} = {}$', multiindex=True)
 
         # clean up for next plot
         plt.legend(numpoints=1, loc='best', fontsize=6)
