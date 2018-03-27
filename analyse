@@ -72,10 +72,8 @@ def main():
         missing_configs = [int(m) for m in missing_configs.split(',')]
 
     if verbose >= 2:
-        print sta_cnfg
-        print end_cnfg
-        print del_cnfg
-        print missing_configs
+        print 'Reading configs', sta_cnfg, '-', end_cnfg, ' in steps of ', del_cnfg
+        print 'Skipping ', missing_configs
 
     ensemble = config.get('ensemble parameters', 'Ensemble Name')
     T = config.getint('ensemble parameters', 'T')
@@ -84,7 +82,7 @@ def main():
         print ensemble
         print T
 
-    p_max = config.getint('gevp parameters', 'p_max')
+    p_cutoff = config.getint('gevp parameters', 'p_cutoff')
     p = config.get('gevp parameters', 'p_cm')
     p = [int(k) for k in p.split(',')]
     gamma_input = config.get('gevp parameters', 'Dirac structure')
@@ -94,22 +92,24 @@ def main():
     gamma_input = {0: ['gamma_5'], 1: gamma_input}
 
     if verbose >= 2:
-        print p_max
-        print p
-        print gamma_input
+        print 'p_cm = ', p
+        print 'p_cutoff = ', p_cutoff
+        print 'Gamma structures: ', gamma_input
 
     diagrams = config.get('contraction details', 'Diagram')
     diagrams = diagrams.replace(" ", "").split(',')
     directories = config.get('contraction details', 'Input Path')
     directories = directories.replace(" ", "").replace("\n", "")
     directories = directories.split(',')
+
+    if verbose >= 2:
+        print 'Wick diagrams to subduce: ', diagrams
     # use the same directory for all diagrams if only one is given
     if (len(directories) == 1):
         directories = directories * len(diagrams)
-
     if verbose >= 2:
-        print diagrams
-        print directories
+        for(i in range(len(diagrams))):
+            print 'Read data for ', diagrams[i], ' from ', directories[i]
 
     path_to_sc = config.get('Environment details',
                             'Path to one-meson subduction coefficients')
@@ -118,8 +118,9 @@ def main():
 
     outpath = config.get('Environment details', 'Output Path')
 
-    if verbose:
-        print 'Subduction coefficients will be read from', path_to_sc
+    if verbose >= 2:
+        print 'Subduction coefficients will be read from ', path_to_sc
+        print 'Two-particle projection coefficients will be read from ', path_to_sc_2
         print 'Data will be writen to', outpath
 
     sep_rows_sep_mom = config.getboolean('plot details',
@@ -138,11 +139,11 @@ def main():
     bootstrapsize = config.getint('plot details', 'Number of bootstrap samples')
 
     if verbose >= 2:
-        print sep_rows_sum_mom
-        print avg_rows_sep_mom
-        print avg_rows_sum_mom
-        print logscale
-        print bootstrapsize
+        if plot_gammas:
+            print 'Plotting gammas'
+        if plot_pcm_and_mu
+            print 'Plotting p_cm_and_mu'
+        print 'Logscale: ', logscale
 
     ############################################################################
     # Main
@@ -165,7 +166,7 @@ def main():
             pion_qn = raw_data.set_lookup_qn(
                 diagram,
                 p_cm,
-                p_max,
+                p_cutoff,
                 gamma_input,
                 process=process,
                 verbose=verbose)
@@ -198,7 +199,7 @@ def main():
             for diagram, directory in zip(diagrams, directories):
 
                 if verbose:
-                    print '\treading data for %s' % (diagram)
+                    print '\tReading data for %s' % (diagram)
 
                 lookup_cnfg = raw_data.set_lookup_cnfg(
                     sta_cnfg, end_cnfg, del_cnfg, missing_configs, verbose)
@@ -208,7 +209,7 @@ def main():
                 lookup_qn[diagram] = raw_data.set_lookup_qn(
                     diagram,
                     p_cm,
-                    p_max,
+                    p_cutoff,
                     gamma_input,
                     process=process,
                     verbose=verbose)
@@ -266,7 +267,7 @@ def main():
             subduced_data = {}
 
             for diagram in diagrams:
-                print '\tsubducing data for %s' % diagram
+                print '\tSubducing data for %s' % diagram
 
                 print lookup_qn[diagram].columns
 
@@ -286,7 +287,7 @@ def main():
                 list_of_irreps = projection.get_list_of_irreps(list_of_pcm, path_to_sc, j)
 
                 for irrep in list_of_irreps:
-                    print '\t  subducing into %s' % irrep
+                    print '\t  Subducing into %s' % irrep
                     di = ContractionType(diagram, irrep)
 
                     operators_so, operators_si = projection.project_operators(
@@ -336,9 +337,9 @@ def main():
             contracted_data_avg = {}
 
             for correlator in correlators:
-                print '\tcontracting data for %s' % correlator
+                print '\tContracting data for %s' % correlator
                 for irrep in list_of_irreps:
-                    print '\t  contracting in %s' % irrep
+                    print '\t  Contracting in %s' % irrep
                     ci = ContractionType(correlator, irrep)
 
                     if process == 'rho':
@@ -430,7 +431,7 @@ def main():
         # Gevp construction
 
         if flag['create gevp']:
-            print '\tcreating gevp'
+            print '\tCreating gevp'
             if process:
                 mode = "rho"
             else:
@@ -460,7 +461,7 @@ def main():
             for irrep in list_of_irreps:
 
                 if verbose:
-                    print "Plotting irrep", irrep
+                    print "Plotting data for ", irrep
 
                 path = '%s/%s/4_plots/p%1i/%s/' % (outpath, ensemble, p_cm,
                                                    irrep)
