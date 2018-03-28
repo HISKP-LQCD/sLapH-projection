@@ -3,6 +3,7 @@ import pandas as pd
 from pandas import Series, DataFrame
 
 from projection_interface_maple import read_sc, read_sc_2
+import utils
 
 def select_irrep(df, irrep):
   """
@@ -374,6 +375,7 @@ def correlate_operators(operator_so, operator_si, verbose):
   if verbose >= 2:
     with pd.option_context('display.max_rows', None, 'display.max_columns', None):
         print lattice_operators
+  utils.write_hdf5_correlators("/hiskp4/werner/subduction-code/", "lattice_operators.h5", lattice_operators, "qn")
    
   return lattice_operators
 

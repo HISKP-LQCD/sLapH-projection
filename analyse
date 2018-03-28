@@ -12,6 +12,7 @@ import src.projection as projection
 import src.subduction as subduction
 import src.setup_gevp as setup_gevp
 import src.plot as plot
+import src.plot_bokeh as bokeh
 
 import pandas as pd
 from pandas import Series, DataFrame
@@ -133,6 +134,7 @@ def main():
                                          'Plot avg_rows_sum_mom')
     plot_gammas = config.getboolean('plot details', 'Plot gammas')
     plot_pcm_and_mu = config.getboolean('plot details', 'Plot P_cm and row')
+    plot_experimental = config.getboolean('plot details', 'Plot experimental')
 
     logscale = config.getboolean('plot details', 'Logscale')
 
@@ -481,6 +483,16 @@ def main():
                         [col for col in plotdata.index.names if 'p^{' in col]
                     gamma_labels = \
                         [col for col in plotdata.index.names if 'gamma' in col]
+
+                    if plot_experimental:
+                        # sum over equivalent momenta
+                        plotdata_tmp = plotdata.sum(
+                            level=gevp_labels + group_labels + ['\mu'] + gamma_labels)
+
+			filename = './%s_p%1i_%s_gammas_%s.html' % (
+				correlator, p_cm, irrep, continuum_basis_string)
+                        bokeh.experimental(plotdata_tmp, correlator, bootstrapsize, 
+                                    filename, logscale, verbose)
 
                     if plot_gammas:
                         # sum over equivalent momenta
