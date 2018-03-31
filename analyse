@@ -132,8 +132,11 @@ def main():
                                          'Plot avg_rows_sep_mom')
     avg_rows_sum_mom = config.getboolean('plot details',
                                          'Plot avg_rows_sum_mom')
-    plot_gammas = config.getboolean('plot details', 'Plot gammas')
-    plot_pcm_and_mu = config.getboolean('plot details', 'Plot P_cm and row')
+
+    plot_gammas = config.getboolean('plot details', 'Plot correlators')
+    plot_group_sum = config.getboolean('plot details', 'Plot angular momentum projection')
+    plot_pcm_and_mu = config.getboolean('plot details', 'Plot p_cm and row')
+
     plot_experimental = config.getboolean('plot details', 'Plot experimental')
 
     logscale = config.getboolean('plot details', 'Logscale')
@@ -142,9 +145,11 @@ def main():
 
     if verbose >= 2:
         if plot_gammas:
-            print 'Plotting gammas'
+            print 'Plotting correlators for all momenta and Dirac structures'
+        if plot_group_sum:
+            print 'Plotting correlators for all group sums'
         if plot_pcm_and_mu:
-            print 'Plotting p_cm_and_mu'
+            print 'Plotting correlators for all p_cm_and_mu'
         print 'Logscale: ', logscale
 
     ############################################################################
@@ -478,7 +483,7 @@ def main():
 
                     gevp_labels = ['gevp_row', 'gevp_col']
                     group_labels = list(set(plotdata.index.names).intersection(
-                        ['p_{cm}','I_{so}', 'I_{si}']))
+                        ['I_{so}', 'I_{si}']))
                     momentum_labels = \
                         [col for col in plotdata.index.names if 'p^{' in col]
                     gamma_labels = \
@@ -487,17 +492,43 @@ def main():
                     if plot_experimental:
                         # sum over equivalent momenta
                         plotdata_tmp = plotdata.sum(
-                            level=gevp_labels + group_labels + ['\mu'] + gamma_labels)
+                            level=gevp_labels + ['p_{cm}', '\mu'] + group_labels + gamma_labels)
 
 			filename = './%s_p%1i_%s_gammas_%s.html' % (
 				correlator, p_cm, irrep, continuum_basis_string)
                         bokeh.experimental(plotdata_tmp, correlator, bootstrapsize, 
                                     filename, logscale, verbose)
 
+                    if plot_pcm_and_mu:
+                        # sum over momenta and gamma structures
+                        plotdata_tmp = plotdata.sum(
+                            level=gevp_labels + ['p_{cm}', '\mu'] + group_labels)
+                        plotdata_tmp = plotdata_tmp.mean(
+                            level=gevp_labels + ['p_{cm}', '\mu'])
+
+                        filename = '/%s_p%1i_%s_pcm-and-mu_%s.pdf' % (
+                            correlator, p_cm, irrep, continuum_basis_string)
+                        pdfplot = utils.create_pdfplot(path, filename)
+                        plot.pcm_and_mu(plotdata_tmp, bootstrapsize, pdfplot, 
+                                        logscale, verbose)
+                        pdfplot.close()
+
+                    if plot_group_sum:
+                        # sum over momenta and gamma structures
+                        plotdata_tmp = plotdata.sum(
+                            level=gevp_labels + ['p_{cm}', '\mu'] + group_labels)
+
+                        filename = '/%s_p%1i_%s_group-sum_%s.pdf' % (
+                            correlator, p_cm, irrep, continuum_basis_string)
+                        pdfplot = utils.create_pdfplot(path, filename)
+                        plot.group_sum(plotdata_tmp, bootstrapsize, pdfplot, 
+                                        logscale, verbose)
+                        pdfplot.close()
+
                     if plot_gammas:
                         # sum over equivalent momenta
                         plotdata_tmp = plotdata.sum(
-                            level=gevp_labels + group_labels + ['\mu'] + gamma_labels)
+                            level=gevp_labels + ['p_{cm}', '\mu'] + group_labels  + gamma_labels)
 
                         filename = '/%s_p%1i_%s_gammas_%s.pdf' % (
                             correlator, p_cm, irrep, continuum_basis_string)
@@ -506,17 +537,6 @@ def main():
                                     pdfplot, logscale, verbose)
                         pdfplot.close()
 
-                    if plot_pcm_and_mu:
-                        # sum over momenta and gamma structures
-                        plotdata_tmp = plotdata.sum(
-                            level=gevp_labels + group_labels + ['\mu'])
-
-                        filename = '/%s_p%1i_%s_pcm-and-mu_%s.pdf' % (
-                            correlator, p_cm, irrep, continuum_basis_string)
-                        pdfplot = utils.create_pdfplot(path, filename)
-                        plot.pcm_and_mu(plotdata_tmp, bootstrapsize, pdfplot, 
-                                        logscale, verbose)
-                        pdfplot.close()
 
                     if avg_rows_sep_mom:
                         filename = '%s_moms_p%1i_%s.pdf' % (correlator, p_cm,

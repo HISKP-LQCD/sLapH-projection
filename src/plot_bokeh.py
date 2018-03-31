@@ -117,7 +117,7 @@ def plot_gevp_el(p, data, label_template, multiindex=False):
 
 #        # prepare parameters for plot design
         if len(rows) == 1:
-            cmap_brg = ['r']
+            cmap_brg = ['red']
         else:
             cmap_brg = bokeh.palettes.viridis(len(rows))
 #                np.asarray(range(len(rows))) * 256 / (len(rows) - 1))
@@ -129,9 +129,13 @@ def plot_gevp_el(p, data, label_template, multiindex=False):
             label = label_template.format(index)
 
 
-	source_error = ColumnDataSource(data=dict(base=mean, lower=mean-std, upper=mean+std))
+	source_error = ColumnDataSource(data=dict(T=T, lower=(mean-std), upper=(mean+std)))
 
-	p.add_layout(Whisker(source=source_error, base="base", upper="upper", lower="lower"))
+        w = Whisker(source=source_error, base="T", upper="upper", lower="lower", 
+                line_color=cmap_brg[counter])
+        w.upper_head.line_color = cmap_brg[counter]
+        w.lower_head.line_color = cmap_brg[counter]
+	p.add_layout(w)
 	p.circle(x=T, y=mean, color=cmap_brg[counter], legend=label)
 
 
@@ -228,7 +232,4 @@ def experimental(plotdata, diagram, bootstrapsize, name, logscale=True, verbose=
 #	p.legend.location = "best"
 #        pdfplot.savefig()
 #        plt.clf()
-
-	show(p)
-
 
