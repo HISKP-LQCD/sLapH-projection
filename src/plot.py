@@ -93,6 +93,63 @@ def mean_and_std(df, bootstrapsize):
     return pd.concat([mean, std], axis=1, keys=['mean', 'std'])
 
 
+def plot_gevp_el_ax(data, label_template, ax, multiindex=False):
+    """
+  Plot all rows of given pd.DataFrame into a single page as seperate graphs
+
+  data : pd.DataFrame
+      
+      Table with any quantity as rows and multicolumns where level 0 contains
+      {'mean', 'std'} and level 1 contains 'T'
+  
+  label_template : string
+
+      Format string that will be used to label the graphs. The format must fit
+      the index of `data`
+  """
+
+    symbol = ['v', '^', '<', '>', 's', 'p', '*', 'h', 'H', 'D', 'd', '8']
+
+    rows = data.index.values
+
+    # iterrows() returns a tuple (index, series)
+    # index is a string (the index of data must be strings for this to work). In
+    # data has a MultiIndex, index is a tuple of strings
+    # series contains the mean and std for every timeslice
+    for counter, (index, series) in enumerate(data.iterrows()):
+
+        T = series.index.levels[1].values
+        mean = series['mean'].values
+        std = series['std'].values
+
+        # prepare parameters for plot design
+        if len(rows) == 1:
+            cmap_brg = ['r']
+        else:
+            cmap_brg = plt.cm.brg(
+                np.asarray(range(len(rows))) * 256 / (len(rows) - 1))
+        shift = 2. / 5 / len(rows)
+
+        if multiindex:
+            label = label_template.format(*index)
+        else:
+            label = label_template.format(index)
+
+        # plot
+        ax.errorbar(
+            T - 1./5 + shift * counter,
+            mean,
+            std,
+            fmt=symbol[counter % len(symbol)],
+            color=cmap_brg[counter],
+            label=label,
+            markersize=3,
+            capsize=3,
+            capthick=0.5,
+            elinewidth=0.5,
+            markeredgecolor=cmap_brg[counter],
+            linewidth='0.0')
+
 def plot_gevp_el(data, label_template, multiindex=False):
     """
   Plot all rows of given pd.DataFrame into a single page as seperate graphs
@@ -150,6 +207,28 @@ def plot_gevp_el(data, label_template, multiindex=False):
             markeredgecolor=cmap_brg[counter],
             linewidth='0.0')
 
+def plot_mean_ax(data, ax):
+
+        # prepare data to plot
+        T = data.index.levels[1].astype(int)
+        mean = data['mean'].values
+        std = data['std'].values
+
+        # plot
+        ax.errorbar(
+            T,
+            mean,
+            std,
+            fmt='o',
+            color='black',
+            label='mean',
+            markersize=3,
+            capsize=3,
+            capthick=0.75,
+            elinewidth=0.75,
+            markeredgecolor='black',
+            linewidth='0.0')
+
 def plot_mean(data):
 
         # prepare data to plot
@@ -205,12 +284,10 @@ def group_sum(plotdata,
 
     plotdata = mean_and_std(plotdata, bootstrapsize)
 
-    if logscale:
-        # abs of smallest positive value
-        linthreshy = plotdata['mean'][plotdata['mean'] > 0].min().min()
-        # abs of value closest to zero
-        #linthreshy = plotdata['mean'].iloc[plotdata.loc[:,('mean',0)].nonzero()].abs().min().min()
-        plt.yscale('symlog', linthreshy=linthreshy)
+    # abs of smallest positive value
+    linthreshy = plotdata['mean'][plotdata['mean'] > 0].min().min()
+    # abs of value closest to zero
+    #linthreshy = plotdata['mean'].iloc[plotdata.loc[:,('mean',0)].nonzero()].abs().min().min()
 
     # create list of gevp elements to loop over
     plotlabel = list(set([(i[0], i[1], i[2], i[3]) for i in plotdata.index.values]))
@@ -226,22 +303,26 @@ def group_sum(plotdata,
         # be the over way round. good enough for a consistency check.
         graphdata_mean = graphdata.mean(axis=0)
 
+
         # prepare plot
-        plt.title(
+        fig, ax = plt.subplots(1,1)
+        ax.set_title(
             r'Gevp Element ${}$ - ${}$, $\vec{{P}}_\textnormal{{cm}} = {}$, $\mu = {}$'.format(
             graphlabel[0], graphlabel[1], graphlabel[2], graphlabel[3]))
-        plt.xlabel(r'$t/a$', fontsize=12)
-        plt.ylabel(r'$C(t/a)$', fontsize=12)
+        ax.set_xlabel(r'$t/a$', fontsize=12)
+        ax.set_ylabel(r'$C(t/a)$', fontsize=12)
+        if logscale:
+            ax.set_yscale('symlog', linthreshy=linthreshy)
 
         # plot
-        plot_gevp_el(graphdata, r'${}$', multiindex=False)
+        plot_gevp_el_ax(graphdata, r'${}$', ax, multiindex=False)
 
-        plot_mean(graphdata_mean)
+        plot_mean_ax(graphdata_mean, ax)
 
         # clean up for next plot
-        plt.legend(numpoints=1, loc='best', fontsize=6)
-        pdfplot.savefig()
-        plt.clf()
+        ax.legend(numpoints=1, loc='best', fontsize=6)
+
+        pdfplot.savefig(fig)
 
     return
 
