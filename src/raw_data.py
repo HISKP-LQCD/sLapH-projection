@@ -136,36 +136,40 @@ def set_groupname(diagram, s):
     p_si = _minus(eval(s['p^{0}_{si}']))
     g_si = s['\gamma^{0}_{si}']
 
-#    groupname = diagram \
-#                  + '_uuu_p%1i%1i%1i.d000.g%1i' % ( p_so_1 + (g_so_0,) ) \
-#                  +     '_p%1i%1i%1i.d000.g%1i' % ( p_so_0 + (g_si,) ) \
-#                  +     '_p%1i%1i%1i.d000.g%1i' % ( tuple([-1*p for p in p_si]) + (g_so_1,) )
     groupname = diagram.replace('c', '+') \
                   + '_uuu_p%1i%1i%1i.d000.g%1i' % ( p_so_1 + (g_so_1,) ) \
                   +     '_p%1i%1i%1i.d000.g%1i' % ( p_si +   (g_si,) ) \
                   +     '_p%1i%1i%1i.d000.g%1i' % ( p_so_0 + (g_so_0,) )
   elif diagram == 'C4cD' or diagram == 'C4cC':
-    p_so = np.array(eval(s['p^{0}_{so}']), eval(s['p^{1}_{so}']))
-    g_so = np.array(s['\gamma^{0}_{so}'], s['\gamma^{1}_{so}'])
-    p_si = np.array(eval(s['p^{0}_{si}']), eval(s['p^{1}_{si}']))
-    g_si = np.array(s['\gamma^{0}_{si}'], s['\gamma^{1}_{si}'])
+    p_so_0 = eval(s['p^{0}_{so}'])
+    p_so_1 = eval(s['p^{1}_{so}'])
+    g_so_0 = s['\gamma^{0}_{so}']
+    g_so_1 = s['\gamma^{1}_{so}']
+    p_si_0 = _minus(eval(s['p^{0}_{si}']))
+    p_si_1 = _minus(eval(s['p^{1}_{si}']))
+    g_si_0 = s['\gamma^{0}_{si}']
+    g_si_1 = s['\gamma^{1}_{si}']
 
-    groupname = diagram.replace('c', '+') \
-                  + '_uuuu_p%1i%1i%1i.d000.g%1i' % ( p_so[0] + (g_so[0],) ) \
-                  +      '_p%1i%1i%1i.d000.g%1i' % ( p_si[0] + (g_si[0],) ) \
-                  +      '_p%1i%1i%1i.d000.g%1i' % ( p_so[1] + (g_so[1],) ) \
-                  +      '_p%1i%1i%1i.d000.g%1i' % ( p_si[1] + (g_si[1],) )
+    groupname = diagram \
+                  + '_uuuu_p%1i%1i%1i.d000.g%1i' % ( p_so_0 + (g_so_0,) ) \
+                  +      '_p%1i%1i%1i.d000.g%1i' % ( p_si_0 + (g_si_0,) ) \
+                  +      '_p%1i%1i%1i.d000.g%1i' % ( p_so_1 + (g_so_1,) ) \
+                  +      '_p%1i%1i%1i.d000.g%1i' % ( p_si_1 + (g_si_1,) )
   elif diagram == 'C4cB':
-    p_so = np.array(eval(s['p^{0}_{so}']), eval(s['p^{1}_{so}']))
-    g_so = np.array(s['\gamma^{0}_{so}'], s['\gamma^{1}_{so}'])
-    p_si = np.array(eval(s['p^{0}_{si}']), eval(s['p^{1}_{si}']))
-    g_si = np.array(s['\gamma^{0}_{si}'], s['\gamma^{1}_{si}'])
+    p_so_0 = eval(s['p^{0}_{so}'])
+    p_so_1 = eval(s['p^{1}_{so}'])
+    g_so_0 = s['\gamma^{0}_{so}']
+    g_so_1 = s['\gamma^{1}_{so}']
+    p_si_0 = _minus(eval(s['p^{0}_{si}']))
+    p_si_1 = _minus(eval(s['p^{1}_{si}']))
+    g_si_0 = s['\gamma^{0}_{si}']
+    g_si_1 = s['\gamma^{1}_{si}']
 
-    groupname = diagram.replace('c', '+') \
-                  + '_uuuu_p%1i%1i%1i.d000.g%1i' % ( p_so[0] + (g_so[0],) ) \
-                  +      '_p%1i%1i%1i.d000.g%1i' % ( p_si[0] + (g_si[0],) ) \
-                  +      '_p%1i%1i%1i.d000.g%1i' % ( p_si[1] + (g_si[1],) ) \
-                  +      '_p%1i%1i%1i.d000.g%1i' % ( p_so[1] + (g_so[1],) ) 
+    groupname = diagram \
+                  + '_uuuu_p%1i%1i%1i.d000.g%1i' % ( p_so_0 + (g_so_0,) ) \
+                  +      '_p%1i%1i%1i.d000.g%1i' % ( p_si_0 + (g_si_0,) ) \
+                  +      '_p%1i%1i%1i.d000.g%1i' % ( p_si_1 + (g_si_1,) ) \
+                  +      '_p%1i%1i%1i.d000.g%1i' % ( p_so_1 + (g_so_1,) ) 
   else:
     print 'in set_groupname: diagram unknown! Quantum numbers corrupted.'
     return

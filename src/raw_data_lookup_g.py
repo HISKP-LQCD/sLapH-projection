@@ -75,13 +75,16 @@ def set_lookup_g(gamma_labels, diagram):
 
   elif diagram.startswith('C4'):
 
-    lookup = DataFrame([5])
-    lookup.index = np.repeat(0, len(lookup))
+    J_so = 0
+    J_si = 0
 
-    lookup_so = pd.merge(lookup, lookup, left_index=True, right_index=True)
-    lookup_so.columns = ['\gamma^{0}', '\gamma^{1}']
+    gamma_so = pd.concat([gamma_dic[gl_so] for gl_so in gamma_labels[J_so]])
+    gamma_so = gamma_so.rename(columns={'\gamma' : '\gamma^{0}_{so}'})
+    gamma_so['\gamma^{1}_{so}'] = gamma_so['\gamma^{0}_{so}']
 
-    lookup_si = lookup_so
+    gamma_si = pd.concat([gamma_dic[gl_si] for gl_si in gamma_labels[J_si]])
+    gamma_si = gamma_si.rename(columns={'\gamma' : '\gamma^{0}_{si}'})
+    gamma_si['\gamma^{1}_{si}'] = gamma_si['\gamma^{0}_{si}']
 
   else:
     print 'in set_lookup_g: diagram unknown! Quantum numbers corrupted.'

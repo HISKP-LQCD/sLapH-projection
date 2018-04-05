@@ -396,6 +396,7 @@ def pcm_and_mu(plotdata,
         # clean up for next plot
         ax.legend(numpoints=1, loc='best', fontsize=6)
         pdfplot.savefig(fig)
+        plt.close(fig)
 
     return
 
