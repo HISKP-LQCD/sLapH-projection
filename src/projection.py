@@ -285,8 +285,8 @@ def project_operators(di, lattice_operators_so, lattice_operators_si,
     continuum_labels_so = [['J^{0}','M^{0}'], ['J^{1}','M^{1}']]
     continuum_labels_si = [['J^{0}','M^{0}']]
   elif di.diagram.startswith('C4'):
-    print 'in project_operators: C4 broken!'
-    return
+    continuum_labels_so = [['J^{0}','M^{0}'], ['J^{1}','M^{1}']]
+    continuum_labels_si = [['J^{0}','M^{0}'], ['J^{1}','M^{1}']]
   else:
     print 'in project_operators: diagram unknown! Quantum numbers corrupted.'
     return
@@ -320,26 +320,52 @@ def project_operators(di, lattice_operators_so, lattice_operators_si,
   operator_so['operator_label'] = operator_so[[col for col in operator_so.columns if 'label' in col]].apply(lambda x: ', '.join(x), axis=1)
   operator_so.drop(['operator_label^{0}', 'operator_label^{1}'], 
                     axis=1, inplace=True, errors='ignore')
-  operator_si.rename(columns={'\gamma' : '\gamma^{0}', 'p^{1}' : 'p^{1}_{so}'}, inplace=True)
+
+  operator_si.rename(columns={'\gamma' : '\gamma^{0}', 'p^{1}' : 'p^{1}_{si}'}, inplace=True)
   operator_si['operator_label'] = operator_si[[col for col in operator_si.columns if 'label' in col]].apply(lambda x: ', '.join(x), axis=1)
   operator_si.drop(['operator_label^{0}', 'operator_label^{1}'], 
                     axis=1, inplace=True, errors='ignore')
+
   operator_so.rename(columns={'\gamma^{0}' : '\gamma^{0}_{so}', 
                               '\gamma^{1}' : '\gamma^{1}_{so}',
                               'q' : 'q_{so}'}, inplace=True)
   operator_si.rename(columns={'\gamma^{0}' : '\gamma^{0}_{si}', 
-                              '\gamma^{1}' : '\gamma^{1}_{si}'}, inplace=True)
+                              '\gamma^{1}' : '\gamma^{1}_{si}',
+                              'q' : 'q_{si}'}, inplace=True)
 
-  # Isospin routine
-  # Todo: Refactor and generalize to 2pt and 4pt function
-  operator_so['q_{so}'] = operator_so['q_{so}'].apply(literal_eval)
-  isospin_neg = operator_so[operator_so['q_{so}'] < (0,0,0)]
-  isospin_neg.loc[:,'coefficient'] = isospin_neg.loc[:,'coefficient'] * -1
-  isospin_neg.loc[:,'q_{so}'] = isospin_neg.loc[:,'q_{so}'].apply(utils._minus)
-  isospin_pos = operator_so[operator_so['q_{so}'] > (0,0,0)]
+  return operator_so, operator_si
 
-  operator_so = pd.concat([isospin_pos, isospin_neg])
-  operator_so['q_{so}'] = operator_so['q_{so}'].apply(str)
+# Create combinations of definite isospin
+def project_isospin(operator_so, operator_si):
+
+  label = 'q_{so}'
+  if label in operator_so.columns:
+    operator_so[label] = operator_so[label].apply(literal_eval)
+
+    isospin_neg = operator_so[operator_so[label] < (0,0,0)]
+    isospin_neg.loc[:,'coefficient'] = isospin_neg.loc[:,'coefficient'] * -1
+    isospin_neg.loc[:,label] = isospin_neg.loc[:,label].apply(utils._minus)
+
+    isospin_pos = operator_so[operator_so[label] > (0,0,0)]
+
+    operator_so = pd.concat([isospin_pos, isospin_neg])
+    operator_so[label] = operator_so[label].apply(str)
+
+  # Code doubled. May be refactored out.
+  # Todo: Do I need to change the sign of q? I don't think so, because the daggering 
+  # taken care off when reading the data
+  label = 'q_{si}'
+  if label in operator_si.columns:
+    operator_si[label] = operator_si[label].apply(literal_eval)
+
+    isospin_neg = operator_si[operator_si[label] < (0,0,0)]
+    isospin_neg.loc[:,'coefficient'] = isospin_neg.loc[:,'coefficient'] * -1
+    isospin_neg.loc[:,label] = isospin_neg.loc[:,label].apply(utils._minus)
+
+    isospin_pos = operator_si[operator_si[label] > (0,0,0)]
+
+    operator_si = pd.concat([isospin_pos, isospin_neg])
+    operator_si[label] = operator_si[label].apply(str)
 
   return operator_so, operator_si
 

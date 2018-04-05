@@ -41,15 +41,25 @@ def set_lookup_corr(coefficients_irrep, qn, verbose=1):
 
   # Add two additional columns with the same string if the quantum numbers 
   # describe equivalent physical constellations: gevp_row and gevp_col
+  if('q_{so}' in lookup_corr.columns):
+    q_string = ', q: ' + lookup_corr['q_{so}']
+  else:
+    q_string = ''
+
   lookup_corr['gevp_row'] = \
     'p: ' + lookup_corr['p_{cm}'].apply(eval).apply(utils._abs2).apply(str) + \
-    ', q: ' + lookup_corr['q_{so}'] + \
-    ', g: ' + lookup_corr['operator_label_{so}']
+    q_string + ', g: ' + lookup_corr['operator_label_{so}']
+
+  if('q_{si}' in lookup_corr.columns):
+    q_string = ', q: ' + lookup_corr['q_{si}']
+  else:
+    q_string = ''
+
   lookup_corr['gevp_col'] = \
     'p: ' + lookup_corr['p_{cm}'].apply(eval).apply(utils._abs2).apply(str) + \
-    ', g: ' + lookup_corr['operator_label_{si}']
+    q_string + ', g: ' + lookup_corr['operator_label_{si}']
 
-  lookup_corr.drop(['operator_label_{so}', 'q_{so}', 'operator_label_{si}'], axis=1, inplace=True)
+  lookup_corr.drop(['operator_label_{so}', 'q_{so}', 'q_{si}', 'operator_label_{si}'], axis=1, inplace=True, errors='ignore')
 
   # Set index as it shall appear in projected correlators
   index = lookup_corr.columns.difference(['index', 'coefficient']).tolist()
@@ -59,16 +69,14 @@ def set_lookup_corr(coefficients_irrep, qn, verbose=1):
             'gevp_col' : 3, 
             'p_{cm}' : 4, 
             '\mu' : 5, 
-            'q_{so}' : 6, 
-            'q_{si}' : 7, 
-            'p^{0}_{so}' : 8, 
-            'p^{1}_{so}' : 9, 
-            'p^{0}_{si}' : 10, 
-            'p^{1}_{si}' : 11, 
-            '\gamma^{0}_{so}' : 14, 
-            '\gamma^{1}_{so}' : 15, 
-            '\gamma^{0}_{si}' : 16, 
-            '\gamma^{1}_{si}' : 17} 
+            'p^{0}_{so}' : 6, 
+            'p^{1}_{so}' : 7, 
+            'p^{0}_{si}' : 8, 
+            'p^{1}_{si}' : 9, 
+            '\gamma^{0}_{so}' : 10, 
+            '\gamma^{1}_{so}' : 11, 
+            '\gamma^{0}_{si}' : 12, 
+            '\gamma^{1}_{si}' : 13} 
   index = sorted(index, key=lambda x : order[x])
   lookup_corr.set_index(index, inplace=True)
 

@@ -569,7 +569,7 @@ def gammas(plotdata, diagram, bootstrapsize, pdfplot, logscale=True, verbose=Fal
                 ', \mu = ', graphlabel[4]
 
         # prepare data to plot
-        graphdata = plotdata.xs(graphlabel, level=['gevp_row', 'gevp_col', 'p_{cm}', 'q_{so}', '\mu'])
+        graphdata = plotdata.xs(graphlabel, level=['gevp_row', 'gevp_col', 'p_{cm}', '\mu'])
         # prepare plot
         plt.title(r'Gevp Element ${}$ - ${}$, $\vec{{P}}_\textnormal{{cm}} = {}$, $\vec{{q}}_\textnormal{{rel}} = {}$, $\mu = {}$'.format(
             graphlabel[0], graphlabel[1], graphlabel[2], graphlabel[3], graphlabel[4]))
