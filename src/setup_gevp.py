@@ -64,18 +64,21 @@ def build_gevp(data, mode, irrep, verbose):
       correlator = 'C3'
       subduced_3pt = data[(correlator, irrep)]
       
-      subduced_3pt_T = subduced_3pt.swaplevel(1,2)
-      subduced_3pt_T.index.set_names(['irrep', 'gevp_row', 'gevp_col'], inplace=True)
+      subduced_3pt_T = subduced_3pt.swaplevel('gevp_row','gevp_col')
+
+      index_3pt_T = map({'gevp_row' : 'gevp_col', 'gevp_col' : 'gevp_row'}.get, subduced_3pt_T.index.names, subduced_3pt_T.index.names)
+      subduced_3pt_T.index.set_names(index_3pt_T, inplace=True)
 
       correlator = 'C4'
       subduced_4pt = data[(correlator, irrep)]
+
 
       ############################################################################## 
 
       # gevp = C2   C3
       #        C3^T C4
-      upper = pd.concat([subduced_2pt, subduced_3pt])
-      lower = pd.concat([subduced_3pt_T, subduced_4pt])
+      upper = pd.concat([subduced_2pt, subduced_3pt_T])
+      lower = pd.concat([subduced_3pt, subduced_4pt])
       gevp = pd.concat([upper, lower]).sort_index()
 
   return gevp
