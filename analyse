@@ -621,12 +621,12 @@ def main():
                         elif process == 'pipi':
                             print "Warning: I=2 Gevp currently not implemented"
 
-                        for p_cm_vec in list_of_pcm:
-                            filename = 'Gevp_p%s_%s.pdf' % (p_cm_vec, irrep)
-                            pdfplot = utils.create_pdfplot(path, filename)
-                            plot.avg_row_sum_mom(gevp_data.xs(str(p_cm_vec), level="p_{cm}"), 
-                                    bootstrapsize, pdfplot)
-                            pdfplot.close()
+#                        for p_cm_vec in list_of_pcm:
+                        filename = 'Gevp_p%1d_%s.pdf' % (p_cm, irrep)
+                        pdfplot = utils.create_pdfplot(path, filename)
+                        plot.gevp(gevp_data.xs(str((0,0,0)), level="p_{cm}"), 
+                                bootstrapsize, pdfplot, logscale, verbose)
+                        pdfplot.close()
                     else:
                         print 'Warning: skipped avg_rows_sum_mom because gevp is incomplete'
 

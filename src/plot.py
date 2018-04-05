@@ -9,6 +9,7 @@ import pandas as pd
 from pandas import Series, DataFrame
 
 import itertools as it
+import gmpy
 
 import utils
 
@@ -399,6 +400,89 @@ def pcm_and_mu(plotdata,
         plt.close(fig)
 
     return
+
+def gevp(gevp_data, bootstrapsize, pdfplot, logscale=False, verbose=False):
+    """
+  Create a multipage plot with a page for every element of the rho gevp
+
+  Parameters
+  ----------
+
+  gevp_data : pd.DataFrame
+
+      Table with a row for each gevp element (sorted by gevp column running
+      faster than gevp row) and hierarchical columns for gauge configuration 
+      number and timeslice
+
+  bootstrapsize : int
+
+      The number of bootstrap samples being drawn from `gevp_data`.
+
+  pdfplot : mpl.PdfPages object
+      
+      Plots will be written to the path `pdfplot` was created with.
+
+  See also
+  --------
+
+  utils.create_pdfplot()
+  """
+
+    assert np.all(gevp_data.notnull()), 'Gevp contains null entires'
+    assert gmpy.is_square(len(gevp_data.index)), 'Gevp is not a square matrix'
+
+    gevp_size = gmpy.sqrt(len(gevp_data.index))
+
+
+    gevp_data = mean_and_std(gevp_data, bootstrapsize)
+
+    # abs of smallest positive value
+    #linthreshy = plotdata['mean'][plotdata['mean'] > 0].min().min()
+    # abs of value closest to zero
+    linthreshy = gevp_data['mean'].iloc[gevp_data.loc[:,('mean',0)].nonzero()].abs().min().min()
+
+    # prepare plot
+    fig, axes = plt.subplots(gevp_size, gevp_size, sharex=True, sharey=True)
+
+    for gevp_index, (gevp_el_name, gevp_el_data) in enumerate(gevp_data.iterrows()):
+
+        ax = axes[gevp_index // gevp_size, gevp_index % gevp_size]
+
+        if verbose:
+            print '\tplotting ', gevp_index, gevp_el_name[0], ' - ', gevp_el_name[1]
+
+        # prepare data to plot
+        T = gevp_el_data.index.levels[1].astype(int)
+        mean = gevp_el_data['mean'].values
+        std = gevp_el_data['std'].values
+
+        # prepare parameters for plot design
+#        ax.set_title(r'${} - {}$'.format(gevp_el_name[0], gevp_el_name[1]), fontsize=6)
+#        ax.set_xlabel(r'$t/a$', fontsize=4)
+#        ax.set_ylabel(r'$C(t/a)$', fontsize=4)
+        if logscale:
+            ax.set_yscale('symlog', linthreshy=linthreshy)
+
+        # plot
+        ax.errorbar(
+            T,
+            mean,
+            std,
+            fmt='o',
+            color='black',
+            markersize=3,
+            capsize=3,
+            capthick=0.75,
+            elinewidth=0.75,
+            markeredgecolor='black',
+            linewidth='0.0')
+
+    plt.tight_layout()
+    pdfplot.savefig(fig)
+    plt.close(fig)
+
+    return
+
 
 def avg_row_sum_mom(gevp_data,
                     bootstrapsize,
