@@ -369,7 +369,7 @@ def main():
                         np.real)
                     gevp_labels = ['Irrep', 'mult', 'gevp_row', 'gevp_col']
                     group_labels = list(set(contracted_data[ci].index.names).intersection(
-                        ['p_{cm}','I_{so}', 'I_{si}']))
+                        ['p_{cm}','q_{so}', 'q_{si}']))
                     momentum_labels = \
                         [col for col in contracted_data_avg[ci].columns if 'p^{' in col]
                     gamma_labels = \
@@ -415,7 +415,7 @@ def main():
                         np.real)
                     gevp_labels = ['Irrep', 'mult', 'gevp_row', 'gevp_col']
                     group_labels = list(set(contracted_data[ci].index.names).intersection(
-                        ['p_{cm}','I_{so}', 'I_{si}']))
+                        ['p_{cm}','q_{so}', 'q_{si}']))
                     momentum_labels = \
                         [col for col in contracted_data_avg[ci].columns if 'p^{' in col]
                     gamma_labels = \
@@ -483,7 +483,7 @@ def main():
 
                     gevp_labels = ['gevp_row', 'gevp_col']
                     group_labels = list(set(plotdata.index.names).intersection(
-                        ['I_{so}', 'I_{si}']))
+                        ['q_{so}', 'q_{si}']))
                     momentum_labels = \
                         [col for col in plotdata.index.names if 'p^{' in col]
                     gamma_labels = \

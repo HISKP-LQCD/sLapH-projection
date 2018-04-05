@@ -62,8 +62,6 @@ def read_sc_2(p_cm_vecs, path, verbose=True, j=1):
     df['p^1'] = df['p^1'].apply(literal_eval).apply(str)
     df['p^2'] = df['p^2'].apply(literal_eval).apply(str)
     df['q'] = df['q'].apply(literal_eval).apply(str)
-    df['abs(p1)'] = df['abs(p1)'].apply(literal_eval)
-    df['abs(p2)'] = df['abs(p2)'].apply(literal_eval)
     df.rename(columns={'p^1' : 'p^{0}', 'p^2' : 'p^{1}'}, inplace=True)
 
     # Rho cannot appear in S-wave pipi scattering because of angular momentum 
@@ -71,9 +69,12 @@ def read_sc_2(p_cm_vecs, path, verbose=True, j=1):
     df = df[(df['p^{0}'] != str((0,0,0))) | (df['p^{1}'] != str((0,0,0)))]
 
     # Momentum cutoff: Don't consider momenta (2,1,0) and higher.
-    df = df[(df['abs(p1)'] <= 4) & (df['abs(p2)'] <= 4)]
-    del df['abs(p1)']
-    del df['abs(p2)']
+    # Currently done in Maple
+#    df['abs(p1)'] = df['abs(p1)'].apply(literal_eval)
+#    df['abs(p2)'] = df['abs(p2)'].apply(literal_eval)
+#    df = df[(df['abs(p1)'] <= 4) & (df['abs(p2)'] <= 4)]
+#    del df['abs(p1)']
+#    del df['abs(p2)']
 
     # pion pion scattering: Hardcoded both particles to be pseudoscalar here.
     df['J^{0}'] = 0

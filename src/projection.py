@@ -332,20 +332,14 @@ def project_operators(di, lattice_operators_so, lattice_operators_si,
 
   # Isospin routine
   # Todo: Refactor and generalize to 2pt and 4pt function
-  # Todo: Create lookuptable for q(I)
-  operator_so.reset_index(inplace=True)
-  operator_so["r^{0}_{so}"] = map(lambda k1, k2: str(tuple([sum(x) for x in zip(k1,k2)])),operator_so['p_{cm}'].apply(literal_eval), operator_so['q_{so}'].apply(literal_eval))
-  operator_so["r^{1}_{so}"] = operator_so['q_{so}'].apply(literal_eval).apply(utils._minus).apply(str)
-  isospin_neg = operator_so[operator_so["r^{0}_{so}"] < operator_so["r^{1}_{so}"]]
+  operator_so['q_{so}'] = operator_so['q_{so}'].apply(literal_eval)
+  isospin_neg = operator_so[operator_so['q_{so}'] < (0,0,0)]
   isospin_neg.loc[:,'coefficient'] = isospin_neg.loc[:,'coefficient'] * -1
-  isospin_neg = isospin_neg.rename(columns={'r^{0}_{so}' : 'r^{1}_{so}', 'r^{1}_{so}' : 'r^{0}_{so}'})
-  isospin_pos = operator_so[operator_so["r^{0}_{so}"] > operator_so["r^{1}_{so}"]]
+  isospin_neg.loc[:,'q_{so}'] = isospin_neg.loc[:,'q_{so}'].apply(utils._minus)
+  isospin_pos = operator_so[operator_so['q_{so}'] > (0,0,0)]
+
   operator_so = pd.concat([isospin_pos, isospin_neg])
-  operator_so["I_{so}"] = operator_so['r^{0}_{so}'] + ', ' + operator_so['r^{1}_{so}']
-  operator_so.drop(['q_{so}', 'r^{0}_{so}', 'r^{1}_{so}'], 
-                    axis=1, inplace=True, errors='ignore')
-  operator_so = operator_so.replace({"I_{so}" : {k: v for v, k in enumerate(operator_so["I_{so}"].unique())}})
-  operator_so.set_index(['p_{cm}', 'Irrep', '\mu', 'mult'], inplace=True)
+  operator_so['q_{so}'] = operator_so['q_{so}'].apply(str)
 
   return operator_so, operator_si
 
@@ -368,8 +362,8 @@ def correlate_operators(operator_so, operator_si, verbose):
             'operator_label_{so}' : 3,
             'operator_label_{si}' : 4,
             '\mu' : 5, 
-            'I_{so}' : 6, 
-            'I_{si}' : 7, 
+            'q_{so}' : 6, 
+            'q_{si}' : 7, 
             'p^{0}_{so}' : 8, 
             'p^{1}_{so}' : 9, 
             'p^{0}_{si}' : 10, 
