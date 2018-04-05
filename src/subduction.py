@@ -41,12 +41,15 @@ def set_lookup_corr(coefficients_irrep, qn, verbose=1):
 
   # Add two additional columns with the same string if the quantum numbers 
   # describe equivalent physical constellations: gevp_row and gevp_col
-  lookup_corr['gevp_row'] = 'p: ' + lookup_corr['p_{cm}'].apply(eval).apply(utils._abs2).apply(str) + \
-                              ', g: ' + lookup_corr['operator_label_{so}']
-  lookup_corr['gevp_col'] = 'p: ' + lookup_corr['p_{cm}'].apply(eval).apply(utils._abs2).apply(str) + \
-                              ', g: ' + lookup_corr['operator_label_{si}']
+  lookup_corr['gevp_row'] = \
+    'p: ' + lookup_corr['p_{cm}'].apply(eval).apply(utils._abs2).apply(str) + \
+    ', q: ' + lookup_corr['q_{so}'] + \
+    ', g: ' + lookup_corr['operator_label_{so}']
+  lookup_corr['gevp_col'] = \
+    'p: ' + lookup_corr['p_{cm}'].apply(eval).apply(utils._abs2).apply(str) + \
+    ', g: ' + lookup_corr['operator_label_{si}']
 
-  lookup_corr.drop(['operator_label_{so}', 'operator_label_{si}'], axis=1, inplace=True)
+  lookup_corr.drop(['operator_label_{so}', 'q_{so}', 'operator_label_{si}'], axis=1, inplace=True)
 
   # Set index as it shall appear in projected correlators
   index = lookup_corr.columns.difference(['index', 'coefficient']).tolist()

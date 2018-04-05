@@ -40,7 +40,8 @@ def _abs2(x):
   return _scalar_mul(x, x)
 
 def _minus(x):
-  return tuple(-np.array(x))
+  # Python distinguishes +0 and -0. I explicitly want the + for string output
+  return tuple(-np.array(x)+0)
 
 ################################################################################
 # IO routines

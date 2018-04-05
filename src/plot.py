@@ -359,12 +359,10 @@ def pcm_and_mu(plotdata,
 
     plotdata = mean_and_std(plotdata, bootstrapsize)
 
-    if logscale:
-        # abs of smallest positive value
-        linthreshy = plotdata['mean'][plotdata['mean'] > 0].min().min()
-        # abs of value closest to zero
-        #linthreshy = plotdata['mean'].iloc[plotdata.loc[:,('mean',0)].nonzero()].abs().min().min()
-        plt.yscale('symlog', linthreshy=linthreshy)
+    # abs of smallest positive value
+    linthreshy = plotdata['mean'][plotdata['mean'] > 0].min().min()
+    # abs of value closest to zero
+    #linthreshy = plotdata['mean'].iloc[plotdata.loc[:,('mean',0)].nonzero()].abs().min().min()
 
     # create list of gevp elements to loop over
     plotlabel = list(set([(i[0], i[1]) for i in plotdata.index.values]))
@@ -381,20 +379,23 @@ def pcm_and_mu(plotdata,
         graphdata_mean = graphdata.mean(axis=0)
 
         # prepare plot
-        plt.title(r'Gevp Element ${}$ - ${}$'.format(
+        fig, ax = plt.subplots(1,1)
+
+        ax.set_title(r'Gevp Element ${}$ - ${}$'.format(
             graphlabel[0], graphlabel[1]))
-        plt.xlabel(r'$t/a$', fontsize=12)
-        plt.ylabel(r'$C(t/a)$', fontsize=12)
+        ax.set_xlabel(r'$t/a$', fontsize=12)
+        ax.set_ylabel(r'$C(t/a)$', fontsize=12)
+        if logscale:
+            ax.set_yscale('symlog', linthreshy=linthreshy)
 
         # plot
-        plot_gevp_el(graphdata, r'$\vec{{P}}_\textnormal{{cm}} = {}$, $\mu = {}$', multiindex=True)
+        plot_gevp_el_ax(graphdata, r'$\vec{{P}}_\textnormal{{cm}} = {}$, $\mu = {}$', ax, multiindex=True)
 
-        plot_mean(graphdata_mean)
+        plot_mean_ax(graphdata_mean, ax)
 
         # clean up for next plot
-        plt.legend(numpoints=1, loc='best', fontsize=6)
-        pdfplot.savefig()
-        plt.clf()
+        ax.legend(numpoints=1, loc='best', fontsize=6)
+        pdfplot.savefig(fig)
 
     return
 
