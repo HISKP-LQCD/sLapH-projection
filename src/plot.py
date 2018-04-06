@@ -3,6 +3,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 plt.rc('text', usetex=True)
 from matplotlib.backends.backend_pdf import PdfPages
+from matplotlib.lines import Line2D
 
 import numpy as np
 import pandas as pd
@@ -94,7 +95,7 @@ def mean_and_std(df, bootstrapsize):
 
 ################################################################################
 
-def plot_gevp_el_ax(data, label_template, ax, multiindex=False):
+def plot_gevp_el_ax(data, label_template, scale, ax, multiindex=False):
     """
   Plot all rows of given pd.DataFrame into a single page as seperate graphs
 
@@ -109,7 +110,7 @@ def plot_gevp_el_ax(data, label_template, ax, multiindex=False):
       the index of `data`
   """
 
-    symbol = ['v', '^', '<', '>', 's', 'p', '*', 'h', 'H', 'D', 'd', '8']
+    symbol = Line2D.filled_markers
 
     rows = data.index.values
 
@@ -144,10 +145,10 @@ def plot_gevp_el_ax(data, label_template, ax, multiindex=False):
             fmt=symbol[counter % len(symbol)],
             color=cmap_brg[counter],
             label=label,
-            markersize=3,
-            capsize=3,
-            capthick=0.5,
-            elinewidth=0.5,
+            markersize=3./scale,
+            capsize=3./scale,
+            capthick=0.5/scale,
+            elinewidth=0.5/scale,
             markeredgecolor=cmap_brg[counter],
             linewidth='0.0')
 
@@ -201,38 +202,41 @@ def plot_gevp_el(data, label_template, multiindex=False):
             fmt=symbol[counter % len(symbol)],
             color=cmap_brg[counter],
             label=label,
-            markersize=3,
-            capsize=3,
-            capthick=0.5,
-            elinewidth=0.5,
+            markersize=0.3,
+            capsize=0.3,
+            capthick=0.05,
+            elinewidth=0.05,
             markeredgecolor=cmap_brg[counter],
             linewidth='0.0')
 
-def plot_mean(data, ax):
+def plot_mean(data, scale, ax):
 
-        # prepare data to plot
-        T = data.index.levels[1].astype(int)
-        mean = data['mean'].values
-        std = data['std'].values
+    symbol = Line2D.filled_markers
 
-        # plot
-        ax.errorbar(
-            T,
-            mean,
-            std,
-            fmt='o',
-            color='black',
-            label='mean',
-            markersize=3,
-            capsize=3,
-            capthick=0.75,
-            elinewidth=0.75,
-            markeredgecolor='black',
-            linewidth='0.0')
+    # prepare data to plot
+    T = data.index.levels[1].astype(int)
+    mean = data['mean'].values
+    std = data['std'].values
+
+    # plot
+    ax.errorbar(
+        T,
+        mean,
+        std,
+        fmt='o',
+        color='black',
+        label='mean',
+        markersize=3./scale,
+        capsize=3./scale,
+        capthick=0.5/scale,
+        elinewidth=0.5/scale,
+        markeredgecolor='black',
+        linewidth='0.0')
+
 
 ################################################################################
 
-def average(graphdata, ax):
+def average(graphdata, ax, scale=1):
     """
     Create a multipage plot with a page for every element of the rho gevp
   
@@ -263,21 +267,21 @@ def average(graphdata, ax):
     graphdata = graphdata.T.squeeze()
 
     # plot
-    plot_mean(graphdata, ax)
+    plot_mean(graphdata, scale, ax)
 
     return
 
-def pcm_and_mu(graphdata, ax):
+def pcm_and_mu(graphdata, ax, scale=1):
 
-    plot_gevp_el_ax(graphdata, r'$\vec{{P}}_\textnormal{{cm}} = {}$, $\mu = {}$', ax, 
-            multiindex=True)
+    plot_gevp_el_ax(graphdata, r'$\vec{{P}}_\textnormal{{cm}} = {}$, $\mu = {}$', scale, 
+            ax, multiindex=True)
 
      # This takes the mean over all operators for the mean and std over 
     # bootstrapsamples. That is not entirelly correct. The operations should 
     # be the over way round. good enough for a consistency check.
     graphdata_mean = graphdata.mean(axis=0)
     
-    plot_mean(graphdata_mean, ax)
+    plot_mean(graphdata_mean, scale, ax)
     
     ax.legend(numpoints=1, loc='best', fontsize=6)
 
@@ -388,6 +392,7 @@ def for_each_gevp_element(plotting_function, plotdata, bootstrapsize, pdfplot,
 
     # create list of gevp elements to loop over
     plotlabel = list(set([(i[0], i[1]) for i in plotdata.index.values]))
+
     for graphlabel in plotlabel:
 
         if verbose:
@@ -413,14 +418,14 @@ def for_each_gevp_element(plotting_function, plotdata, bootstrapsize, pdfplot,
 
     return
 
-def gevp(gevp_data, bootstrapsize, pdfplot, logscale=False, verbose=False):
+def gevp(plotting_function, plotdata, bootstrapsize, pdfplot, logscale=False, verbose=False):
     """
   Create a multipage plot with a page for every element of the rho gevp
 
   Parameters
   ----------
 
-  gevp_data : pd.DataFrame
+  plotdata: pd.DataFrame
 
       Table with a row for each gevp element (sorted by gevp column running
       faster than gevp row) and hierarchical columns for gauge configuration 
@@ -428,7 +433,7 @@ def gevp(gevp_data, bootstrapsize, pdfplot, logscale=False, verbose=False):
 
   bootstrapsize : int
 
-      The number of bootstrap samples being drawn from `gevp_data`.
+      The number of bootstrap samples being drawn from `plotdata`.
 
   pdfplot : mpl.PdfPages object
       
@@ -440,40 +445,48 @@ def gevp(gevp_data, bootstrapsize, pdfplot, logscale=False, verbose=False):
   utils.create_pdfplot()
   """
 
-    assert np.all(gevp_data.notnull()), 'Gevp contains null entires'
-    gevp_data = mean_and_std(gevp_data, bootstrapsize)
-
-    gevp_rows = gevp_data.index.get_level_values(level="gevp_row").unique()
-    gevp_cols = gevp_data.index.get_level_values(level="gevp_col").unique()
-    assert len(gevp_rows) == len(gevp_cols), 'Gevp is not a square matrix'
-    gevp_size = len(gevp_rows)
+    assert np.all(plotdata.notnull()), 'Gevp contains null entires'
+    plotdata = mean_and_std(plotdata, bootstrapsize)
 
     # abs of smallest positive value
     #linthreshy = plotdata['mean'][plotdata['mean'] > 0].min().min()
     # abs of value closest to zero
-    linthreshy = 10e2 * gevp_data['mean'].iloc[gevp_data.loc[:,('mean',0)].nonzero()].abs().min().min()
+    linthreshy = 10e2 * plotdata['mean'].iloc[plotdata.loc[:,('mean',0)].nonzero()].abs().min().min()
 
-    # prepare plot
-    fig, axes = plt.subplots(gevp_size, gevp_size, dpi=gevp_size*80, sharex=True, sharey=True)
+    # Create unique list of gevp elements to loop over while keeping order intact
+    seen = set()
+    plotlabel= []
+    for item in [(i[0], i[1]) for i in plotdata.index.values]:
+        if item not in seen:
+            seen.add(item)
+            plotlabel.append(item)
+    assert gmpy.is_square(len(plotlabel)), 'Gevp is not a square matrix'
+    gevp_size = gmpy.sqrt(len(plotlabel))
 
-    for r,row in enumerate(gevp_rows):
-        for c, col in enumerate(gevp_cols):
+    # Prepare Figure
+    fig, axes = plt.subplots(gevp_size, gevp_size, sharex=True, sharey=True)
 
-            graphdata = gevp_data.xs((row,col), level=("gevp_row", "gevp_col"))
-            ax = axes[r, c]
+    for counter, graphlabel in enumerate(plotlabel):
 
-            if verbose:
-                print '\tplotting ', row, ' - ', col
+        if verbose:
+            print '\tplotting ', graphlabel[0], ' - ', graphlabel[1]
 
-            # prepare parameters for plot design
-#            ax.set_title(r'${} - {}$'.format(row, col), fontsize=6)
-#            ax.set_xlabel(r'$t/a$', fontsize=4)
-#            ax.set_ylabel(r'$C(t/a)$', fontsize=4)
-            if logscale:
-                ax.set_yscale('symlog', linthreshy=linthreshy)
+        # Prepare Axes
+        ax = axes[counter // gevp_size, counter % gevp_size]
+#        ax.set_title(r'Gevp Element ${}$ - ${}$'.format(graphlabel[0], graphlabel[1]))
+#        ax.set_xlabel(r'$t/a$', fontsize=12)
+#        ax.set_ylabel(r'$C(t/a)$', fontsize=12)
+        if logscale:
+#            ax.locator_params(axis='y', numticks=3)
+            ax.set_yscale('symlog', linthreshy=linthreshy)
 
-            plot_gevp_el_ax(graphdata, r'$\vec{{P}}_\textnormal{{cm}} = {}$, $\mu = {}$', ax, multiindex=True)
+        # Select data for plot
+        graphdata = plotdata.xs(graphlabel, level=['gevp_row', 'gevp_col'])
 
+        plotting_function(graphdata, ax, scale=gevp_size)
+        ax.legend_.remove()
+
+    plt.locator_params(axis='y', numticks=4)
     plt.tight_layout()
     pdfplot.savefig(fig)
     plt.close(fig)

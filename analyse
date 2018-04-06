@@ -587,7 +587,7 @@ def main():
                         # average over rows.
 #                        contracted_data_avg[ci] = contracted_data_avg[ci].mean(
 #                            level=gevp_labels + ['p_{cm}'])
-                        # average over p_cm.
+#                        # average over p_cm.
 #                        contracted_data_avg[ci] = contracted_data_avg[ci].mean(
 #                            level=gevp_labels)
 
@@ -603,7 +603,8 @@ def main():
 #                        for p_cm_vec in list_of_pcm:
                         filename = 'Gevp_p%1d_%s.pdf' % (p_cm, irrep)
                         pdfplot = utils.create_pdfplot(path, filename)
-                        plot.gevp(gevp_data, bootstrapsize, pdfplot, logscale, verbose)
+                        plot.gevp(plot.pcm_and_mu, gevp_data, bootstrapsize, pdfplot, 
+                                logscale, verbose)
                         pdfplot.close()
                     else:
                         print 'Warning: skipped plot_avg because gevp is incomplete'
