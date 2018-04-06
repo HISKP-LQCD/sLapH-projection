@@ -126,17 +126,9 @@ def main():
         print 'Two-particle projection coefficients will be read from ', path_to_sc_2
         print 'Data will be writen to', outpath
 
-    sep_rows_sep_mom = config.getboolean('plot details',
-                                         'Plot sep_rows_sep_mom')
-    sep_rows_sum_mom = config.getboolean('plot details',
-                                         'Plot sep_rows_sum_mom')
-    avg_rows_sep_mom = config.getboolean('plot details',
-                                         'Plot avg_rows_sep_mom')
-    avg_rows_sum_mom = config.getboolean('plot details',
-                                         'Plot avg_rows_sum_mom')
-
-    plot_gammas = config.getboolean('plot details', 'Plot correlators')
+    plot_p_and_g = config.getboolean('plot details', 'Plot correlators')
     plot_pcm_and_mu = config.getboolean('plot details', 'Plot p_cm and row')
+    plot_avg = config.getboolean('plot details', 'Plot average')
 
     plot_experimental = config.getboolean('plot details', 'Plot experimental')
 
@@ -145,7 +137,7 @@ def main():
     bootstrapsize = config.getint('plot details', 'Number of bootstrap samples')
 
     if verbose >= 2:
-        if plot_gammas:
+        if plot_p_and_g:
             print 'Plotting correlators for all momenta and Dirac structures'
         if plot_pcm_and_mu:
             print 'Plotting correlators for all p_cm_and_mu'
@@ -532,11 +524,23 @@ def main():
                         bokeh.experimental(plotdata_tmp, correlator, bootstrapsize, 
                                     filename, logscale, verbose)
 
-                    if plot_pcm_and_mu:
+                    if plot_avg:
                         # sum over momenta and gamma structures
                         plotdata_tmp = plotdata.sum(
                             level=gevp_labels + ['p_{cm}', '\mu'])
-                        plotdata_tmp = plotdata_tmp.mean(
+                        plotdata_tmp = plotdata_tmp.mean(level=gevp_labels)
+
+                        filename = '/%s_p%1i_%s_avg_%s.pdf' % (
+                            correlator, p_cm, irrep, continuum_basis_string)
+                        pdfplot = utils.create_pdfplot(path, filename)
+                        plot.average(plotdata_tmp, bootstrapsize, pdfplot, 
+                                        logscale, verbose)
+                        pdfplot.close()
+
+
+                    if plot_pcm_and_mu:
+                        # sum over momenta and gamma structures
+                        plotdata_tmp = plotdata.sum(
                             level=gevp_labels + ['p_{cm}', '\mu'])
 
                         filename = '/%s_p%1i_%s_pcm-and-mu_%s.pdf' % (
@@ -546,7 +550,7 @@ def main():
                                         logscale, verbose)
                         pdfplot.close()
 
-                    if plot_gammas:
+                    if plot_p_and_g:
                         # sum over equivalent momenta
                         plotdata_tmp = plotdata.sum(
                             level=gevp_labels + ['p_{cm}', '\mu'] + gamma_labels)
@@ -554,38 +558,12 @@ def main():
                         filename = '/%s_p%1i_%s_gammas_%s.pdf' % (
                             correlator, p_cm, irrep, continuum_basis_string)
                         pdfplot = utils.create_pdfplot(path, filename)
-                        plot.gammas(plotdata_tmp, correlator, bootstrapsize, 
+                        plot.p_and_gammas(plotdata_tmp, correlator, bootstrapsize, 
                                     pdfplot, logscale, verbose)
                         pdfplot.close()
 
+                if plot_avg:
 
-                    if avg_rows_sep_mom:
-                        filename = '%s_moms_p%1i_%s.pdf' % (correlator, p_cm,
-                                                            irrep)
-                        pdfplot = utils.create_pdfplot(path, filename)
-                        plot.avg_rows_sep_mom(plotdata, correlator,
-                                              bootstrapsize, pdfplot, logscale,
-                                              verbose)
-                        pdfplot.close()
-
-                    if sep_rows_sep_mom:
-                        filename = '%s_rows_and_moms_real_p%1i_%s.pdf' % (
-                            correlator, p_cm, irrep)
-                        pdfplot = utils.create_pdfplot(path, filename)
-                        plot.sep_rows_sep_mom(
-                            plotdata.apply(np.real), correlator, bootstrapsize,
-                            pdfplot, logscale, verbose)
-                        pdfplot.close()
-
-                        filename = '%s_rows_and_moms_imag_p%1i_%s.pdf' % (
-                            correlator, p_cm, irrep)
-                        pdfplot = utils.create_pdfplot(path, filename)
-                        plot.sep_rows_sep_mom(
-                            plotdata.apply(np.imag), correlator, bootstrapsize,
-                            pdfplot, logscale, verbose)
-                        pdfplot.close()
-
-                if avg_rows_sum_mom:
 
                     for correlator in correlators:
                         ci = ContractionType(correlator, irrep)
@@ -606,8 +584,8 @@ def main():
                         contracted_data_avg[ci] = contracted_data_avg[ci].sum(
                             level=gevp_labels + ['p_{cm}'] + ['\mu'])
                         # average over rows.
-                        contracted_data_avg[ci] = contracted_data_avg[ci].mean(
-                            level=gevp_labels + ['p_{cm}'])
+#                        contracted_data_avg[ci] = contracted_data_avg[ci].mean(
+#                            level=gevp_labels + ['p_{cm}'])
                         # average over p_cm.
 #                        contracted_data_avg[ci] = contracted_data_avg[ci].mean(
 #                            level=gevp_labels)
@@ -624,11 +602,10 @@ def main():
 #                        for p_cm_vec in list_of_pcm:
                         filename = 'Gevp_p%1d_%s.pdf' % (p_cm, irrep)
                         pdfplot = utils.create_pdfplot(path, filename)
-                        plot.gevp(gevp_data.xs(str((0,0,0)), level="p_{cm}"), 
-                                bootstrapsize, pdfplot, logscale, verbose)
+                        plot.gevp(gevp_data, bootstrapsize, pdfplot, logscale, verbose)
                         pdfplot.close()
                     else:
-                        print 'Warning: skipped avg_rows_sum_mom because gevp is incomplete'
+                        print 'Warning: skipped plot_avg because gevp is incomplete'
 
 
 ################################################################################
