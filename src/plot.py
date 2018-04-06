@@ -232,7 +232,7 @@ def plot_mean(data, ax):
 
 ################################################################################
 
-def average(plotdata, bootstrapsize, pdfplot, logscale=False, verbose=False):
+def average(graphdata, ax):
     """
     Create a multipage plot with a page for every element of the rho gevp
   
@@ -259,117 +259,29 @@ def average(plotdata, bootstrapsize, pdfplot, logscale=False, verbose=False):
     utils.create_pdfplot()
     """
 
-    plotdata = mean_and_std(plotdata, bootstrapsize)
+    # prepare data to plot
+    graphdata = graphdata.T.squeeze()
 
-    # abs of smallest positive value
-    linthreshy = plotdata['mean'][plotdata['mean'] > 0].min().min()
-    # abs of value closest to zero
-    #linthreshy = plotdata['mean'].iloc[plotdata.loc[:,('mean',0)].nonzero()].abs().min().min()
-
-    # create list of gevp elements to loop over
-    plotlabel = list(set([(i[0], i[1]) for i in plotdata.index.values]))
-    for graphlabel in plotlabel:
-
-        if verbose:
-            print '\tplotting ', graphlabel[0], ' - ', graphlabel[1]
-
-        # prepare data to plot
-        graphdata = plotdata.xs(graphlabel, level=['gevp_row', 'gevp_col']).T.squeeze()
-
-        # prepare plot
-        fig, ax = plt.subplots(1,1)
-
-        ax.set_title(r'Gevp Element ${}$ - ${}$'.format(
-            graphlabel[0], graphlabel[1]))
-        ax.set_xlabel(r'$t/a$', fontsize=12)
-        ax.set_ylabel(r'$C(t/a)$', fontsize=12)
-        if logscale:
-            ax.set_yscale('symlog', linthreshy=linthreshy)
-
-        # plot
-        plot_mean(graphdata, ax)
-
-        # clean up for next plot
-        ax.legend(numpoints=1, loc='best', fontsize=6)
-        pdfplot.savefig(fig)
-        plt.close(fig)
+    # plot
+    plot_mean(graphdata, ax)
 
     return
 
-def pcm_and_mu(plotdata,
-                    bootstrapsize,
-                    pdfplot,
-                    logscale=False,
-                    verbose=False):
-    """
-    Create a multipage plot with a page for every element of the rho gevp
-  
-    Parameters
-    ----------
-  
-    gevp_data : pd.DataFrame
-  
-        Table with a row for each gevp element (sorted by gevp column running
-        faster than gevp row) and hierarchical columns for gauge configuration 
-        number and timeslice
-  
-    bootstrapsize : int
-  
-        The number of bootstrap samples being drawn from `gevp_data`.
-  
-    pdfplot : mpl.PdfPages object
-        
-        Plots will be written to the path `pdfplot` was created with.
-  
-    See also
-    --------
-  
-    utils.create_pdfplot()
-    """
+def pcm_and_mu(graphdata, ax):
 
-    plotdata = mean_and_std(plotdata, bootstrapsize)
+    plot_gevp_el_ax(graphdata, r'$\vec{{P}}_\textnormal{{cm}} = {}$, $\mu = {}$', ax, 
+            multiindex=True)
 
-    # abs of smallest positive value
-    linthreshy = plotdata['mean'][plotdata['mean'] > 0].min().min()
-    # abs of value closest to zero
-    #linthreshy = plotdata['mean'].iloc[plotdata.loc[:,('mean',0)].nonzero()].abs().min().min()
-
-    # create list of gevp elements to loop over
-    plotlabel = list(set([(i[0], i[1]) for i in plotdata.index.values]))
-    for graphlabel in plotlabel:
-
-        if verbose:
-            print '\tplotting ', graphlabel[0], ' - ', graphlabel[1]
-
-        # prepare data to plot
-        graphdata = plotdata.xs(graphlabel, level=['gevp_row', 'gevp_col'])
-        # This takes the mean over all operators for the mean and std over 
-        # bootstrapsamples. That is not entirelly correct. The operations should 
-        # be the over way round. good enough for a consistency check.
-        graphdata_mean = graphdata.mean(axis=0)
-
-        # prepare plot
-        fig, ax = plt.subplots(1,1)
-
-        ax.set_title(r'Gevp Element ${}$ - ${}$'.format(
-            graphlabel[0], graphlabel[1]))
-        ax.set_xlabel(r'$t/a$', fontsize=12)
-        ax.set_ylabel(r'$C(t/a)$', fontsize=12)
-        if logscale:
-            ax.set_yscale('symlog', linthreshy=linthreshy)
-
-        # plot
-        plot_gevp_el_ax(graphdata, r'$\vec{{P}}_\textnormal{{cm}} = {}$, $\mu = {}$', ax, multiindex=True)
-
-        plot_mean(graphdata_mean, ax)
-
-        # clean up for next plot
-        ax.legend(numpoints=1, loc='best', fontsize=6)
-        pdfplot.savefig(fig)
-        plt.close(fig)
+     # This takes the mean over all operators for the mean and std over 
+    # bootstrapsamples. That is not entirelly correct. The operations should 
+    # be the over way round. good enough for a consistency check.
+    graphdata_mean = graphdata.mean(axis=0)
+    
+    plot_mean(graphdata_mean, ax)
+    
+    ax.legend(numpoints=1, loc='best', fontsize=6)
 
     return
-
 
 def p_and_gammas(plotdata, diagram, bootstrapsize, pdfplot, logscale=True, verbose=False):
     """
@@ -437,6 +349,69 @@ def p_and_gammas(plotdata, diagram, bootstrapsize, pdfplot, logscale=True, verbo
         plt.legend(numpoints=1, loc='best', fontsize=6)
         pdfplot.savefig()
         plt.clf()
+
+def for_each_gevp_element(plotting_function, plotdata, bootstrapsize, pdfplot,
+                    logscale=False,
+                    verbose=False):
+    """
+    Create a multipage plot with a page for every element of the rho gevp
+  
+    Parameters
+    ----------
+  
+    gevp_data : pd.DataFrame
+  
+        Table with a row for each gevp element (sorted by gevp column running
+        faster than gevp row) and hierarchical columns for gauge configuration 
+        number and timeslice
+  
+    bootstrapsize : int
+  
+        The number of bootstrap samples being drawn from `gevp_data`.
+  
+    pdfplot : mpl.PdfPages object
+        
+        Plots will be written to the path `pdfplot` was created with.
+  
+    See also
+    --------
+  
+    utils.create_pdfplot()
+    """
+
+    plotdata = mean_and_std(plotdata, bootstrapsize)
+
+    # abs of smallest positive value
+    linthreshy = plotdata['mean'][plotdata['mean'] > 0].min().min()
+    # abs of value closest to zero
+    #linthreshy = plotdata['mean'].iloc[plotdata.loc[:,('mean',0)].nonzero()].abs().min().min()
+
+    # create list of gevp elements to loop over
+    plotlabel = list(set([(i[0], i[1]) for i in plotdata.index.values]))
+    for graphlabel in plotlabel:
+
+        if verbose:
+            print '\tplotting ', graphlabel[0], ' - ', graphlabel[1]
+
+        # Prepare Figure
+        fig, ax = plt.subplots(1,1)
+
+        # Prepare Axes
+        ax.set_title(r'Gevp Element ${}$ - ${}$'.format(graphlabel[0], graphlabel[1]))
+        ax.set_xlabel(r'$t/a$', fontsize=12)
+        ax.set_ylabel(r'$C(t/a)$', fontsize=12)
+        if logscale:
+            ax.set_yscale('symlog', linthreshy=linthreshy)
+
+        # Select data for plot
+        graphdata = plotdata.xs(graphlabel, level=['gevp_row', 'gevp_col'])
+
+        plotting_function(graphdata, ax)
+
+        pdfplot.savefig(fig)
+        plt.close(fig)
+
+    return
 
 def gevp(gevp_data, bootstrapsize, pdfplot, logscale=False, verbose=False):
     """

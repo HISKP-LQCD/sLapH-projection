@@ -533,8 +533,8 @@ def main():
                         filename = '/%s_p%1i_%s_avg_%s.pdf' % (
                             correlator, p_cm, irrep, continuum_basis_string)
                         pdfplot = utils.create_pdfplot(path, filename)
-                        plot.average(plotdata_tmp, bootstrapsize, pdfplot, 
-                                        logscale, verbose)
+                        plot.for_each_gevp_element(plot.average, plotdata_tmp, 
+                                bootstrapsize, pdfplot, logscale, verbose)
                         pdfplot.close()
 
 
@@ -546,14 +546,15 @@ def main():
                         filename = '/%s_p%1i_%s_pcm-and-mu_%s.pdf' % (
                             correlator, p_cm, irrep, continuum_basis_string)
                         pdfplot = utils.create_pdfplot(path, filename)
-                        plot.pcm_and_mu(plotdata_tmp, bootstrapsize, pdfplot, 
-                                        logscale, verbose)
+                        plot.for_each_gevp_element(plot.pcm_and_mu, plotdata_tmp, 
+                                bootstrapsize, pdfplot, logscale, verbose)
                         pdfplot.close()
 
                     if plot_p_and_g:
-                        # sum over equivalent momenta
-                        plotdata_tmp = plotdata.sum(
-                            level=gevp_labels + ['p_{cm}', '\mu'] + gamma_labels)
+                        # Want to look at all individual contributions
+                        # Todo: Want to have imaginary part as well
+                        plotdata_tmp = [plotdata, contracted_data[ci].xs(
+                        (irrep, 1), level=('Irrep', 'mult')).apply(np.imag)]
 
                         filename = '/%s_p%1i_%s_gammas_%s.pdf' % (
                             correlator, p_cm, irrep, continuum_basis_string)
