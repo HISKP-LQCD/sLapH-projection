@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from pandas import Series, DataFrame
 
+# Used in isospin
 from ast import literal_eval
 
 from projection_interface_maple import read_sc, read_sc_2
