@@ -313,7 +313,7 @@ if __name__ == '__main__':
                                 reset_index(["operator_label_{so}", "operator_label_{si}"], 
                                         drop=True).\
                                 to_csv(path+"lattice-operators_{}_p{}_{}.tsv".format(
-                                        di.diagram, p_cm, di.irrep), sep="\t")
+                                        di.diagram, pcm, di.irrep), sep="\t")
 
                         filename = '/%s_p%1i_%s.h5' % (diagram, p_cm, irrep)
                         utils.write_hdf5_correlators(
@@ -525,8 +525,7 @@ if __name__ == '__main__':
     
                         if plot_experimental:
                             # sum over equivalent momenta
-                            plotdata_tmp = plotdata.sum(
-                                level=gevp_labels + ['p_{cm}', '\mu'] + gamma_labels)
+                            plotdata_tmp = plotdata.copy()
     
     			    filename = './%s_p%1i_%s_gammas_%s.html' % (
     				correlator, p_cm, irrep, continuum_basis_string)

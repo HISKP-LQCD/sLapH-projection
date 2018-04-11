@@ -3,8 +3,12 @@ import pandas as pd
 from pandas import Series, DataFrame
 
 import bokeh.palettes
-from bokeh.models import ColumnDataSource, Whisker
+from bokeh.models import ColumnDataSource, Whisker, HoverTool 
 from bokeh.plotting import figure, output_file, show
+from bokeh.layouts import column
+
+import sys
+
 
 # TODO: Symmetrization and Antisymmetrization. Take negative eigenvalues under
 # time reversal into account
@@ -86,7 +90,7 @@ def mean_and_std(df, bootstrapsize):
     return pd.concat([mean, std], axis=1, keys=['mean', 'std'])
 
 
-def plot_gevp_el(p, data, label_template, multiindex=False):
+def p_and_gammas(p, data):
     """
   Plot all rows of given pd.DataFrame into a single page as seperate graphs
 
@@ -100,44 +104,46 @@ def plot_gevp_el(p, data, label_template, multiindex=False):
       Format string that will be used to label the graphs. The format must fit
       the index of `data`
   """
-
-    symbol = ['v', '^', '<', '>', 's', 'p', '*', 'h', 'H', 'D', 'd', '8']
-
-    rows = data.index.values
+  
+    row_names = data.index.names
+    row_values = data.index.values
+    data = data.T.unstack().T
 
     # iterrows() returns a tuple (index, series)
     # index is a string (the index of data must be strings for this to work). In
     # data has a MultiIndex, index is a tuple of strings
     # series contains the mean and std for every timeslice
-    for counter, (index, series) in enumerate(data.iterrows()):
+    for counter, rv in enumerate(row_values):
 
-        T = series.index.levels[1].values
-        mean = series['mean'].values
-        std = series['std'].values
+        df = data.ix[rv]
+        df['upper'] = df['mean'] + df['std']
+        df['lower'] = df['mean'] - df['std']
 
+        for name,value in zip(row_names, rv):
+            df[name] = value
+        df.rename(columns={'p^{0}_{so}' : 'p0so',
+                           'p^{1}_{so}' : 'p1so',
+                           'p^{0}_{si}' : 'p0si',
+                           'p^{1}_{si}' : 'p1si',
+                           '\gamma^{0}_{so}' : 'g0so',
+                           '\gamma^{1}_{so}' : 'g1so',
+                           '\gamma^{0}_{si}' : 'g0si',
+                           '\gamma^{1}_{si}' : 'g1si'}, inplace=True)
+   
 #        # prepare parameters for plot design
-        if len(rows) == 1:
+        if len(rv) == 1:
             cmap_brg = ['red']
         else:
-            cmap_brg = bokeh.palettes.viridis(len(rows))
-#                np.asarray(range(len(rows))) * 256 / (len(rows) - 1))
+            cmap_brg = bokeh.palettes.viridis(len(row_values))
 #        shift = 2. / 5 / len(rows)
 
-        if multiindex:
-            label = label_template.format(*index)
-        else:
-            label = label_template.format(index)
-
-
-	source_error = ColumnDataSource(data=dict(T=T, lower=(mean-std), upper=(mean+std)))
-
-        w = Whisker(source=source_error, base="T", upper="upper", lower="lower", 
+        w = Whisker(source=ColumnDataSource(df), base="T", upper="upper", lower="lower", 
                 line_color=cmap_brg[counter])
         w.upper_head.line_color = cmap_brg[counter]
         w.lower_head.line_color = cmap_brg[counter]
 	p.add_layout(w)
-	p.circle(x=T, y=mean, color=cmap_brg[counter], legend=label)
 
+	p.circle(x='T', y='mean', source=ColumnDataSource(df), color=cmap_brg[counter])
 
 #        # plot
 #        plt.errorbar(
@@ -153,6 +159,8 @@ def plot_gevp_el(p, data, label_template, multiindex=False):
 #            elinewidth=0.5,
 #            markeredgecolor=cmap_brg[counter],
 #            linewidth='0.0')
+
+
 
 
 def experimental(plotdata, diagram, bootstrapsize, name, logscale=True, verbose=False):
@@ -198,38 +206,45 @@ def experimental(plotdata, diagram, bootstrapsize, name, logscale=True, verbose=
     # abs of value closest to zero
     #linthreshy = plotdata['mean'].iloc[plotdata.loc[:,('mean',0)].nonzero()].abs().min().min()
 
+    # list for subplots
+    ss = []
+
     # create list of gevp elements to loop over
-    plotlabel = list(set([(i[0], i[1], i[2], i[3], i[4]) for i in plotdata.index.values]))
+    plotlabel = list(set([(i[0], i[1], i[2], i[3]) for i in plotdata.index.values]))
     for graphlabel in plotlabel:
 
         if verbose:
-            print '\tplotting p_cm = ', graphlabel[2], \
-                ', q = ', graphlabel[3], \
-                ', \mu = ', graphlabel[4]
+            print '\tplotting p_cm = ', graphlabel[2], ', \mu = ', graphlabel[3]
 
         # prepare data to plot
-        graphdata = plotdata.xs(graphlabel, level=['gevp_row', 'gevp_col', 'p_{cm}', 'q_{so}', '\mu'])
+        graphdata = plotdata.xs(graphlabel, level=['gevp_row', 'gevp_col', 'p_{cm}', '\mu'])
 
         # prepare plot
-	title = r'Gevp Element ${}$ - ${}$, $\vec{{P}}_\textnormal{{cm}} = {}$, $\vec{{q}}_\textnormal{{rel}} = {}$, $\mu = {}$'.format(
-            graphlabel[0], graphlabel[1], graphlabel[2], graphlabel[3], graphlabel[4])
+	title = r'Gevp Element ${}$ - ${}$, $\vec{{P}}_\textnormal{{cm}} = {}$, $\mu = {}$'.format(
+            graphlabel[0], graphlabel[1], graphlabel[2], graphlabel[3])
+
+        #TODO: add color to hovertool
+        hover = HoverTool(tooltips=[
+            ("T", "@T"),
+            ("p^{0}_{so}", "@{p0so}"), 
+            ("p^{1}_{so}", "@{p1so}"),
+            ("p^{0}_{si}", "@{p0si}"),
+            ("p^{1}_{si}", "@{p1si}"),
+            ("\gamma^{0}_{so}", "@{g0so}"), 
+            ("\gamma^{1}_{so}", "@{g1so}"),
+            ("\gamma^{0}_{si}", "@{g0si}"),  
+            ("\gamma^{1}_{si}", "@{g1si}")])
 
         # create a new plot
-        p = figure(
-           tools="pan,box_zoom,reset,save",
-           y_axis_type="log", title=title,
-           x_axis_label=r'$t/a$', y_axis_label=r'${}(t/a)$'.format(diagram)
+        ss.append(figure(
+            tools=[hover],
+            y_axis_type="linear", title=title,
+            x_axis_label=r'$t/a$', y_axis_label=r'${}(t/a)$'.format(diagram)
+            )
         )
 
-#        if logscale:
-#            plt.yscale('symlog', linthreshy=linthreshy)
-
         # plot
-        plot_gevp_el(p, graphdata, r'$\gamma_{{so}} = {},{}$ -  $\gamma_{{si}} = {}$', multiindex=True)
+        p_and_gammas(ss[-1], graphdata)
 
-        # clean up for next plot
-#        plt.legend(numpoints=1, loc='best', fontsize=6)
-#	p.legend.location = "best"
-#        pdfplot.savefig()
-#        plt.clf()
+    show(column(ss))
 
