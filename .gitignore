@@ -3,6 +3,7 @@
 # plots
 *.pdf
 *.png
+*.html
 # data files
 *.dat
 *.npy
