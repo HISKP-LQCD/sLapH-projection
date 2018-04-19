@@ -573,7 +573,6 @@ if __name__ == '__main__':
     
                     if plot_avg:
     
-    
                         for correlator in correlators:
                             ci = ContractionType(correlator, irrep)
     
@@ -593,11 +592,11 @@ if __name__ == '__main__':
                             contracted_data_avg[ci] = contracted_data_avg[ci].sum(
                                 level=gevp_labels + ['p_{cm}'] + ['\mu'])
                             # average over rows.
-#                           contracted_data_avg[ci] = contracted_data_avg[ci].mean(
-#                               level=gevp_labels + ['p_{cm}'])
-#                           # average over p_cm.
-#                           contracted_data_avg[ci] = contracted_data_avg[ci].mean(
-#                               level=gevp_labels)
+                            contracted_data_avg[ci] = contracted_data_avg[ci].mean(
+                                level=gevp_labels + ['p_{cm}'])
+                            # average over p_cm.
+                            contracted_data_avg[ci] = contracted_data_avg[ci].mean(
+                                level=gevp_labels)
     
                         if flag['create gevp']:
                             if process == 'rho':

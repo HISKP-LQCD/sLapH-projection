@@ -5,6 +5,8 @@ plt.rc('text', usetex=True)
 from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.lines import Line2D
 
+import matplotlib.patheffects as PathEffects
+
 import numpy as np
 import pandas as pd
 from pandas import Series, DataFrame
@@ -461,7 +463,7 @@ def gevp(plotting_function, plotdata, bootstrapsize, pdfplot, logscale=False, ve
             seen.add(item)
             plotlabel.append(item)
     assert gmpy.is_square(len(plotlabel)), 'Gevp is not a square matrix'
-    gevp_size = gmpy.sqrt(len(plotlabel))
+    gevp_size = int(gmpy.sqrt(len(plotlabel)))
 
     # Prepare Figure
     fig, axes = plt.subplots(gevp_size, gevp_size, sharex=True, sharey=True)
@@ -474,11 +476,18 @@ def gevp(plotting_function, plotdata, bootstrapsize, pdfplot, logscale=False, ve
         # Prepare Axes
         ax = axes[counter // gevp_size, counter % gevp_size]
 #        ax.set_title(r'Gevp Element ${}$ - ${}$'.format(graphlabel[0], graphlabel[1]))
-#        ax.set_xlabel(r'$t/a$', fontsize=12)
-#        ax.set_ylabel(r'$C(t/a)$', fontsize=12)
+        ax.set_xlabel(r'$%s$' % graphlabel[1], fontsize=3, rotation=30)
+        ax.set_ylabel(r'$%s$' % graphlabel[0], fontsize=3, rotation=30)
+        ax.label_outer()
+
         if logscale:
 #            ax.locator_params(axis='y', numticks=3)
             ax.set_yscale('symlog', linthreshy=linthreshy)
+
+        ax.set_xticks([])
+#        ax.tick_params(labelleft='off')  
+        ax.set_yticks([])
+
 
         # Select data for plot
         graphdata = plotdata.xs(graphlabel, level=['gevp_row', 'gevp_col'])
@@ -486,8 +495,8 @@ def gevp(plotting_function, plotdata, bootstrapsize, pdfplot, logscale=False, ve
         plotting_function(graphdata, ax, scale=gevp_size)
         ax.legend_.remove()
 
-    plt.locator_params(axis='y', numticks=4)
-    plt.tight_layout()
+#    plt.locator_params(axis='y', numticks=2)
+    plt.tight_layout(h_pad=0.1, w_pad=0.15)
     pdfplot.savefig(fig)
     plt.close(fig)
 
