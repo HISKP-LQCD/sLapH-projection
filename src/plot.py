@@ -323,7 +323,7 @@ def p_and_gammas(plotdata, diagram, bootstrapsize, pdfplot, logscale=True, verbo
     plotdata = mean_and_std(plotdata, bootstrapsize)
 
     # abs of smallest positive value
-    linthreshy = plotdata['mean'][plotdata['mean'] > 0].min().min()
+    linthreshy = 1e3 * plotdata['mean'][plotdata['mean'] > 0].min().min()
     # abs of value closest to zero
     #linthreshy = plotdata['mean'].iloc[plotdata.loc[:,('mean',0)].nonzero()].abs().min().min()
 
@@ -335,24 +335,29 @@ def p_and_gammas(plotdata, diagram, bootstrapsize, pdfplot, logscale=True, verbo
             print '\tplotting p_cm = ', graphlabel[2], \
                 ', \mu = ', graphlabel[3]
 
-        # prepare data to plot
+        # Select data for plot
         graphdata = plotdata.xs(graphlabel, level=['gevp_row', 'gevp_col', 'p_{cm}', '\mu'])
-        # prepare plot
-        plt.title(r'Gevp Element ${}$ - ${}$, $\vec{{P}}_\textnormal{{cm}} = {}$, $\mu = {}$'.format(
-            graphlabel[0], graphlabel[1], graphlabel[2], graphlabel[3]))
-        plt.xlabel(r'$t/a$', fontsize=12)
-        plt.ylabel(r'$%s(t/a)$' % diagram, fontsize=12)
+
+        # Prepare Figure
+        fig, ax = plt.subplots(1,1)
+
+        # Prepare Axes
+        ax.set_title(r'Gevp Element ${}$ - ${}$, $\vec{{P}}_\textnormal{{cm}} = {}$, $\mu = {}$'.\
+            format(graphlabel[0], graphlabel[1], graphlabel[2], graphlabel[3]))
+        ax.set_xlabel(r'$t/a$', fontsize=12)
+        ax.set_ylabel(r'$%s(t/a)$' % diagram, fontsize=12)
 
         if logscale:
-            plt.yscale('symlog', linthreshy=linthreshy)
+            ax.set_yscale('symlog', linthreshy=linthreshy)
 
         # plot
-        plot_gevp_el(graphdata, r'$\gamma_{{so}} = {},{}$ -  $\gamma_{{si}} = {}$', multiindex=True)
+        plot_gevp_el_ax(graphdata, 'None', 1, ax)
+        plot_mean(graphdata.mean(axis=0), 1, ax)
 
         # clean up for next plot
-        plt.legend(numpoints=1, loc='best', fontsize=6)
-        pdfplot.savefig()
-        plt.clf()
+        #plt.legend(numpoints=1, loc='best', fontsize=6)
+        pdfplot.savefig(fig)
+        plt.close(fig)
 
 def for_each_gevp_element(plotting_function, plotdata, bootstrapsize, pdfplot,
                     logscale=False,
@@ -451,7 +456,7 @@ def gevp(plotting_function, plotdata, bootstrapsize, pdfplot, logscale=False, ve
     # abs of smallest positive value
     #linthreshy = plotdata['mean'][plotdata['mean'] > 0].min().min()
     # abs of value closest to zero
-    linthreshy = 10e2 * plotdata['mean'].iloc[plotdata.loc[:,('mean',0)].nonzero()].abs().min().min()
+    linthreshy = 1e3 * plotdata['mean'].iloc[plotdata.loc[:,('mean',0)].nonzero()].abs().min().min()
 
     # Create unique list of gevp elements to loop over while keeping order intact
     seen = set()
