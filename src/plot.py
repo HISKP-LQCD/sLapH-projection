@@ -154,63 +154,6 @@ def plot_gevp_el_ax(data, label_template, scale, ax, multiindex=False):
             markeredgecolor=cmap_brg[counter],
             linewidth='0.0')
 
-def plot_gevp_el(data, label_template, multiindex=False):
-    """
-  Plot all rows of given pd.DataFrame into a single page as seperate graphs
-
-  data : pd.DataFrame
-      
-      Table with any quantity as rows and multicolumns where level 0 contains
-      {'mean', 'std'} and level 1 contains 'T'
-  
-  label_template : string
-
-      Format string that will be used to label the graphs. The format must fit
-      the index of `data`
-  """
-
-    symbol = ['v', '^', '<', '>', 's', 'p', '*', 'h', 'H', 'D', 'd', '8']
-
-    rows = data.index.values
-
-    # iterrows() returns a tuple (index, series)
-    # index is a string (the index of data must be strings for this to work). In
-    # data has a MultiIndex, index is a tuple of strings
-    # series contains the mean and std for every timeslice
-    for counter, (index, series) in enumerate(data.iterrows()):
-
-        T = series.index.levels[1].values
-        mean = series['mean'].values
-        std = series['std'].values
-
-        # prepare parameters for plot design
-        if len(rows) == 1:
-            cmap_brg = ['r']
-        else:
-            cmap_brg = plt.cm.brg(
-                np.asarray(range(len(rows))) * 256 / (len(rows) - 1))
-        shift = 2. / 5 / len(rows)
-
-        if multiindex:
-            label = label_template.format(*index)
-        else:
-            label = label_template.format(index)
-
-        # plot
-        plt.errorbar(
-            T - 1./5 + shift * counter,
-            mean,
-            std,
-            fmt=symbol[counter % len(symbol)],
-            color=cmap_brg[counter],
-            label=label,
-            markersize=0.3,
-            capsize=0.3,
-            capthick=0.05,
-            elinewidth=0.05,
-            markeredgecolor=cmap_brg[counter],
-            linewidth='0.0')
-
 def plot_mean(data, scale, ax):
 
     symbol = Line2D.filled_markers
@@ -289,7 +232,7 @@ def pcm_and_mu(graphdata, ax, scale=1):
 
     return
 
-def p_and_gammas(plotdata, diagram, bootstrapsize, pdfplot, logscale=True, verbose=False):
+def p_and_gammas(data, diagram, bootstrapsize, pdfplot, logscale=True, verbose=False):
     """
     Create a multipage plot with a page for every element of the rho gevp. Each
     page contains one graph for each row of the irrep, summed over all momenta.
@@ -322,15 +265,24 @@ def p_and_gammas(plotdata, diagram, bootstrapsize, pdfplot, logscale=True, verbo
     utils.create_pdfplot()
     """
 
-    plotdata = mean_and_std(plotdata, bootstrapsize)
+    plotdata_real = mean_and_std(data.apply(np.real), bootstrapsize)
+    plotdata_imag = mean_and_std(data.apply(np.imag), bootstrapsize)
 
     # abs of smallest positive value
-    linthreshy = 1e3 * plotdata['mean'][plotdata['mean'] > 0].min().min()
+    linthreshy = 1e3 * plotdata_real['mean'][plotdata_real['mean'] > 0].min().min()
     # abs of value closest to zero
-    #linthreshy = plotdata['mean'].iloc[plotdata.loc[:,('mean',0)].nonzero()].abs().min().min()
+    #linthreshy = plotdata_real['mean'].iloc[plotdata_real.loc[:,('mean',0)].nonzero()].abs().min().min()
 
     # create list of gevp elements to loop over
-    plotlabel = list(set([(i[0], i[1], i[2], i[3]) for i in plotdata.index.values]))
+#    plotlabel = list(set([(i[0], i[1], i[2], i[3]) for i in plotdata_real.index.values]))
+    # Create unique list of gevp elements to loop over while keeping order intact
+    seen = set()
+    plotlabel= []
+    for item in [(i[0], i[1], i[2], i[3]) for i in plotdata_real.index.values]:
+        if item not in seen:
+            seen.add(item)
+            plotlabel.append(item)
+
     for graphlabel in plotlabel:
 
         if verbose:
@@ -338,26 +290,45 @@ def p_and_gammas(plotdata, diagram, bootstrapsize, pdfplot, logscale=True, verbo
                 ', \mu = ', graphlabel[3]
 
         # Select data for plot
-        graphdata = plotdata.xs(graphlabel, level=['gevp_row', 'gevp_col', 'p_{cm}', '\mu'])
+        graphdata_real = plotdata_real.xs(
+                graphlabel, level=['gevp_row', 'gevp_col', 'p_{cm}', '\mu'])
+        graphdata_imag = plotdata_imag.xs(
+                graphlabel, level=['gevp_row', 'gevp_col', 'p_{cm}', '\mu'])
 
         # Prepare Figure
-        fig, ax = plt.subplots(1,1)
+        fig, (ax_r, ax_i) = plt.subplots(1,2, sharex=True, sharey=True)
+        fig.suptitle(r'Gevp Element ${}$ - ${}$, $\vec{{P}}_\textnormal{{cm}} = {}$, $\mu = {}$'.\
+            format(graphlabel[0], graphlabel[1], graphlabel[2], graphlabel[3]))
 
         # Prepare Axes
-        ax.set_title(r'Gevp Element ${}$ - ${}$, $\vec{{P}}_\textnormal{{cm}} = {}$, $\mu = {}$'.\
-            format(graphlabel[0], graphlabel[1], graphlabel[2], graphlabel[3]))
-        ax.set_xlabel(r'$t/a$', fontsize=12)
-        ax.set_ylabel(r'$%s(t/a)$' % diagram, fontsize=12)
-
+        ax_r.set_title('Real')
+        ax_r.set_xlabel(r'$t/a$', fontsize=12)
+        ax_r.set_ylabel(r'$%s(t/a)$' % diagram, fontsize=12)
+        ax_r.label_outer()
         if logscale:
-            ax.set_yscale('symlog', linthreshy=linthreshy)
+            ax_r.set_yscale('symlog', linthreshy=linthreshy)
 
         # plot
-        plot_gevp_el_ax(graphdata, 'None', 1, ax)
-        plot_mean(graphdata.mean(axis=0), 1, ax)
+        plot_gevp_el_ax(graphdata_real, 'None', 1, ax_r)
+        plot_mean(graphdata_real.mean(axis=0), 1, ax_r)
+
+        # Prepare Axes
+        ax_i.set_title('Imag')
+        ax_i.set_xlabel(r'$t/a$', fontsize=12)
+        ax_i.set_ylabel(r'$%s(t/a)$' % diagram, fontsize=12)
+        ax_i.label_outer()
+        if logscale:
+            ax_r.set_yscale('symlog', linthreshy=linthreshy)
+            ax_i.set_yscale('symlog', linthreshy=linthreshy)
+
+
+        # plot
+        plot_gevp_el_ax(graphdata_imag, 'None', 1, ax_i)
+        plot_mean(graphdata_imag.mean(axis=0), 1, ax_i)
 
         # clean up for next plot
         #plt.legend(numpoints=1, loc='best', fontsize=6)
+        #fig.legend(numpoints=1, loc='lower center', fontsize=6)
         pdfplot.savefig(fig)
         plt.close(fig)
 

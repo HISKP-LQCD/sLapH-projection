@@ -561,13 +561,12 @@ if __name__ == '__main__':
                         if plot_p_and_g:
                             # Want to look at all individual contributions
                             # Todo: Want to have imaginary part as well
-                            plotdata_tmp = [plotdata, contracted_data[ci].xs(
-                            (irrep, 1), level=('Irrep', 'mult')).apply(np.imag)]
-    
+                            plotdata_tmp = contracted_data[ci].xs(
+                                    (irrep, 1), level=('Irrep', 'mult'))    
                             filename = '/%s_p%1i_%s_gammas_%s.pdf' % (
                                 correlator, p_cm, irrep, continuum_basis_string)
                             pdfplot = utils.create_pdfplot(path, filename)
-                            plot.p_and_gammas(plotdata_tmp[0], correlator, bootstrapsize, 
+                            plot.p_and_gammas(plotdata_tmp, correlator, bootstrapsize, 
                                         pdfplot, logscale, verbose)
                             pdfplot.close()
     
