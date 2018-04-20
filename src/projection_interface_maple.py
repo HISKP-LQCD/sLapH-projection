@@ -53,6 +53,7 @@ def read_sc_2(p_cm_vecs, path, verbose=True, j=1):
     df.rename(columns=lambda x: x.strip(), inplace=True)
 
     df['p_{cm}'] = [p_cm_vec] * len(df)
+    del df['name']
     df.rename(columns={'alpha' : '\mu'}, inplace=True)
     del df['beta']
     df['mult'] = 1
