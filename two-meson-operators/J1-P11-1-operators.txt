@@ -1,1 +1,1 @@
-Irrep 	 alpha 	 beta 	 coefficient 	  p^1 	 p^2 	 q
+Irrep 	 alpha 	 beta 	 name 	 coefficient 	  p^1 	 p^2 	 q
