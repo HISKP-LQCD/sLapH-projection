@@ -383,29 +383,27 @@ def correlate_operators(operator_so, operator_si, verbose):
 
   lattice_operators.reset_index(inplace=True)
   index = lattice_operators.columns.difference(['coefficient']).tolist()
-  order = { 'Irrep' : 0, 
-            'mult' : 1,             
-            'p_{cm}' : 2, 
-            'operator_label_{so}' : 3,
-            'operator_label_{si}' : 4,
-            '\mu' : 5, 
-            'q_{so}' : 6, 
-            'q_{si}' : 7, 
-            'p^{0}_{so}' : 8, 
-            'p^{1}_{so}' : 9, 
-            'p^{0}_{si}' : 10, 
-            'p^{1}_{si}' : 11, 
-            '\gamma^{0}_{so}' : 12, 
-            '\gamma^{1}_{so}' : 13, 
-            '\gamma^{0}_{si}' : 14, 
-            '\gamma^{1}_{si}' : 15} 
+  order = { r'Irrep' : 0, 
+            r'mult' : 1,             
+            r'p_{cm}' : 2, 
+            r'operator_label_{so}' : 3,
+            r'operator_label_{si}' : 4,
+            r'\mu' : 5, 
+            r'\beta' : 6, 
+            r'q_{so}' : 7, 
+            r'q_{si}' : 8, 
+            r'p^{0}_{so}' : 9, 
+            r'p^{1}_{so}' : 10, 
+            r'p^{0}_{si}' : 11, 
+            r'p^{1}_{si}' : 12, 
+            r'\gamma^{0}_{so}' : 13, 
+            r'\gamma^{1}_{so}' : 14, 
+            r'\gamma^{0}_{si}' : 15, 
+            r'\gamma^{1}_{si}' : 16} 
   index = sorted(index, key=lambda x : order[x])
   lattice_operators.set_index(index, inplace=True)
 
   lattice_operators = lattice_operators.sum(axis=0, level=index)
-
-  # Munging the result: Delete rows with coefficient 0, 
-  lattice_operators = lattice_operators[lattice_operators['coefficient'] != 0]
 
   if verbose >= 1:
     print 'lattice_operators'

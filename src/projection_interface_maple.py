@@ -56,7 +56,6 @@ def read_sc_2(p_cm_vecs, path, verbose=True, j=1):
     df['p_{cm}'] = [p_cm_vec] * len(df)
     del df['name']
     df.rename(columns={'alpha' : r'\mu', 'beta' : r'\beta'}, inplace=True)
-    df = df.set_index(['Irrep', 'mult', 'p_{cm}', '\mu', r'\beta', ])
 
     df['p^1'] = df['p^1'].apply(literal_eval).apply(str)
     df['p^2'] = df['p^2'].apply(literal_eval).apply(str)
@@ -83,6 +82,15 @@ def read_sc_2(p_cm_vecs, path, verbose=True, j=1):
     df['M^{1}'] = 0
 
     df['coefficient'] = df['coefficient'].str.replace('^', '**').apply(aeval)
+
+    df['coefficient'] = df.groupby(
+        ['Irrep', 'mult', 'p_{cm}', '\mu', r'\beta', 'p^{0}', 'p^{1}', 'q', 'M^{0}', 'M^{1}', 'J^{0}', 'J^{1}']).transform('sum')
+    df.drop_duplicates(inplace=True)
+
+    # Munging the result: Delete rows with coefficient 0, 
+    df = df[df['coefficient'] != 0]
+
+    df = df.set_index(['Irrep', 'mult', 'p_{cm}', '\mu', r'\beta', ])
 
     if verbose >= 2:
       print 'Two-particle projection coefficients for {}'.format(p_cm_vec)
@@ -120,7 +128,14 @@ def read_sc(p_cm_vecs, path, verbose=True, j=1):
     df['M^{0}'] = df['M^{0}'].apply(int)
     df['coefficient'] = df['coefficient'].str.replace('^', '**').apply(aeval)
 
-    df = df.set_index(['Irrep', 'mult', 'p_{cm}', '\mu', r'\beta'])
+    df['coefficient'] = df.groupby(
+        ['Irrep', 'mult', 'p_{cm}', '\mu', r'\beta', 'p^{0}', 'J^{0}', 'M^{0}']).transform('sum')
+    df.drop_duplicates(inplace=True)
+
+    # Munging the result: Delete rows with coefficient 0, 
+    df = df[df['coefficient'] != 0]
+
+    df = df.set_index(['Irrep', 'mult', 'p_{cm}', '\mu', r'\beta', ])
 
     if verbose >= 2:
       print 'One-particle projection coefficients for {}'.format(p_cm_vec)
