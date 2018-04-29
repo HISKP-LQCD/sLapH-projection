@@ -405,6 +405,8 @@ def correlate_operators(operator_so, operator_si, verbose):
 
   lattice_operators = lattice_operators.sum(axis=0, level=index)
 
+  lattice_operators = lattice_operators[lattice_operators['coefficient'] != 0]
+
   if verbose >= 1:
     print 'lattice_operators'
   if verbose == 1:
