@@ -580,56 +580,59 @@ if __name__ == '__main__':
   
           # TODO: Include beta
           if plot_avg:
+
+            for beta in np.unique(contracted_data[ci].index.get_level_values(r'\beta')):
+ 
+              for correlator in correlators:
+                ci = ContractionType(correlator, irrep)
   
-            for correlator in correlators:
-              ci = ContractionType(correlator, irrep)
+                # Only real part is physically relevant at that point
+                contracted_data_avg[ci] = contracted_data[ci].apply(
+                  np.real)
+                contracted_data_avg[ci] = contracted_data_avg[ci].xs(beta, level=r'\beta')
+                gevp_labels = ['Irrep', 'mult', 'gevp_row', 'gevp_col']
+                momentum_labels = \
+                  [col for col in contracted_data_avg[ci].columns if 'p^{' in col]
+                gamma_labels = \
+                  [col for col in contracted_data_avg[ci].columns if 'gamma' in col]
   
-              # Only real part is physically relevant at that point
-              contracted_data_avg[ci] = contracted_data[ci].apply(
-                np.real)
-              gevp_labels = ['Irrep', 'mult', 'gevp_row', 'gevp_col']
-              momentum_labels = \
-                [col for col in contracted_data_avg[ci].columns if 'p^{' in col]
-              gamma_labels = \
-                [col for col in contracted_data_avg[ci].columns if 'gamma' in col]
+                # sum over gamma structures.
+                contracted_data_avg[ci] = contracted_data_avg[ci].sum(
+                  level=gevp_labels + ['p_{cm}'] + ['\mu'] + momentum_labels)
+                # sum over equivalent momenta
+                contracted_data_avg[ci] = contracted_data_avg[ci].sum(
+                  level=gevp_labels + ['p_{cm}'] + ['\mu'])
+                # average over rows.
+                contracted_data_avg[ci] = contracted_data_avg[ci].mean(
+                  level=gevp_labels + ['p_{cm}'])
+                # average over p_cm.
+                contracted_data_avg[ci] = contracted_data_avg[ci].mean(
+                  level=gevp_labels)
   
-              # sum over gamma structures.
-              contracted_data_avg[ci] = contracted_data_avg[ci].sum(
-                level=gevp_labels + ['p_{cm}'] + ['\mu'] + momentum_labels)
-              # sum over equivalent momenta
-              contracted_data_avg[ci] = contracted_data_avg[ci].sum(
-                level=gevp_labels + ['p_{cm}'] + ['\mu'])
-              # average over rows.
-              contracted_data_avg[ci] = contracted_data_avg[ci].mean(
-                level=gevp_labels + ['p_{cm}'])
-              # average over p_cm.
-              contracted_data_avg[ci] = contracted_data_avg[ci].mean(
-                level=gevp_labels)
-  
-            if flag['create gevp']:
-              if process == 'rho':
-                gevp_data = setup_gevp.build_gevp(contracted_data_avg, 'rho',
-                                  irrep, verbose)
+              if flag['create gevp']:
+                if process == 'rho':
+                  gevp_data = setup_gevp.build_gevp(contracted_data_avg, 'rho',
+                                    irrep, verbose)
         
-                gevp_data = gevp_data.xs((irrep, 1), level=('Irrep', 'mult'))
-              elif process == 'pipi':
-                print "Warning: I=2 Gevp currently not implemented"
+                  gevp_data = gevp_data.xs((irrep, 1), level=('Irrep', 'mult'))
+                elif process == 'pipi':
+                  print "Warning: I=2 Gevp currently not implemented"
   
-#               for p_cm_vec in list_of_pcm:
-              filename = 'Gevp_p%1d_%s.pdf' % (p_cm, irrep)
-              pdfplot = utils.create_pdfplot(path, filename)
-              plot.gevp(plot.pcm_and_mu, gevp_data, bootstrapsize, pdfplot, 
-                  logscale, verbose)
-              pdfplot.close()
+#                 for p_cm_vec in list_of_pcm:
+                filename = 'Gevp_p%1d_%s_beta%s.pdf' % (p_cm, irrep, beta)
+                pdfplot = utils.create_pdfplot(path, filename)
+                plot.gevp(plot.pcm_and_mu, gevp_data, bootstrapsize, pdfplot, 
+                    logscale, verbose)
+                pdfplot.close()
   
-#               for p_cm_vec in list_of_pcm:
-#               filename = 'Gevp_p001_%s.pdf' % (irrep)
-#               pdfplot = utils.create_pdfplot(path, filename)
-#               plot.gevp(plot.pcm_and_mu, gevp_data.xs(str((0,0,1)), level="p_{cm}", drop_level=False), bootstrapsize, pdfplot, 
-#                   logscale, verbose)
-#               pdfplot.close()
+#                 for p_cm_vec in list_of_pcm:
+#                 filename = 'Gevp_p001_%s.pdf' % (irrep)
+#                 pdfplot = utils.create_pdfplot(path, filename)
+#                 plot.gevp(plot.pcm_and_mu, gevp_data.xs(str((0,0,1)), level="p_{cm}", drop_level=False), bootstrapsize, pdfplot, 
+#                     logscale, verbose)
+#                 pdfplot.close()
   
-            else:
-              print 'Warning: skipped plot_avg because gevp is incomplete'
+              else:
+                print 'Warning: skipped plot_avg because gevp is incomplete'
   except KeyboardInterrupt:
     pass

@@ -453,7 +453,8 @@ def gevp(plotting_function, plotdata, bootstrapsize, pdfplot, logscale=False, ve
         ax = axes[counter // gevp_size, counter % gevp_size]
 #        ax.set_title(r'Gevp Element ${}$ - ${}$'.format(graphlabel[0], graphlabel[1]))
         ax.set_xlabel(r'$%s$' % graphlabel[1], fontsize=3, rotation=30)
-        ax.set_ylabel(r'$%s$' % graphlabel[0], fontsize=3, rotation=30)
+        ax.set_ylabel(r'$%s$' % graphlabel[0], fontsize=3, rotation=30)	
+        # https://stackoverflow.com/questions/4209467/matplotlib-share-x-axis-but-dont-show-x-axis-tick-labels-for-both-just-one
         ax.label_outer()
 
         if logscale:
@@ -463,6 +464,7 @@ def gevp(plotting_function, plotdata, bootstrapsize, pdfplot, logscale=False, ve
         ax.set_xticks([])
 #        ax.tick_params(labelleft='off')  
         ax.set_yticks([])
+
 
 
         # Select data for plot
