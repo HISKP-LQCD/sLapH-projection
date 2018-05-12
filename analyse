@@ -152,92 +152,33 @@ if __name__ == '__main__':
         print 80 * '#'
         print 'p_cm = ', p_cm
   
-      for diagram in diagrams:
-        raw_data.set_lookup_p(0, p_cm, diagram)
-  
       ########################################################################
-      # read data for pion
-      if flag_pion:
-        diagram = 'C2c'
-        directory = directories[0]
-  
-        lookup_cnfg = raw_data.set_lookup_cnfg(sta_cnfg, end_cnfg, del_cnfg,
-                             missing_configs, verbose)
-        pion_qn = raw_data.set_lookup_qn(
-          diagram,
-          p_cm,
-          p_cutoff,
-          gamma_input,
-          process=process,
-          verbose=verbose)
-  
-        pion_data = raw_data.read(lookup_cnfg, pion_qn, diagram, T,
-                        directory, verbose)
-  
-        # write data
-        path = '%s/%s/0_raw-data/' % (outpath, ensemble)
-        filename = '%s_p%1i.h5' % ('pi', p_cm)
-        utils.write_hdf5_correlators(path, filename, pion_data, 'data',
-                       verbose)
-        utils.write_hdf5_correlators(
-          path, filename, pion_qn, 'qn', verbose=False)
-  
+      # read diagrams for correlators contributing to rho
+      if flag['read']:
+        raw_data.read(T, diagrams, directories, sta_cnfg, end_cnfg, del_cnfg, 
+                missing_configs, process, p_cm, p_cutoff, gamma_input, verbose)
+
+      if flag_pion:    
+        raw_data.read(T, ['C2c'], directories[:1], sta_cnfg, end_cnfg, del_cnfg, 
+                missing_configs, process, p_cm, p_cutoff, gamma_input, verbose)
+
         path = '%s/%s/3_gevp-data/' % (outpath, ensemble)
         filename = 'pi_p%1i.dat' % (p_cm)
         utils.write_ascii_correlators(
           path, filename, pion_data.mean(axis=1).apply(np.real), verbose)
+ 
+      # helper function to read all raw data from disk
+      path = '%s/%s/0_raw-data/' % (outpath, ensemble)
   
-      ########################################################################
-      # read diagrams for correlators contributing to rho
-      if flag['read']:
-        data = {}
-        lookup_qn = {}
-        for diagram, directory in zip(diagrams, directories):
-  
-          if verbose:
-            print '\tReading data for %s' % (diagram)
-  
-          lookup_cnfg = raw_data.set_lookup_cnfg(
-            sta_cnfg, end_cnfg, del_cnfg, missing_configs, verbose)
-  
-          # TODO: That needs to be refactored when going to a larger operator
-          #     basis
-          lookup_qn[diagram] = raw_data.set_lookup_qn(
-            diagram,
-            p_cm,
-            p_cutoff,
-            gamma_input,
-            process=process,
-            verbose=verbose)
-  
-          data[diagram] = raw_data.read(lookup_cnfg,
-                            lookup_qn[diagram], diagram,
-                            T, directory, verbose)
-  
-          # write data
-          # TODO: Writing into same file only works in append mode
-          path = '%s/%s/0_raw-data/' % (outpath, ensemble)
-          filename = '%s_p%1i.h5' % (diagram, p_cm)
-          utils.write_hdf5_correlators(path, filename, data[diagram],
-                         'data', verbose)
-          filename = '%s_p%1i_qn.h5' % (diagram, p_cm)
-          utils.write_hdf5_correlators(
-            path, filename, lookup_qn[diagram], 'qn', verbose=False)
-  
-      elif (flag['subduce'] or flag['contract'] or flag['create gevp'] or
-          flag['plot']):
-        # helper function to read all raw data from disk
-        path = '%s/%s/0_raw-data/' % (outpath, ensemble)
-  
-        data = {}
-        lookup_qn = {}
-        for diagram in diagrams:
-          filename = '%s_p%1i.h5' % (diagram, p_cm)
-          data[diagram] = utils.read_hdf5_correlators(
-            path + filename, 'data')
-          filename = '%s_p%1i_qn.h5' % (diagram, p_cm)
-          lookup_qn[diagram] = utils.read_hdf5_correlators(
-            path + filename, 'qn')
+      data = {}
+      lookup_qn = {}
+      for diagram in diagrams:
+        filename = '%s_p%1i.h5' % (diagram, p_cm)
+        data[diagram] = utils.read_hdf5_correlators(
+          path + filename, 'data')
+        filename = '%s_p%1i_qn.h5' % (diagram, p_cm)
+        lookup_qn[diagram] = utils.read_hdf5_correlators(
+          path + filename, 'qn')
   
       ########################################################################
       # Subduction

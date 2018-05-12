@@ -179,7 +179,7 @@ def set_groupname(diagram, s):
 ################################################################################
 # reading configurations
 
-def read(lookup_cnfg, lookup_qn, diagram, T, directory, verbose=0):
+def read_diagram(lookup_cnfg, lookup_qn, diagram, T, directory, verbose=0):
   """
   Read resulting correlators from contraction code and creates a pd.DataFrame
 
@@ -265,3 +265,35 @@ def read(lookup_cnfg, lookup_qn, diagram, T, directory, verbose=0):
 
   return data
 
+##########################################################################################
+def read(T, diagrams, directories, sta_cnfg, end_cnfg, del_cnfg, missing_configs, 
+        process, p_cm, p_cutoff, gamma_input, verbose)
+
+  for diagram, directory in zip(diagrams, directories):
+
+    if verbose:
+      print '\tReading data for %s' % (diagram)
+  
+    lookup_cnfg = set_lookup_cnfg(
+      sta_cnfg, end_cnfg, del_cnfg, missing_configs, verbose)
+  
+    # TODO: That needs to be refactored when going to a larger operator
+    #     basis
+    lookup_qn[diagram] = set_lookup_qn(
+      diagram,
+      p_cm,
+      p_cutoff,
+      gamma_input,
+      process=process,
+      verbose=verbose)
+  
+    data = read(lookup_cnfg, lookup_qn, diagram, T, directory, verbose)
+  
+    # write data
+    # TODO: Writing into same file only works in append mode
+    path = '%s/%s/0_raw-data/' % (outpath, ensemble)
+    filename = '%s_p%1i.h5' % (diagram, p_cm)
+    utils.write_hdf5_correlators(path, filename, data, 'data', verbose)
+    filename = '%s_p%1i_qn.h5' % (diagram, p_cm)
+    utils.write_hdf5_correlators(path, filename, lookup_qn, 'qn', verbose=False)
+  
