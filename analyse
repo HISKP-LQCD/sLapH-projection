@@ -158,6 +158,7 @@ if __name__ == '__main__':
         raw_data.read(T, diagrams, directories, sta_cnfg, end_cnfg, del_cnfg, 
                 missing_configs, process, p_cm, p_cutoff, gamma_input, verbose)
 
+      # TODO: Is gamma_input giving the right quantum numbers?
       if flag_pion:    
         raw_data.read(T, ['C2c'], directories[:1], sta_cnfg, end_cnfg, del_cnfg, 
                 missing_configs, process, p_cm, p_cutoff, gamma_input, verbose)
@@ -166,20 +167,24 @@ if __name__ == '__main__':
         filename = 'pi_p%1i.dat' % (p_cm)
         utils.write_ascii_correlators(
           path, filename, pion_data.mean(axis=1).apply(np.real), verbose)
- 
-      # helper function to read all raw data from disk
+  
+  
+      ########################################################################
+      # Setup of list of pcm and irrep to loop over
       path = '%s/%s/0_raw-data/' % (outpath, ensemble)
-  
-      data = {}
-      lookup_qn = {}
-      for diagram in diagrams:
-        filename = '%s_p%1i.h5' % (diagram, p_cm)
-        data[diagram] = utils.read_hdf5_correlators(
-          path + filename, 'data')
-        filename = '%s_p%1i_qn.h5' % (diagram, p_cm)
-        lookup_qn[diagram] = utils.read_hdf5_correlators(
-          path + filename, 'qn')
-  
+      filename = '%s_p%1i_qn.h5' % (diagram[0], p_cm)
+      lookup_qn = utils.read_hdf5_correlators(path + filename, 'qn')
+
+      # Angular momentum for particles of interest
+      if process == 'rho':
+        j = 1
+      elif process == 'pipi':
+        j = 0
+ 
+      # helper function to read all subduced data from disk
+      list_of_pcm = lookup_qn['p_{cm}'].unique()
+      list_of_irreps = projection.get_list_of_irreps(list_of_pcm, path_to_sc, j)
+ 
       ########################################################################
       # Subduction
   
@@ -188,40 +193,37 @@ if __name__ == '__main__':
       ContractionType = collections.namedtuple('ContractionType',
                            ['diagram', 'irrep'])
   
-      # Angular momentum for particles of interest
-      if process == 'rho':
-        j = 1
-      elif process == 'pipi':
-        j = 0
-  
+ 
       if flag['subduce']:
   
         subduced_data = {}
+
+        list_of_irreps = projection.get_list_of_irreps(list_of_pcm, path_to_sc, j)
+ 
+        for irrep in list_of_irreps:
+         print '\t  Subducing into %s' % irrep
   
-        for diagram in diagrams:
-          print '\tSubducing data for %s' % diagram
-  
-          print lookup_qn[diagram].columns
-  
-          list_of_pcm = lookup_qn[diagram]['p_{cm}'].unique()
-  
-          # Express :math:`O^{J,M}` in terms of physical Dirac operators
-          # specified in `gamma_input`
-          continuum_operators = projection.set_continuum_basis(
-            gamma_input, continuum_basis_string, verbose)
-  
-          # read coefficients for correlation function, little group
-          # and irreducible representation given by diagram, p_cm
-          # irrep and mult
-          lattice_operators_so, lattice_operators_si = projection.read_lattice_basis(
-            diagram, list_of_pcm, path_to_sc, path_to_sc_2, j, verbose)
-  
-          list_of_irreps = projection.get_list_of_irreps(list_of_pcm, path_to_sc, j)
-  
-          for irrep in list_of_irreps:
-            print '\t  Subducing into %s' % irrep
+          for diagram in diagrams:
             di = ContractionType(diagram, irrep)
+            print '\tSubducing data for %s' % diagram
+   
+            path = '%s/%s/0_raw-data/' % (outpath, ensemble)
+            filename = '%s_p%1i.h5' % (diagram, p_cm)
+            data = utils.read_hdf5_correlators(path + filename, 'data')
+            filename = '%s_p%1i_qn.h5' % (diagram, p_cm)
+            lookup_qn = utils.read_hdf5_correlators(path + filename, 'qn')
+
+            # Express :math:`O^{J,M}` in terms of physical Dirac operators
+            # specified in `gamma_input`
+            continuum_operators = projection.set_continuum_basis(
+              gamma_input, continuum_basis_string, verbose)
   
+            # read coefficients for correlation function, little group
+            # and irreducible representation given by diagram, p_cm
+            # irrep and mult
+            lattice_operators_so, lattice_operators_si = projection.read_lattice_basis(
+              diagram, list_of_pcm, path_to_sc, path_to_sc_2, j, verbose)
+
             operators_so, operators_si = projection.project_operators(
               di, lattice_operators_so, lattice_operators_si, 
               continuum_operators, verbose)
@@ -233,10 +235,9 @@ if __name__ == '__main__':
               operators_so, operators_si, verbose)
   
             lookup_corr = subduction.set_lookup_corr(
-              lattice_operators, lookup_qn[di.diagram], verbose)
+              lattice_operators, lookup_qn, verbose)
 
-            subduced_data[di] = subduction.project_correlators(
-              data[di.diagram], lookup_corr)
+            subduced_data[di] = subduction.project_correlators(data, lookup_corr)
   
             # write data to disc
             path = '%s/%s/1_subduced-data/' % (outpath, ensemble)
@@ -253,11 +254,7 @@ if __name__ == '__main__':
                                irrep)], 'data', verbose)
   
       elif (flag['contract'] or flag['create gevp'] or flag['plot']):
-  
-        # helper function to read all subduced data from disk
-        list_of_pcm = lookup_qn[diagram]['p_{cm}'].unique()
-        list_of_irreps = projection.get_list_of_irreps(list_of_pcm, path_to_sc, j)
-  
+ 
         path = '%s/%s/1_subduced-data/' % (outpath, ensemble)
   
         subduced_data = {}
