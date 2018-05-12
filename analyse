@@ -193,15 +193,14 @@ if __name__ == '__main__':
       ContractionType = collections.namedtuple('ContractionType',
                            ['diagram', 'irrep'])
   
- 
-      if flag['subduce']:
-  
-        subduced_data = {}
+      subduced_data = {}
 
-        list_of_irreps = projection.get_list_of_irreps(list_of_pcm, path_to_sc, j)
+      list_of_irreps = projection.get_list_of_irreps(list_of_pcm, path_to_sc, j)
  
-        for irrep in list_of_irreps:
-         print '\t  Subducing into %s' % irrep
+      for irrep in list_of_irreps:
+        print '\t  Subducing into %s' % irrep
+
+        if flag['subduce']:
   
           for diagram in diagrams:
             di = ContractionType(diagram, irrep)
@@ -253,178 +252,175 @@ if __name__ == '__main__':
               path, filename, subduced_data[(diagram,
                                irrep)], 'data', verbose)
   
-      elif (flag['contract'] or flag['create gevp'] or flag['plot']):
+        elif (flag['contract'] or flag['create gevp'] or flag['plot']):
  
-        path = '%s/%s/1_subduced-data/' % (outpath, ensemble)
+          path = '%s/%s/1_subduced-data/' % (outpath, ensemble)
   
-        subduced_data = {}
-        for diagram in diagrams:
-          for irrep in list_of_irreps:
-            di = ContractionType(diagram, irrep)
+          subduced_data = {}
+          for diagram in diagrams:
+            for irrep in list_of_irreps:
+              di = ContractionType(diagram, irrep)
   
-            filename = '/%s_p%1i_%s.h5' % (diagram, p_cm, irrep)
-            subduced_data[di] = utils.read_hdf5_correlators(
-              path + filename, 'data')
+              filename = '/%s_p%1i_%s.h5' % (diagram, p_cm, irrep)
+              subduced_data[di] = utils.read_hdf5_correlators(
+                path + filename, 'data')
   
-      ############################################################################
-      # Wick contraction
+        ############################################################################
+        # Wick contraction
   
-      if flag['contract']:
-        correlators = wick.set_lookup_correlators(diagrams)
+        if flag['contract']:
+          correlators = wick.set_lookup_correlators(diagrams)
   
-        contracted_data = {}
-        contracted_data_avg = {}
-  
-        for correlator in correlators:
-          print '\tContracting data for %s' % correlator
-          for irrep in list_of_irreps:
-            print '\t  Contracting in %s' % irrep
-            ci = ContractionType(correlator, irrep)
-  
-            if process == 'rho':
-              # rho analysis
-              contracted_data[ci] = wick.rho(
-                subduced_data, correlator, irrep, verbose)
-            elif process == 'pipi':
-              # pipi I=2 analysis
-              contracted_data[ci] = wick.pipi(
-                subduced_data, correlator, irrep, verbose)
-  
-            # write data to disc
-            path = '%s/%s/2_contracted-data/' % (outpath, ensemble)
-            filename = '/%s_p%1i_%s.h5' % (correlator, p_cm, irrep)
-            utils.write_hdf5_correlators(
-              path, filename, contracted_data[ci], 'data', verbose)
-  
-            # Only real part is physically relevant at that point
-            contracted_data_avg[ci] = contracted_data[ci].apply(
-              np.real)
-            gevp_labels = ['Irrep', 'mult', 'gevp_row', 'gevp_col']
-            momentum_labels = \
-              [col for col in contracted_data_avg[ci].columns if 'p^{' in col]
-            gamma_labels = \
-              [col for col in contracted_data_avg[ci].columns if 'gamma' in col]
-  
-            # sum over gamma structures.
-            contracted_data_avg[ci] = contracted_data_avg[ci].sum(
-              level=gevp_labels + ['p_{cm}'] + ['\mu'] + momentum_labels)
-            # sum over equivalent momenta
-            contracted_data_avg[ci] = contracted_data_avg[ci].sum(
-              level=gevp_labels + ['p_{cm}'] + ['\mu'])
-            # average over rows.
-            contracted_data_avg[ci] = contracted_data_avg[ci].mean(
-              level=gevp_labels + ['p_{cm}'])
-            # average over p_cm.
-            contracted_data_avg[ci] = contracted_data_avg[ci].mean(
-              level=gevp_labels)
-  
-            # write data to disc
-            path = '%s/%s/2_contracted-data/' % (outpath, ensemble)
-            filename = '/%s_p%1i_%s_avg.h5' % (correlator, p_cm, irrep)
-            utils.write_hdf5_correlators(path, filename,
-                           contracted_data_avg[ci],
-                           'data', verbose)
-  
-      elif (flag['create gevp'] or flag['plot']):
-        correlators = wick.set_lookup_correlators(diagrams)
-  
-        contracted_data = {}
-        contracted_data_avg = {}
-  
-        for correlator in correlators:
-          for irrep in list_of_irreps:
-            ci = ContractionType(correlator, irrep)
-            path = '%s/%s/2_contracted-data/' % (outpath, ensemble)
-  
-            filename = '/%s_p%1i_%s.h5' % (correlator, p_cm, irrep)
-            contracted_data[ci] = \
-              utils.read_hdf5_correlators(path+filename, 'data')
-  
-            # Only real part is physically relevant at that point
-            contracted_data_avg[ci] = contracted_data[ci].apply(
-              np.real)
-            gevp_labels = ['Irrep', 'mult', 'gevp_row', 'gevp_col']
-            momentum_labels = \
-              [col for col in contracted_data_avg[ci].columns if 'p^{' in col]
-            gamma_labels = \
-              [col for col in contracted_data_avg[ci].columns if 'gamma' in col]
-  
-            # sum over gamma structures.
-            contracted_data_avg[ci] = contracted_data_avg[ci].sum(
-              level=gevp_labels + ['p_{cm}'] + ['\mu'] + momentum_labels)
-            # sum over equivalent momenta
-            contracted_data_avg[ci] = contracted_data_avg[ci].sum(
-              level=gevp_labels + ['p_{cm}'] + ['\mu'])
-            # average over rows.
-            contracted_data_avg[ci] = contracted_data_avg[ci].mean(
-              level=gevp_labels + ['p_{cm}'])
-            # average over p_cm.
-            contracted_data_avg[ci] = contracted_data_avg[ci].mean(
-              level=gevp_labels)
-  
-      ########################################################################
-      # Gevp construction
-  
-      if flag['create gevp']:
-        print '\tCreating gevp'
-        if process:
-          mode = "rho"
-        else:
-          mode = "pipi"
-  
-        for correlator in correlators:
-          for irrep in list_of_irreps:
-            ci = ContractionType(correlator, irrep)
-  
-            # Only real part is physically relevant at that point
-            contracted_data_avg[ci] = contracted_data[ci].apply(
-              np.real)
-            gevp_labels = ['Irrep', 'mult', 'gevp_row', 'gevp_col']
-            momentum_labels = \
-              [col for col in contracted_data_avg[ci].columns if 'p^{' in col]
-            gamma_labels = \
-              [col for col in contracted_data_avg[ci].columns if 'gamma' in col]
-  
-            # sum over gamma structures.
-            contracted_data_avg[ci] = contracted_data_avg[ci].sum(
-              level=gevp_labels + ['p_{cm}'] + ['\mu'] + momentum_labels)
-            # sum over equivalent momenta
-            contracted_data_avg[ci] = contracted_data_avg[ci].sum(
-              level=gevp_labels + ['p_{cm}'] + ['\mu'])
-            # average over rows.
-#             contracted_data_avg[ci] = contracted_data_avg[ci].mean(
-#               level=gevp_labels + ['p_{cm}'])
-#             # average over p_cm.
-#             contracted_data_avg[ci] = contracted_data_avg[ci].mean(
-#               level=gevp_labels)
-  
-        for irrep in list_of_irreps:
-          # loop over target irreps
-  
-          gevp_data = setup_gevp.build_gevp(contracted_data_avg, mode,
-                            irrep, verbose)
-  
-          gevp_data = gevp_data.xs((irrep, 1), level=('Irrep', 'mult'))
-  
-          path = '%s/%s/3_gevp-data/' % (outpath, ensemble)
-          filename = '%s_p%1i_%s_%d.h5' % (mode, p_cm, irrep, 1)
-          utils.write_hdf5_correlators(path, filename, gevp_data, 'data', verbose)
-  
-#             path = '%s/%s/3_gevp-data/p%1i/%s/%s/' % (outpath, ensemble,
-#                                 p_cm, irrep, tirr)
-#             utils.write_ascii_gevp(path, mode, select, verbose)
+          contracted_data = {}
+          contracted_data_avg = {}
 
-#           for tirr, select in gevp_data.groupby(level=[0]):
+            for correlator in correlators:
+              print '\tContracting data for %s' % correlator
+              ci = ContractionType(correlator, irrep)
+  
+              if process == 'rho':
+                # rho analysis
+                contracted_data[ci] = wick.rho(
+                  subduced_data, correlator, irrep, verbose)
+              elif process == 'pipi':
+                # pipi I=2 analysis
+                contracted_data[ci] = wick.pipi(
+                  subduced_data, correlator, irrep, verbose)
+  
+              # write data to disc
+              path = '%s/%s/2_contracted-data/' % (outpath, ensemble)
+              filename = '/%s_p%1i_%s.h5' % (correlator, p_cm, irrep)
+              utils.write_hdf5_correlators(
+                path, filename, contracted_data[ci], 'data', verbose)
+  
+              # Only real part is physically relevant at that point
+              contracted_data_avg[ci] = contracted_data[ci].apply(
+                np.real)
+              gevp_labels = ['Irrep', 'mult', 'gevp_row', 'gevp_col']
+              momentum_labels = \
+                [col for col in contracted_data_avg[ci].columns if 'p^{' in col]
+              gamma_labels = \
+                [col for col in contracted_data_avg[ci].columns if 'gamma' in col]
+  
+              # sum over gamma structures.
+              contracted_data_avg[ci] = contracted_data_avg[ci].sum(
+                level=gevp_labels + ['p_{cm}'] + ['\mu'] + momentum_labels)
+              # sum over equivalent momenta
+              contracted_data_avg[ci] = contracted_data_avg[ci].sum(
+                level=gevp_labels + ['p_{cm}'] + ['\mu'])
+              # average over rows.
+              contracted_data_avg[ci] = contracted_data_avg[ci].mean(
+                level=gevp_labels + ['p_{cm}'])
+              # average over p_cm.
+              contracted_data_avg[ci] = contracted_data_avg[ci].mean(
+                level=gevp_labels)
+  
+              # write data to disc
+              path = '%s/%s/2_contracted-data/' % (outpath, ensemble)
+              filename = '/%s_p%1i_%s_avg.h5' % (correlator, p_cm, irrep)
+              utils.write_hdf5_correlators(path, filename,
+                             contracted_data_avg[ci],
+                             'data', verbose)
+  
+        elif (flag['create gevp'] or flag['plot']):
+          correlators = wick.set_lookup_correlators(diagrams)
+  
+          contracted_data = {}
+          contracted_data_avg = {}
+  
+          for correlator in correlators:
+            for irrep in list_of_irreps:
+              ci = ContractionType(correlator, irrep)
+              path = '%s/%s/2_contracted-data/' % (outpath, ensemble)
+  
+              filename = '/%s_p%1i_%s.h5' % (correlator, p_cm, irrep)
+              contracted_data[ci] = \
+                utils.read_hdf5_correlators(path+filename, 'data')
+  
+              # Only real part is physically relevant at that point
+              contracted_data_avg[ci] = contracted_data[ci].apply(
+                np.real)
+              gevp_labels = ['Irrep', 'mult', 'gevp_row', 'gevp_col']
+              momentum_labels = \
+                [col for col in contracted_data_avg[ci].columns if 'p^{' in col]
+              gamma_labels = \
+                [col for col in contracted_data_avg[ci].columns if 'gamma' in col]
+  
+              # sum over gamma structures.
+              contracted_data_avg[ci] = contracted_data_avg[ci].sum(
+                level=gevp_labels + ['p_{cm}'] + ['\mu'] + momentum_labels)
+              # sum over equivalent momenta
+              contracted_data_avg[ci] = contracted_data_avg[ci].sum(
+                level=gevp_labels + ['p_{cm}'] + ['\mu'])
+              # average over rows.
+              contracted_data_avg[ci] = contracted_data_avg[ci].mean(
+                level=gevp_labels + ['p_{cm}'])
+              # average over p_cm.
+              contracted_data_avg[ci] = contracted_data_avg[ci].mean(
+                level=gevp_labels)
+  
+        ########################################################################
+        # Gevp construction
+  
+        if flag['create gevp']:
+          print '\tCreating gevp'
+          if process:
+            mode = "rho"
+          else:
+            mode = "pipi"
+  
+          for correlator in correlators:
+              ci = ContractionType(correlator, irrep)
+  
+              # Only real part is physically relevant at that point
+              contracted_data_avg[ci] = contracted_data[ci].apply(
+                np.real)
+              gevp_labels = ['Irrep', 'mult', 'gevp_row', 'gevp_col']
+              momentum_labels = \
+                [col for col in contracted_data_avg[ci].columns if 'p^{' in col]
+              gamma_labels = \
+                [col for col in contracted_data_avg[ci].columns if 'gamma' in col]
+  
+              # sum over gamma structures.
+              contracted_data_avg[ci] = contracted_data_avg[ci].sum(
+                level=gevp_labels + ['p_{cm}'] + ['\mu'] + momentum_labels)
+              # sum over equivalent momenta
+              contracted_data_avg[ci] = contracted_data_avg[ci].sum(
+                level=gevp_labels + ['p_{cm}'] + ['\mu'])
+              # average over rows.
+#               contracted_data_avg[ci] = contracted_data_avg[ci].mean(
+#                 level=gevp_labels + ['p_{cm}'])
+#               # average over p_cm.
+#               contracted_data_avg[ci] = contracted_data_avg[ci].mean(
+#                 level=gevp_labels)
+  
+          for irrep in list_of_irreps:
+            # loop over target irreps
+  
+            gevp_data = setup_gevp.build_gevp(contracted_data_avg, mode,
+                              irrep, verbose)
+  
+            gevp_data = gevp_data.xs((irrep, 1), level=('Irrep', 'mult'))
+  
+            path = '%s/%s/3_gevp-data/' % (outpath, ensemble)
+            filename = '%s_p%1i_%s_%d.h5' % (mode, p_cm, irrep, 1)
+            utils.write_hdf5_correlators(path, filename, gevp_data, 'data', verbose)
+  
+#               path = '%s/%s/3_gevp-data/p%1i/%s/%s/' % (outpath, ensemble,
+#                                   p_cm, irrep, tirr)
+#               utils.write_ascii_gevp(path, mode, select, verbose)
+
+#             for tirr, select in gevp_data.groupby(level=[0]):
 #   
-#             #print(select)
-#             path = '%s/%s/3_gevp-data/' % (outpath, ensemble)
-#             filename = '%s_p%1i_%s_%s.h5' % (mode, p_cm, irrep, tirr)
-#             utils.write_hdf5_correlators(path, filename, select, 'data',
-#                          verbose)
+#               #print(select)
+#               path = '%s/%s/3_gevp-data/' % (outpath, ensemble)
+#               filename = '%s_p%1i_%s_%s.h5' % (mode, p_cm, irrep, tirr)
+#               utils.write_hdf5_correlators(path, filename, select, 'data',
+#                            verbose)
 #   
-#             path = '%s/%s/3_gevp-data/p%1i/%s/%s/' % (outpath, ensemble,
-#                                 p_cm, irrep, tirr)
-#             utils.write_ascii_gevp(path, mode, select, verbose)
+#               path = '%s/%s/3_gevp-data/p%1i/%s/%s/' % (outpath, ensemble,
+#                                   p_cm, irrep, tirr)
+#               utils.write_ascii_gevp(path, mode, select, verbose)
   
       ########################################################################
       # Plotting
