@@ -22,9 +22,8 @@ from ast import literal_eval
 ################################################################################
 if __name__ == '__main__':
   pd.set_option('display.width', None)
+  # TODO: replace that by with statement
   try:
-    # TODO: pull out irrep as outer loop and do not use it in any of the files
-    # TODO: refactor towards a more objectoriented design
   
     ###########################################################################
     # Parameters ##############################################################
@@ -36,7 +35,6 @@ if __name__ == '__main__':
   
     # optional parameter, Default: False
     flag_pion = config.getboolean('parameters', 'Read pion')
-    flag_old = config.getboolean('parameters', 'use old data format')
   
     # Choices: ['rho', 'pipi']
     process = config.get('parameters', 'Process to analyse').lower()
@@ -147,6 +145,8 @@ if __name__ == '__main__':
   
     ############################################################################
     # Main
+    # TODO: pull out irrep as outer loop and do not use it in any of the files
+    # TODO: refactor towards a more objectoriented design
     for p_cm in p:
       if verbose:
         print 80 * '#'
@@ -171,11 +171,7 @@ if __name__ == '__main__':
           process=process,
           verbose=verbose)
   
-        if flag_old:
-          pion_data = raw_data.read_old(lookup_cnfg, pion_qn, diagram, T,
-                          directory, verbose)
-        else:
-          pion_data = raw_data.read(lookup_cnfg, pion_qn, diagram, T,
+        pion_data = raw_data.read(lookup_cnfg, pion_qn, diagram, T,
                         directory, verbose)
   
         # write data
@@ -214,12 +210,7 @@ if __name__ == '__main__':
             process=process,
             verbose=verbose)
   
-          if flag_old:
-            data[diagram] = raw_data.read_old(
-              lookup_cnfg, lookup_qn[diagram], diagram, T, directory,
-              verbose)
-          else:
-            data[diagram] = raw_data.read(lookup_cnfg,
+          data[diagram] = raw_data.read(lookup_cnfg,
                             lookup_qn[diagram], diagram,
                             T, directory, verbose)
   
