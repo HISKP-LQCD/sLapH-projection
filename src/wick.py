@@ -254,7 +254,7 @@ def set_lookup_correlators(diagrams):
       Correlation functions constituted by given diagrams
   """
 
-  lookup_correlators = []
+  lookup_correlators = {}
   for nb_quarklines in range(2,5):
 
     # as a function argument give the names of all diagrams with the correct
@@ -262,10 +262,8 @@ def set_lookup_correlators(diagrams):
     mask = [d.startswith('C%1d' % nb_quarklines) for d in diagrams]
     diagram = list(it.compress(diagrams, mask))
 
-    if (len(diagram) == 0):
-      continue
-    else:
-      lookup_correlators.append("C%1d" % nb_quarklines)
+    if len(diagram) != 0:
+        lookup_correlators.update({"C%1d" % nb_quarklines : diagram})
 
   return lookup_correlators
 

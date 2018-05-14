@@ -187,6 +187,8 @@ if __name__ == '__main__':
             # helper function to read all subduced data from disk
             list_of_pcm = lookup_qn['p_{cm}'].unique()
             list_of_irreps = projection.get_list_of_irreps(list_of_pcm, path_to_sc, j)
+            correlators = wick.set_lookup_correlators(diagrams)
+
 
             ########################################################################
             # Subduction
@@ -201,77 +203,75 @@ if __name__ == '__main__':
             for irrep in list_of_irreps:
                 print '\t  Subducing into %s' % irrep
 
-                for diagram in diagrams:
-                    di = ContractionType(diagram, irrep)
-                    print '\tSubducing data for %s' % diagram
-
-                    if flag['subduce']:
-
-                        path = '%s/%s/0_raw-data/' % (outpath, ensemble)
-                        filename = '%s_p%1i.h5' % (diagram, p_cm)
-                        data = utils.read_hdf5_correlators(path + filename, 'data')
-                        filename = '%s_p%1i_qn.h5' % (diagram, p_cm)
-                        lookup_qn = utils.read_hdf5_correlators(path + filename, 'qn')
-
-                        # Express :math:`O^{J,M}` in terms of physical Dirac operators
-                        # specified in `gamma_input`
-                        continuum_operators = projection.set_continuum_basis(
-                          gamma_input, continuum_basis_string, verbose)
-
-                        # read coefficients for correlation function, little group
-                        # and irreducible representation given by diagram, p_cm
-                        # irrep and mult
-                        lattice_operators_so, lattice_operators_si = projection.read_lattice_basis(
-                          diagram, list_of_pcm, path_to_sc, path_to_sc_2, j, verbose)
-
-                        operators_so, operators_si = projection.project_operators(
-                          di, lattice_operators_so, lattice_operators_si,
-                          continuum_operators, verbose)
-
-                        operators_so, operators_si = projection.project_isospin(
-                          operators_so, operators_si)
-
-                        lattice_operators = projection.correlate_operators(
-                          operators_so, operators_si, verbose)
-
-                        lookup_corr = subduction.set_lookup_corr(
-                          lattice_operators, lookup_qn, verbose)
-
-                        subduced_data[di] = subduction.project_correlators(data, lookup_corr)
-
-                        # write data to disc
-                        path = '%s/%s/1_subduced-data/' % (outpath, ensemble)
-
-                        filename = '/%s_p%1i_%s.h5' % (diagram, p_cm, irrep)
-                        utils.write_hdf5_correlators(
-                          path, filename, subduced_data[(diagram,
-                                           irrep)], 'data', verbose)
-
-                        lattice_operators.sort_index().\
-                            reset_index(["operator_label_{so}", "operator_label_{si}"],
-                                drop=True).\
-                            to_csv(path+"lattice-operators_{}_p{}_{}.tsv".format(
-                                di.diagram, p_cm, di.irrep), sep="\t")
-
-                    elif (flag['contract'] or flag['create gevp'] or flag['plot']):
-
-                        path = '%s/%s/1_subduced-data/' % (outpath, ensemble)
-
-                        filename = '/%s_p%1i_%s.h5' % (diagram, p_cm, irrep)
-                        subduced_data[di] = utils.read_hdf5_correlators(
-                          path + filename, 'data')
-
-                ############################################################################
-                # Wick contraction
-
                 contracted_data = {}
                 contracted_data_avg = {}
 
-                correlators = wick.set_lookup_correlators(diagrams)
-
-                for correlator in correlators:
+                for correlator, diagrams in correlators.iteritems():
                     print '\tContracting data for %s' % correlator
                     ci = ContractionType(correlator, irrep)
+
+                    for diagram in diagrams:
+                        di = ContractionType(diagram, irrep)
+                        print '\tSubducing data for %s' % diagram
+
+                        if flag['subduce']:
+
+                            path = '%s/%s/0_raw-data/' % (outpath, ensemble)
+                            filename = '%s_p%1i.h5' % (diagram, p_cm)
+                            data = utils.read_hdf5_correlators(path + filename, 'data')
+                            filename = '%s_p%1i_qn.h5' % (diagram, p_cm)
+                            lookup_qn = utils.read_hdf5_correlators(path + filename, 'qn')
+
+                            # Express :math:`O^{J,M}` in terms of physical Dirac operators
+                            # specified in `gamma_input`
+                            continuum_operators = projection.set_continuum_basis(
+                              gamma_input, continuum_basis_string, verbose)
+
+                            # read coefficients for correlation function, little group
+                            # and irreducible representation given by diagram, p_cm
+                            # irrep and mult
+                            lattice_operators_so, lattice_operators_si = projection.read_lattice_basis(
+                              diagram, list_of_pcm, path_to_sc, path_to_sc_2, j, verbose)
+
+                            operators_so, operators_si = projection.project_operators(
+                              di, lattice_operators_so, lattice_operators_si,
+                              continuum_operators, verbose)
+
+                            operators_so, operators_si = projection.project_isospin(
+                              operators_so, operators_si)
+
+                            lattice_operators = projection.correlate_operators(
+                              operators_so, operators_si, verbose)
+
+                            lookup_corr = subduction.set_lookup_corr(
+                              lattice_operators, lookup_qn, verbose)
+
+                            subduced_data[di] = subduction.project_correlators(data, lookup_corr)
+
+                            # write data to disc
+                            path = '%s/%s/1_subduced-data/' % (outpath, ensemble)
+
+                            filename = '/%s_p%1i_%s.h5' % (diagram, p_cm, irrep)
+                            utils.write_hdf5_correlators(
+                              path, filename, subduced_data[(diagram,
+                                               irrep)], 'data', verbose)
+
+                            lattice_operators.sort_index().\
+                                reset_index(["operator_label_{so}", "operator_label_{si}"],
+                                    drop=True).\
+                                to_csv(path+"lattice-operators_{}_p{}_{}.tsv".format(
+                                    di.diagram, p_cm, di.irrep), sep="\t")
+
+                        elif (flag['contract'] or flag['create gevp'] or flag['plot']):
+
+                            path = '%s/%s/1_subduced-data/' % (outpath, ensemble)
+
+                            filename = '/%s_p%1i_%s.h5' % (diagram, p_cm, irrep)
+                            subduced_data[di] = utils.read_hdf5_correlators(
+                              path + filename, 'data')
+
+                ############################################################################
+                # Wick contraction
 
                     if flag['contract']:
 
