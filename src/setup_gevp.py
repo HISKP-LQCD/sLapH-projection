@@ -9,14 +9,14 @@ import utils
 
 # TODO: factor out the setup of subduced_npt and just pass a
 # list of lists of pd.DataFrame
-def build_gevp(data, mode, irrep, verbose):
+def build_gevp(data, mode, verbose):
     """
     Create a single pd.DataFrame containing all correlators contributing to the
     rho gevp.
 
     Parameters
     ----------
-    data : Dictionary of pd.DataFrame, keys in ({'C2', 'C3', 'C4'}, `irrep`)
+    data : Dictionary of pd.DataFrame, keys in ('C2', 'C3', 'C4')
 
         For each correlator `data` must contain an associated pd.DataFrame with
         its completely summed out subduced and contracted lattice data
@@ -24,11 +24,6 @@ def build_gevp(data, mode, irrep, verbose):
     mode : string, {'rho', 'pipi'}
 
         Unique identifier for identification of identity of analysis
-
-    irrep : string, see target_irrep
-
-        name of the irreducible representation of the little group all single
-        particle operators used to create the contributing operators
 
     target_irrep : string, {'A1u', 'A2u', 'E1u', 'Ep1u', 'T1u', 'T2u', 'G1u', 'G2u',
                      'K1u', 'K2u', 'A1g', 'A2g', 'E1g', 'Ep1g', 'T1g', 'T2g',
@@ -49,7 +44,7 @@ def build_gevp(data, mode, irrep, verbose):
     if mode == 'pipi':
 
         print "Warning: I=2 Gevp currently not implemented"
-        gevp = data[("C4", irrep)]
+        gevp = data["C4"]
         # NOTE: Delete all rows and colums with only NaN's
         gevp = gevp.dropna(axis=0,how='all').dropna(axis=1,how='all')
 
@@ -60,10 +55,10 @@ def build_gevp(data, mode, irrep, verbose):
         # TODO: 2x2 kinds of operators hardcoded. E.g. for baryons this has to be
         # adopted.
         correlator = 'C2'
-        subduced_2pt = data[(correlator, irrep)]
+        subduced_2pt = data[correlator]
 
         correlator = 'C3'
-        subduced_3pt = data[(correlator, irrep)]
+        subduced_3pt = data[correlator]
 
         subduced_3pt_T = subduced_3pt.swaplevel('gevp_row','gevp_col')
 
@@ -71,7 +66,7 @@ def build_gevp(data, mode, irrep, verbose):
         subduced_3pt_T.index.set_names(index_3pt_T, inplace=True)
 
         correlator = 'C4'
-        subduced_4pt = data[(correlator, irrep)]
+        subduced_4pt = data[correlator]
 
 
         ##############################################################################

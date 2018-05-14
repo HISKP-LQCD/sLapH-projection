@@ -208,16 +208,21 @@ if __name__ == '__main__':
                 contracted_data_avg = {}
                 for correlator, diagrams in correlators.iteritems():
 
+                    lattice_operators = projection.project(j, correlator, 
+                            continuum_basis_string, gamma_input, list_of_pcm, 
+                            path_to_sc, path_to_sc_2, verbose)
+                    lattice_operators = lattice_operators.xs(beta, level=r'\beta')
+
+                    # Select irrep and discard imaginary part (noise)
+                    # :warning: multiplicity 1 hardcoded
+                    lattice_operators = lattice_operators.xs(
+                            (irrep, 1), level=('Irrep', 'mult'))
+
                     subduced_data = {}
                     for diagram in diagrams:
 
                         if flag['subduce']:
                             print '\tSubducing data for %s' % diagram
-
-                            lattice_operators = projection.project(j, correlator, 
-                                    continuum_basis_string, gamma_input, list_of_pcm, 
-                                    path_to_sc, path_to_sc_2, verbose)
-                            lattice_operators = lattice_operators.xs(beta, level=r'\beta')
 
                             path = '%s/%s/0_raw-data/' % (outpath, ensemble)
                             filename = '%s_p%1i.h5' % (diagram, p_cm)
@@ -255,9 +260,10 @@ if __name__ == '__main__':
                 ############################################################################
                 # Wick contraction
 
+                    ci = ContractionType(correlator, irrep)
+
                     if flag['contract']:
                         print '\tContracting data for %s' % correlator
-                        ci = ContractionType(correlator, irrep)
 
                         if process == 'rho':
                             # rho analysis
@@ -283,29 +289,6 @@ if __name__ == '__main__':
                         contracted_data = \
                           utils.read_hdf5_correlators(path+filename, 'data')
 
-                    # Only real part is physically relevant at that point
-                    contracted_data_avg[ci] = contracted_data.apply(
-                      np.real)
-
-                    gevp_labels = ['Irrep', 'mult', 'gevp_row', 'gevp_col']
-                    momentum_labels = \
-                      [col for col in contracted_data_avg[ci].columns if 'p^{' in col]
-                    gamma_labels = \
-                      [col for col in contracted_data_avg[ci].columns if 'gamma' in col]
-
-                    # sum over gamma structures.
-                    contracted_data_avg[ci] = contracted_data_avg[ci].sum(
-                      level=gevp_labels + ['p_{cm}'] + ['\mu'] + momentum_labels)
-                    # sum over equivalent momenta
-                    contracted_data_avg[ci] = contracted_data_avg[ci].sum(
-                      level=gevp_labels + ['p_{cm}'] + ['\mu'])
-                    # average over rows.
-                    contracted_data_avg[ci] = contracted_data_avg[ci].mean(
-                      level=gevp_labels + ['p_{cm}'])
-                    # average over p_cm.
-                    contracted_data_avg[ci] = contracted_data_avg[ci].mean(
-                      level=gevp_labels)
-
                 ########################################################################
                 # Plotting
 
@@ -317,11 +300,6 @@ if __name__ == '__main__':
                         path = '%s/%s/4_plots/p%1i/%s/' % (outpath, ensemble, p_cm,
                                            irrep)
 
-                        # Select irrep and discard imaginary part (noise)
-                        # :warning: multiplicity 1 hardcoded
-                        plotdata = contracted_data.xs(
-                          (irrep, 1), level=('Irrep', 'mult')).apply(np.real)
-
                         gevp_labels = ['gevp_row', 'gevp_col']
                         momentum_labels = \
                           [col for col in plotdata.index.names if 'p^{' in col]
@@ -331,7 +309,7 @@ if __name__ == '__main__':
                         if plot_experimental:
 
                             # sum over equivalent momenta
-                            plotdata_tmp = plotdata.copy()
+                            plotdata_tmp = contracted_data.apply(np.real)
 
                             filename = './%s_p%1i_%s_gammas_%s.html' % (
                               correlator, p_cm, irrep, continuum_basis_string)
@@ -340,8 +318,7 @@ if __name__ == '__main__':
 
                         if plot_avg:
                             # sum over momenta and gamma structures
-                            plotdata_tmp = plotdata.xs(beta, level=r'\beta')
-                            plotdata_tmp = plotdata_tmp.sum(
+                            plotdata_tmp = plotdata.sum(
                               level=gevp_labels + ['p_{cm}', '\mu'])
                             plotdata_tmp = plotdata_tmp.mean(level=gevp_labels)
 
@@ -355,8 +332,7 @@ if __name__ == '__main__':
 
                         if plot_pcm_and_mu:
                             # sum over momenta and gamma structures
-                            plotdata_tmp = plotdata.xs(beta, level=r'\beta')
-                            plotdata_tmp = plotdata_tmp.sum(
+                            plotdata_tmp = plotdata.sum(
                               level=gevp_labels + ['p_{cm}', '\mu'])
 
                             filename = '/%s_p%1i_%s_pcm-and-mu_%s.pdf' % (
@@ -369,9 +345,7 @@ if __name__ == '__main__':
                         if plot_p_and_g:
                             # Want to look at all individual contributions
                             # Todo: Want to have imaginary part as well
-                            plotdata_tmp = contracted_data.xs(
-                                (irrep, 1), level=('Irrep', 'mult'))
-                            plotdata_tmp = plotdata_tmp.xs(beta, level=r'\beta')
+                            plotdata_tmp = contracted_data.copy()
                             filename = '/%s_p%1i_%s_gammas_%s.pdf' % (
                               correlator, p_cm, irrep, continuum_basis_string)
                             pdfplot = utils.create_pdfplot(path, filename)
@@ -379,6 +353,28 @@ if __name__ == '__main__':
                                   pdfplot, logscale, verbose)
                             pdfplot.close()
 
+                    # Only real part is physically relevant at that point
+                    contracted_data_avg[correlator] = contracted_data.apply(
+                      np.real)
+
+                    gevp_labels = ['gevp_row', 'gevp_col']
+                    momentum_labels = \
+                      [col for col in contracted_data_avg[correlator].columns if 'p^{' in col]
+                    gamma_labels = \
+                      [col for col in contracted_data_avg[correlator].columns if 'gamma' in col]
+
+                    # sum over gamma structures.
+                    contracted_data_avg[correlator] = contracted_data_avg[correlator].sum(
+                      level=gevp_labels + ['p_{cm}'] + ['\mu'] + momentum_labels)
+                    # sum over equivalent momenta
+                    contracted_data_avg[correlator] = contracted_data_avg[correlator].sum(
+                      level=gevp_labels + ['p_{cm}'] + ['\mu'])
+                    # average over rows.
+                    contracted_data_avg[correlator] = contracted_data_avg[correlator].mean(
+                      level=gevp_labels + ['p_{cm}'])
+                    # average over p_cm.
+                    contracted_data_avg[correlator] = contracted_data_avg[correlator].mean(
+                      level=gevp_labels)
 
                 ########################################################################
                 # Gevp construction
@@ -387,9 +383,7 @@ if __name__ == '__main__':
                     print '\tCreating gevp'
 
                     gevp_data = setup_gevp.build_gevp(contracted_data_avg, process,
-                                      irrep, verbose)
-
-                    gevp_data = gevp_data.xs((irrep, 1), level=('Irrep', 'mult'))
+                                      verbose)
 
                     path = '%s/%s/3_gevp-data/' % (outpath, ensemble)
                     filename = '%s_p%1i_%s_%d.h5' % (process, p_cm, irrep, 1)
