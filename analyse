@@ -85,6 +85,10 @@ if __name__ == '__main__':
             print ensemble
             print T
 
+        beta = config.get('phase conventions', 'beta')
+        if verbose >= 2:
+            print 'beta = ', beta
+
         p_cutoff = config.getint('gevp parameters', 'p_cutoff')
         p = config.get('gevp parameters', 'p_cm')
         p = [int(k) for k in p.split(',')]
@@ -298,8 +302,6 @@ if __name__ == '__main__':
                     # Only real part is physically relevant at that point
                     contracted_data_avg[ci] = contracted_data.apply(
                       np.real)
-#                    for beta in np.unique(contracted_data[ci].index.get_level_values(r'\beta')):
-                    beta = '2'
                     contracted_data_avg[ci] = contracted_data_avg[ci].xs(beta, level=r'\beta')
 
                     gevp_labels = ['Irrep', 'mult', 'gevp_row', 'gevp_col']
@@ -360,8 +362,8 @@ if __name__ == '__main__':
                               level=gevp_labels + ['p_{cm}', '\mu'])
                             plotdata_tmp = plotdata_tmp.mean(level=gevp_labels)
 
-                            filename = '/%s_p%1i_%s_beta%s_avg_%s.pdf' % (
-                              correlator, p_cm, irrep, beta, continuum_basis_string)
+                            filename = '/%s_p%1i_%s_avg_%s.pdf' % (
+                              correlator, p_cm, irrep, continuum_basis_string)
                             pdfplot = utils.create_pdfplot(path, filename)
                             plot.for_each_gevp_element(plot.average, plotdata_tmp,
                                 bootstrapsize, pdfplot, logscale, verbose)
@@ -374,8 +376,8 @@ if __name__ == '__main__':
                             plotdata_tmp = plotdata_tmp.sum(
                               level=gevp_labels + ['p_{cm}', '\mu'])
 
-                            filename = '/%s_p%1i_%s_beta%s_pcm-and-mu_%s.pdf' % (
-                              correlator, p_cm, irrep, beta, continuum_basis_string)
+                            filename = '/%s_p%1i_%s_pcm-and-mu_%s.pdf' % (
+                              correlator, p_cm, irrep, continuum_basis_string)
                             pdfplot = utils.create_pdfplot(path, filename)
                             plot.for_each_gevp_element(plot.pcm_and_mu, plotdata_tmp,
                                 bootstrapsize, pdfplot, logscale, verbose)
@@ -387,8 +389,8 @@ if __name__ == '__main__':
                             plotdata_tmp = contracted_data.xs(
                                 (irrep, 1), level=('Irrep', 'mult'))
                             plotdata_tmp = plotdata_tmp.xs(beta, level=r'\beta')
-                            filename = '/%s_p%1i_%s_beta%s_gammas_%s.pdf' % (
-                              correlator, p_cm, irrep, beta, continuum_basis_string)
+                            filename = '/%s_p%1i_%s_gammas_%s.pdf' % (
+                              correlator, p_cm, irrep, continuum_basis_string)
                             pdfplot = utils.create_pdfplot(path, filename)
                             plot.p_and_gammas(plotdata_tmp, correlator, bootstrapsize,
                                   pdfplot, logscale, verbose)
@@ -438,7 +440,7 @@ if __name__ == '__main__':
                     path = '%s/%s/4_plots/p%1i/%s/' % (outpath, ensemble, p_cm, irrep)
 
                     if plot_avg:
-                        filename = 'Gevp_p%1d_%s_beta%s_avg.pdf' % (p_cm, irrep, beta)
+                        filename = 'Gevp_p%1d_%s_avg.pdf' % (p_cm, irrep)
                         pdfplot = utils.create_pdfplot(path, filename)
                         plot.gevp(plot.average, gevp_data, bootstrapsize, pdfplot,
                             logscale, verbose)
@@ -446,7 +448,7 @@ if __name__ == '__main__':
     
                     if plot_pcm_and_mu:
     #                 for p_cm_vec in list_of_pcm:
-                        filename = 'Gevp_p%1d_%s_beta%s_pcm-and-mu.pdf' % (p_cm, irrep, beta)
+                        filename = 'Gevp_p%1d_%s_pcm-and-mu.pdf' % (p_cm, irrep)
                         pdfplot = utils.create_pdfplot(path, filename)
                         plot.gevp(plot.pcm_and_mu, gevp_data, bootstrapsize, pdfplot,
                             logscale, verbose)
