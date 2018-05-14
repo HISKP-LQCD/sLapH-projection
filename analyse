@@ -198,23 +198,17 @@ if __name__ == '__main__':
             ContractionType = collections.namedtuple('ContractionType',
                                  ['diagram', 'irrep'])
 
-            subduced_data = {}
-
             for irrep in list_of_irreps:
                 print '\t  Subducing into %s' % irrep
 
-                contracted_data = {}
                 contracted_data_avg = {}
-
                 for correlator, diagrams in correlators.iteritems():
-                    print '\tContracting data for %s' % correlator
-                    ci = ContractionType(correlator, irrep)
 
+                    subduced_data = {}
                     for diagram in diagrams:
-                        di = ContractionType(diagram, irrep)
-                        print '\tSubducing data for %s' % diagram
 
                         if flag['subduce']:
+                            print '\tSubducing data for %s' % diagram
 
                             path = '%s/%s/0_raw-data/' % (outpath, ensemble)
                             filename = '%s_p%1i.h5' % (diagram, p_cm)
@@ -234,7 +228,7 @@ if __name__ == '__main__':
                               diagram, list_of_pcm, path_to_sc, path_to_sc_2, j, verbose)
 
                             operators_so, operators_si = projection.project_operators(
-                              di, lattice_operators_so, lattice_operators_si,
+                              correlator, lattice_operators_so, lattice_operators_si,
                               continuum_operators, verbose)
 
                             operators_so, operators_si = projection.project_isospin(
@@ -246,60 +240,63 @@ if __name__ == '__main__':
                             lookup_corr = subduction.set_lookup_corr(
                               lattice_operators, lookup_qn, verbose)
 
-                            subduced_data[di] = subduction.project_correlators(data, lookup_corr)
+                            subduced_data[diagram] = subduction.project_correlators(data, lookup_corr)
+                            del data
 
                             # write data to disc
                             path = '%s/%s/1_subduced-data/' % (outpath, ensemble)
 
                             filename = '/%s_p%1i_%s.h5' % (diagram, p_cm, irrep)
                             utils.write_hdf5_correlators(
-                              path, filename, subduced_data[(diagram,
-                                               irrep)], 'data', verbose)
+                              path, filename, subduced_data[diagram], 'data', verbose)
 
                             lattice_operators.sort_index().\
                                 reset_index(["operator_label_{so}", "operator_label_{si}"],
                                     drop=True).\
                                 to_csv(path+"lattice-operators_{}_p{}_{}.tsv".format(
-                                    di.diagram, p_cm, di.irrep), sep="\t")
+                                    diagram, p_cm, irrep), sep="\t")
 
-                        elif (flag['contract'] or flag['create gevp'] or flag['plot']):
+                        elif flag['contract']:
 
                             path = '%s/%s/1_subduced-data/' % (outpath, ensemble)
 
                             filename = '/%s_p%1i_%s.h5' % (diagram, p_cm, irrep)
-                            subduced_data[di] = utils.read_hdf5_correlators(
+                            subduced_data[diagram] = utils.read_hdf5_correlators(
                               path + filename, 'data')
 
                 ############################################################################
                 # Wick contraction
 
                     if flag['contract']:
+                        print '\tContracting data for %s' % correlator
+                        ci = ContractionType(correlator, irrep)
 
                         if process == 'rho':
                             # rho analysis
-                            contracted_data[ci] = wick.rho(
-                              subduced_data, correlator, irrep, verbose)
+                            contracted_data = wick.rho(
+                              subduced_data, correlator, verbose)
                         elif process == 'pipi':
                             # pipi I=2 analysis
-                            contracted_data[ci] = wick.pipi(
-                              subduced_data, correlator, irrep, verbose)
+                            contracted_data = wick.pipi(
+                              subduced_data, correlator, verbose)
+                        del subduced_data
 
                         # write data to disc
                         path = '%s/%s/2_contracted-data/' % (outpath, ensemble)
                         filename = '/%s_p%1i_%s.h5' % (correlator, p_cm, irrep)
                         utils.write_hdf5_correlators(
-                          path, filename, contracted_data[ci], 'data', verbose)
+                          path, filename, contracted_data, 'data', verbose)
 
                     elif (flag['create gevp'] or flag['plot']):
 
                         path = '%s/%s/2_contracted-data/' % (outpath, ensemble)
 
                         filename = '/%s_p%1i_%s.h5' % (correlator, p_cm, irrep)
-                        contracted_data[ci] = \
+                        contracted_data = \
                           utils.read_hdf5_correlators(path+filename, 'data')
 
                     # Only real part is physically relevant at that point
-                    contracted_data_avg[ci] = contracted_data[ci].apply(
+                    contracted_data_avg[ci] = contracted_data.apply(
                       np.real)
 #                    for beta in np.unique(contracted_data[ci].index.get_level_values(r'\beta')):
                     beta = '2'
@@ -337,7 +334,7 @@ if __name__ == '__main__':
 
                         # Select irrep and discard imaginary part (noise)
                         # :warning: multiplicity 1 hardcoded
-                        plotdata = contracted_data[ci].xs(
+                        plotdata = contracted_data.xs(
                           (irrep, 1), level=('Irrep', 'mult')).apply(np.real)
 
                         gevp_labels = ['gevp_row', 'gevp_col']
@@ -387,7 +384,7 @@ if __name__ == '__main__':
                         if plot_p_and_g:
                             # Want to look at all individual contributions
                             # Todo: Want to have imaginary part as well
-                            plotdata_tmp = contracted_data[ci].xs(
+                            plotdata_tmp = contracted_data.xs(
                                 (irrep, 1), level=('Irrep', 'mult'))
                             plotdata_tmp = plotdata_tmp.xs(beta, level=r'\beta')
                             filename = '/%s_p%1i_%s_beta%s_gammas_%s.pdf' % (

@@ -4,21 +4,16 @@ from pandas import Series, DataFrame
 
 import utils
 
-def rho_2pt(data, irrep, verbose=1):
+def rho_2pt(data, verbose=1):
   """
   Perform Wick contraction for 2pt function
 
   Parameters
   ----------
-  data : Dictionary of pd.DataFrame, keys in 
-      ({'C20', 'C3c', 'C4cB', 'C4cD'}, `irrep`)
+  data : Dictionary of pd.DataFrame, keys in {'C20', 'C3c', 'C4cB', 'C4cD')
 
       For each diagram constituting the given `corrrelator` `data` must contain
       an associated pd.DataFrame with its subduced lattice data
-  irrep : string, {'T1', 'A1', 'E2', 'B1', 'B2'}
-
-      Name of the irreducible representation of the little group the operator
-      is required to transform under.
 
   Returns
   -------
@@ -37,7 +32,7 @@ def rho_2pt(data, irrep, verbose=1):
   gamma_i =   [1, 2, 3]
   gamma_50i = [13, 14, 15]
 
-  wick = data[('C20',irrep)]
+  wick = data['C20']
 
   # Warning: 1j hardcoded
   wick[wick.index.get_level_values('\gamma^{0}_{so}').isin(gamma_i) & \
@@ -50,7 +45,7 @@ def rho_2pt(data, irrep, verbose=1):
        wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_50i)] *= (2.)
 
   if verbose >= 2:
-    print "wick[('C2', ", irrep, ")]"
+    print "wick['C2']"
   if verbose == 2:
     print wick.head()
   if verbose == 3:
@@ -58,21 +53,16 @@ def rho_2pt(data, irrep, verbose=1):
 
   return wick
 
-def pipi_2pt(data, irrep, verbose=1):
+def pipi_2pt(data, verbose=1):
   """
   Perform Wick contraction for 2pt function
 
   Parameters
   ----------
-  data : Dictionary of pd.DataFrame, keys in 
-      ({'C20', 'C3c', 'C4cB', 'C4cD'}, `irrep`)
+  data : Dictionary of pd.DataFrame, keys in ('C20', 'C3c', 'C4cB', 'C4cD')
 
       For each diagram constituting the given `corrrelator` `data` must contain
       an associated pd.DataFrame with its subduced lattice data
-  irrep : string, {'T1', 'A1', 'E2', 'B1', 'B2'}
-
-      Name of the irreducible representation of the little group the operator
-      is required to transform under.
 
   Returns
   -------
@@ -84,27 +74,22 @@ def pipi_2pt(data, irrep, verbose=1):
   -----
   The gamma strucures that can appear in \pi\pi(t) are hardcoded
   """
-  wick = data[('C2c',irrep)]
+  wick = data['C2c']
 
   return wick
 
 ################################################################################
 
-def rho_3pt(data, irrep, verbose=1):
+def rho_3pt(data, verbose=1):
   """
   Perform Wick contraction for 3pt function
 
   Parameters
   ----------
-  data : Dictionary of pd.DataFrame, keys in 
-      ({'C20', 'C3c', 'C4cB', 'C4cD'}, `irrep`)
+  data : Dictionary of pd.DataFrame, keys in ('C20', 'C3c', 'C4cB', 'C4cD')
 
       For each diagram constituting the given `corrrelator` `data` must contain
       an associated pd.DataFrame with its subduced lattice data
-  irrep : string, {'T1', 'A1', 'E2', 'B1', 'B2'}
-
-      Name of the irreducible representation of the little group the operator
-      is required to transform under.
 
   Returns
   -------
@@ -125,7 +110,7 @@ def rho_3pt(data, irrep, verbose=1):
   gamma_i =   [1, 2, 3]
   gamma_50i = [13, 14, 15]
 
-  wick = data[('C3c',irrep)]
+  wick = data['C3c']
 
   # Warning: 1j hardcoded
   wick[wick.index.get_level_values('\gamma^{0}_{so}').isin(gamma_5) & \
@@ -136,7 +121,7 @@ def rho_3pt(data, irrep, verbose=1):
        wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_50i)] *= ( 2.*1j)*(-1j)
 
   if verbose >= 2:
-    print "wick[('C3', ", irrep, ")]"
+    print "wick['C3']"
   if verbose == 2:
     print wick.head()
   if verbose == 3:
@@ -147,23 +132,16 @@ def rho_3pt(data, irrep, verbose=1):
 ################################################################################
 
 # TODO: catch if keys were not found
-# TODO: having to pass irrep is anoying, but the keys should vanish anyway when
-# this is rewritten as member function
-def rho_4pt(data, irrep, verbose=0):
+def rho_4pt(data, verbose=0):
   """
   Perform Wick contraction for 4pt function
 
   Parameters
   ----------
-  data : Dictionary of pd.DataFrame, keys in 
-      ({'C20', 'C3c', 'C4cB', 'C4cD'}, `irrep`)
+  data : Dictionary of pd.DataFrame, keys in ('C20', 'C3c', 'C4cB', 'C4cD')
 
       For each diagram constituting the given `corrrelator` `data` must contain
       an associated pd.DataFrame with its subduced lattice data
-  irrep : string, {'T1', 'A1', 'E2', 'B1', 'B2'}
-
-      Name of the irreducible representation of the little group the operator
-      is required to transform under.
 
   Returns
   -------
@@ -180,8 +158,8 @@ def rho_4pt(data, irrep, verbose=0):
   The gamma strucures that can appear in \rho(t) are hardcoded
   """
 
-  data_box = data[('C4cB', irrep)]
-  data_dia = data[('C4cD', irrep)]
+  data_box = data['C4cB']
+  data_dia = data['C4cD']
   
   # TODO: support read in if the passed data is incomplete
 #  data_box = pd.read_hdf('readdata/%s_p%1i.h5' % (diagrams[0], p_cm), 'data')
@@ -190,7 +168,7 @@ def rho_4pt(data, irrep, verbose=0):
   wick = ((-2.)*data_box).add(data_dia, fill_value=0)
 
   if verbose >= 2:
-    print "wick[('C4', ", irrep, ")]"
+    print "wick['C4']"
   if verbose == 2:
     print wick.head()
   if verbose == 3:
@@ -198,21 +176,16 @@ def rho_4pt(data, irrep, verbose=0):
 
   return wick
 
-def pipi_4pt(data, irrep, verbose=0):
+def pipi_4pt(data, verbose=0):
   """
   Perform Wick contraction for 4pt function
 
   Parameters
   ----------
-  data : Dictionary of pd.DataFrame, keys in 
-      ({'C20', 'C3c', 'C4cB', 'C4cD'}, `irrep`)
+  data : Dictionary of pd.DataFrame, keys in ('C20', 'C3c', 'C4cB', 'C4cD')
 
       For each diagram constituting the given `corrrelator` `data` must contain
       an associated pd.DataFrame with its subduced lattice data
-  irrep : string, {'T1', 'A1', 'E2', 'B1', 'B2'}
-
-      Name of the irreducible representation of the little group the operator
-      is required to transform under.
 
   Returns
   -------
@@ -229,8 +202,8 @@ def pipi_4pt(data, irrep, verbose=0):
   The gamma strucures that can appear in \rho(t) are hardcoded
   """
 
-  data_cro = data[('C4cC', irrep)]
-  data_dia = data[('C4cD', irrep)]
+  data_cro = data['C4cC']
+  data_dia = data['C4cD']
   
   wick = ((-1.)*data_cro).add(data_dia, fill_value=0)
 
@@ -267,8 +240,7 @@ def set_lookup_correlators(diagrams):
 
   return lookup_correlators
 
-# TODO: pass path as alternative to read the data
-def rho(data, correlator, irrep, verbose=0):
+def rho(data, correlator, verbose=0):
   """
   Sums all diagrams with the factors they appear in the Wick contractions
 
@@ -279,10 +251,6 @@ def rho(data, correlator, irrep, verbose=0):
       an associated pd.DataFrame with its subduced lattice data
   correlator : string {'C2', 'C3', 'C4'}
       Correlation functions to perform the Wick contraction on
-  irrep : string, {'T1', 'A1', 'E2', 'B1', 'B2'}
-      name of the irreducible representation of the little group the operator
-      is required to transform under.
-
 
   Returns
   -------
@@ -305,11 +273,11 @@ def rho(data, correlator, irrep, verbose=0):
   rho = {'C2' : rho_2pt, 'C3' : rho_3pt, 'C4' : rho_4pt}
 
   # call rho_2pt, rho_3pt, rho_4pt from this loop
-  contracted = rho[correlator](data, irrep, verbose)
+  contracted = rho[correlator](data, verbose)
 
   return contracted
 
-def pipi(data, correlator, irrep, verbose=0):
+def pipi(data, correlator, verbose=0):
   """
   Sums all diagrams with the factors they appear in the Wick contractions
 
@@ -320,10 +288,6 @@ def pipi(data, correlator, irrep, verbose=0):
       an associated pd.DataFrame with its subduced lattice data
   correlator : string {'C2', 'C4'}
       Correlation functions to perform the Wick contraction on
-  irrep : string, {'T1', 'A1', 'E2', 'B1', 'B2'}
-      name of the irreducible representation of the little group the operator
-      is required to transform under.
-
 
   Returns
   -------
@@ -346,6 +310,6 @@ def pipi(data, correlator, irrep, verbose=0):
   pipi = {'C2' : pipi_2pt, 'C4' : pipi_4pt}
 
   # call rho_2pt, rho_3pt, rho_4pt from this loop
-  contracted = pipi[correlator](data, irrep, verbose)
+  contracted = pipi[correlator](data, verbose)
 
   return contracted

@@ -243,8 +243,7 @@ def set_continuum_basis(names, basis_type, verbose):
 
 # TODO: find a better name for diagram after Wick contraction
 # TODO: No restriction to multiplicacy currently done
-def project_operators(di, lattice_operators_so, lattice_operators_si, 
-        continuum_operators, verbose):
+def project_operators(correlator, operator_so, operator_si, continuum_operators, verbose):
   """
   Project continuum operators to lattice using subduction coefficients 
 
@@ -274,22 +273,18 @@ def project_operators(di, lattice_operators_so, lattice_operators_si,
       numbers
   """
 
-  # Restrict subduction coefficients to irredicible representation specified in di
-  operator_so = select_irrep(lattice_operators_so, di.irrep)
-  operator_si = select_irrep(lattice_operators_si, di.irrep)
-
-  if di.diagram.startswith('C2'):
+  if correlator == 'C2':
     continuum_labels_so = [['J^{0}','M^{0}']]
     continuum_labels_si = [['J^{0}','M^{0}']]
-  elif di.diagram.startswith('C3'):
+  elif correlator == 'C3':
     # for 3pt function we have pipi operator at source and rho operator at sink
     continuum_labels_so = [['J^{0}','M^{0}'], ['J^{1}','M^{1}']]
     continuum_labels_si = [['J^{0}','M^{0}']]
-  elif di.diagram.startswith('C4'):
+  elif correlator == 'C4':
     continuum_labels_so = [['J^{0}','M^{0}'], ['J^{1}','M^{1}']]
     continuum_labels_si = [['J^{0}','M^{0}'], ['J^{1}','M^{1}']]
   else:
-    print 'in project_operators: diagram unknown! Quantum numbers corrupted.'
+    print 'in project_operators: correlator unknown! Quantum numbers corrupted.'
     return
 
   # Project operators 
