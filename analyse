@@ -290,35 +290,6 @@ if __name__ == '__main__':
                         utils.write_hdf5_correlators(
                           path, filename, contracted_data[ci], 'data', verbose)
 
-                        # Only real part is physically relevant at that point
-                        contracted_data_avg[ci] = contracted_data[ci].apply(
-                          np.real)
-                        gevp_labels = ['Irrep', 'mult', 'gevp_row', 'gevp_col']
-                        momentum_labels = \
-                          [col for col in contracted_data_avg[ci].columns if 'p^{' in col]
-                        gamma_labels = \
-                          [col for col in contracted_data_avg[ci].columns if 'gamma' in col]
-
-                        # sum over gamma structures.
-                        contracted_data_avg[ci] = contracted_data_avg[ci].sum(
-                          level=gevp_labels + ['p_{cm}'] + ['\mu'] + momentum_labels)
-                        # sum over equivalent momenta
-                        contracted_data_avg[ci] = contracted_data_avg[ci].sum(
-                          level=gevp_labels + ['p_{cm}'] + ['\mu'])
-                        # average over rows.
-                        contracted_data_avg[ci] = contracted_data_avg[ci].mean(
-                          level=gevp_labels + ['p_{cm}'])
-                        # average over p_cm.
-                        contracted_data_avg[ci] = contracted_data_avg[ci].mean(
-                          level=gevp_labels)
-
-                        # write data to disc
-                        path = '%s/%s/2_contracted-data/' % (outpath, ensemble)
-                        filename = '/%s_p%1i_%s_avg.h5' % (correlator, p_cm, irrep)
-                        utils.write_hdf5_correlators(path, filename,
-                                       contracted_data_avg[ci],
-                                       'data', verbose)
-
                     elif (flag['create gevp'] or flag['plot']):
 
                         path = '%s/%s/2_contracted-data/' % (outpath, ensemble)
@@ -327,105 +298,42 @@ if __name__ == '__main__':
                         contracted_data[ci] = \
                           utils.read_hdf5_correlators(path+filename, 'data')
 
-                        # Only real part is physically relevant at that point
-                        contracted_data_avg[ci] = contracted_data[ci].apply(
-                          np.real)
-                        gevp_labels = ['Irrep', 'mult', 'gevp_row', 'gevp_col']
-                        momentum_labels = \
-                          [col for col in contracted_data_avg[ci].columns if 'p^{' in col]
-                        gamma_labels = \
-                          [col for col in contracted_data_avg[ci].columns if 'gamma' in col]
+                    # Only real part is physically relevant at that point
+                    contracted_data_avg[ci] = contracted_data[ci].apply(
+                      np.real)
+#                    for beta in np.unique(contracted_data[ci].index.get_level_values(r'\beta')):
+                    beta = '2'
+                    contracted_data_avg[ci] = contracted_data_avg[ci].xs(beta, level=r'\beta')
 
-                        # sum over gamma structures.
-                        contracted_data_avg[ci] = contracted_data_avg[ci].sum(
-                          level=gevp_labels + ['p_{cm}'] + ['\mu'] + momentum_labels)
-                        # sum over equivalent momenta
-                        contracted_data_avg[ci] = contracted_data_avg[ci].sum(
-                          level=gevp_labels + ['p_{cm}'] + ['\mu'])
-                        # average over rows.
-                        contracted_data_avg[ci] = contracted_data_avg[ci].mean(
-                          level=gevp_labels + ['p_{cm}'])
-                        # average over p_cm.
-                        contracted_data_avg[ci] = contracted_data_avg[ci].mean(
-                          level=gevp_labels)
+                    gevp_labels = ['Irrep', 'mult', 'gevp_row', 'gevp_col']
+                    momentum_labels = \
+                      [col for col in contracted_data_avg[ci].columns if 'p^{' in col]
+                    gamma_labels = \
+                      [col for col in contracted_data_avg[ci].columns if 'gamma' in col]
+
+                    # sum over gamma structures.
+                    contracted_data_avg[ci] = contracted_data_avg[ci].sum(
+                      level=gevp_labels + ['p_{cm}'] + ['\mu'] + momentum_labels)
+                    # sum over equivalent momenta
+                    contracted_data_avg[ci] = contracted_data_avg[ci].sum(
+                      level=gevp_labels + ['p_{cm}'] + ['\mu'])
+                    # average over rows.
+                    contracted_data_avg[ci] = contracted_data_avg[ci].mean(
+                      level=gevp_labels + ['p_{cm}'])
+                    # average over p_cm.
+                    contracted_data_avg[ci] = contracted_data_avg[ci].mean(
+                      level=gevp_labels)
 
                 ########################################################################
-                # Gevp construction
+                # Plotting
 
-                if flag['create gevp']:
-                    print '\tCreating gevp'
-                    if process:
-                        mode = "rho"
-                    else:
-                        mode = "pipi"
+                    if flag['contract'] and flag['plot']:
 
-                    for correlator in correlators:
-                        ci = ContractionType(correlator, irrep)
+                        if verbose:
+                            print "Plotting data for ", irrep
 
-                        # Only real part is physically relevant at that point
-                        contracted_data_avg[ci] = contracted_data[ci].apply(
-                          np.real)
-                        gevp_labels = ['Irrep', 'mult', 'gevp_row', 'gevp_col']
-                        momentum_labels = \
-                          [col for col in contracted_data_avg[ci].columns if 'p^{' in col]
-                        gamma_labels = \
-                          [col for col in contracted_data_avg[ci].columns if 'gamma' in col]
-
-                        # sum over gamma structures.
-                        contracted_data_avg[ci] = contracted_data_avg[ci].sum(
-                          level=gevp_labels + ['p_{cm}'] + ['\mu'] + momentum_labels)
-                        # sum over equivalent momenta
-                        contracted_data_avg[ci] = contracted_data_avg[ci].sum(
-                          level=gevp_labels + ['p_{cm}'] + ['\mu'])
-                        # average over rows.
-#               contracted_data_avg[ci] = contracted_data_avg[ci].mean(
-#                 level=gevp_labels + ['p_{cm}'])
-#               # average over p_cm.
-#               contracted_data_avg[ci] = contracted_data_avg[ci].mean(
-#                 level=gevp_labels)
-
-                    for irrep in list_of_irreps:
-                        # loop over target irreps
-
-                        gevp_data = setup_gevp.build_gevp(contracted_data_avg, mode,
-                                          irrep, verbose)
-
-                        gevp_data = gevp_data.xs((irrep, 1), level=('Irrep', 'mult'))
-
-                        path = '%s/%s/3_gevp-data/' % (outpath, ensemble)
-                        filename = '%s_p%1i_%s_%d.h5' % (mode, p_cm, irrep, 1)
-                        utils.write_hdf5_correlators(path, filename, gevp_data, 'data', verbose)
-
-#               path = '%s/%s/3_gevp-data/p%1i/%s/%s/' % (outpath, ensemble,
-#                                   p_cm, irrep, tirr)
-#               utils.write_ascii_gevp(path, mode, select, verbose)
-
-#             for tirr, select in gevp_data.groupby(level=[0]):
-#
-#               #print(select)
-#               path = '%s/%s/3_gevp-data/' % (outpath, ensemble)
-#               filename = '%s_p%1i_%s_%s.h5' % (mode, p_cm, irrep, tirr)
-#               utils.write_hdf5_correlators(path, filename, select, 'data',
-#                            verbose)
-#
-#               path = '%s/%s/3_gevp-data/p%1i/%s/%s/' % (outpath, ensemble,
-#                                   p_cm, irrep, tirr)
-#               utils.write_ascii_gevp(path, mode, select, verbose)
-
-            ########################################################################
-            # Plotting
-
-            if flag['plot']:
-                for irrep in list_of_irreps:
-
-                    if verbose:
-                        print "Plotting data for ", irrep
-
-                    path = '%s/%s/4_plots/p%1i/%s/' % (outpath, ensemble, p_cm,
-                                       irrep)
-                    for correlator in correlators:
-
-                        ci = ContractionType(correlator, irrep)
+                        path = '%s/%s/4_plots/p%1i/%s/' % (outpath, ensemble, p_cm,
+                                           irrep)
 
                         # Select irrep and discard imaginary part (noise)
                         # :warning: multiplicity 1 hardcoded
@@ -438,116 +346,122 @@ if __name__ == '__main__':
                         gamma_labels = \
                           [col for col in plotdata.index.names if 'gamma' in col]
 
-                        for beta in np.unique(plotdata.index.get_level_values(r'\beta')):
+                        if plot_experimental:
 
-                            print beta
+                            # sum over equivalent momenta
+                            plotdata_tmp = plotdata.copy()
 
-                            if plot_experimental:
+                            filename = './%s_p%1i_%s_gammas_%s.html' % (
+                              correlator, p_cm, irrep, continuum_basis_string)
+                            bokeh.experimental(plotdata_tmp, correlator, bootstrapsize,
+                              filename, logscale, verbose)
 
-                                # sum over equivalent momenta
-                                plotdata_tmp = plotdata.copy()
+                        if plot_avg:
+                            # sum over momenta and gamma structures
+                            plotdata_tmp = plotdata.xs(beta, level=r'\beta')
+                            plotdata_tmp = plotdata_tmp.sum(
+                              level=gevp_labels + ['p_{cm}', '\mu'])
+                            plotdata_tmp = plotdata_tmp.mean(level=gevp_labels)
 
-                                filename = './%s_p%1i_%s_gammas_%s.html' % (
-                                  correlator, p_cm, irrep, continuum_basis_string)
-                                bokeh.experimental(plotdata_tmp, correlator, bootstrapsize,
-                                  filename, logscale, verbose)
-
-                            if plot_avg:
-                                # sum over momenta and gamma structures
-                                plotdata_tmp = plotdata.xs(beta, level=r'\beta')
-                                plotdata_tmp = plotdata_tmp.sum(
-                                  level=gevp_labels + ['p_{cm}', '\mu'])
-                                plotdata_tmp = plotdata_tmp.mean(level=gevp_labels)
-
-                                filename = '/%s_p%1i_%s_beta%s_avg_%s.pdf' % (
-                                  correlator, p_cm, irrep, beta, continuum_basis_string)
-                                pdfplot = utils.create_pdfplot(path, filename)
-                                plot.for_each_gevp_element(plot.average, plotdata_tmp,
-                                    bootstrapsize, pdfplot, logscale, verbose)
-                                pdfplot.close()
+                            filename = '/%s_p%1i_%s_beta%s_avg_%s.pdf' % (
+                              correlator, p_cm, irrep, beta, continuum_basis_string)
+                            pdfplot = utils.create_pdfplot(path, filename)
+                            plot.for_each_gevp_element(plot.average, plotdata_tmp,
+                                bootstrapsize, pdfplot, logscale, verbose)
+                            pdfplot.close()
 
 
-                            if plot_pcm_and_mu:
-                                # sum over momenta and gamma structures
-                                plotdata_tmp = plotdata.xs(beta, level=r'\beta')
-                                plotdata_tmp = plotdata_tmp.sum(
-                                  level=gevp_labels + ['p_{cm}', '\mu'])
+                        if plot_pcm_and_mu:
+                            # sum over momenta and gamma structures
+                            plotdata_tmp = plotdata.xs(beta, level=r'\beta')
+                            plotdata_tmp = plotdata_tmp.sum(
+                              level=gevp_labels + ['p_{cm}', '\mu'])
 
-                                filename = '/%s_p%1i_%s_beta%s_pcm-and-mu_%s.pdf' % (
-                                  correlator, p_cm, irrep, beta, continuum_basis_string)
-                                pdfplot = utils.create_pdfplot(path, filename)
-                                plot.for_each_gevp_element(plot.pcm_and_mu, plotdata_tmp,
-                                    bootstrapsize, pdfplot, logscale, verbose)
-                                pdfplot.close()
+                            filename = '/%s_p%1i_%s_beta%s_pcm-and-mu_%s.pdf' % (
+                              correlator, p_cm, irrep, beta, continuum_basis_string)
+                            pdfplot = utils.create_pdfplot(path, filename)
+                            plot.for_each_gevp_element(plot.pcm_and_mu, plotdata_tmp,
+                                bootstrapsize, pdfplot, logscale, verbose)
+                            pdfplot.close()
 
-                            if plot_p_and_g:
-                                # Want to look at all individual contributions
-                                # Todo: Want to have imaginary part as well
-                                plotdata_tmp = contracted_data[ci].xs(
-                                    (irrep, 1), level=('Irrep', 'mult'))
-                                plotdata_tmp = plotdata_tmp.xs(beta, level=r'\beta')
-                                filename = '/%s_p%1i_%s_beta%s_gammas_%s.pdf' % (
-                                  correlator, p_cm, irrep, beta, continuum_basis_string)
-                                pdfplot = utils.create_pdfplot(path, filename)
-                                plot.p_and_gammas(plotdata_tmp, correlator, bootstrapsize,
-                                      pdfplot, logscale, verbose)
-                                pdfplot.close()
+                        if plot_p_and_g:
+                            # Want to look at all individual contributions
+                            # Todo: Want to have imaginary part as well
+                            plotdata_tmp = contracted_data[ci].xs(
+                                (irrep, 1), level=('Irrep', 'mult'))
+                            plotdata_tmp = plotdata_tmp.xs(beta, level=r'\beta')
+                            filename = '/%s_p%1i_%s_beta%s_gammas_%s.pdf' % (
+                              correlator, p_cm, irrep, beta, continuum_basis_string)
+                            pdfplot = utils.create_pdfplot(path, filename)
+                            plot.p_and_gammas(plotdata_tmp, correlator, bootstrapsize,
+                                  pdfplot, logscale, verbose)
+                            pdfplot.close()
 
-                    # TODO: Include beta
+
+                ########################################################################
+                # Gevp construction
+
+                if flag['create gevp']:
+                    print '\tCreating gevp'
+
+                    gevp_data = setup_gevp.build_gevp(contracted_data_avg, process,
+                                      irrep, verbose)
+
+                    gevp_data = gevp_data.xs((irrep, 1), level=('Irrep', 'mult'))
+
+                    path = '%s/%s/3_gevp-data/' % (outpath, ensemble)
+                    filename = '%s_p%1i_%s_%d.h5' % (process, p_cm, irrep, 1)
+                    utils.write_hdf5_correlators(path, filename, gevp_data, 'data', verbose)
+
+
+#               path = '%s/%s/3_gevp-data/p%1i/%s/%s/' % (outpath, ensemble,
+#                                   p_cm, irrep, tirr)
+#               utils.write_ascii_gevp(path, process, select, verbose)
+
+#             for tirr, select in gevp_data.groupby(level=[0]):
+#
+#               #print(select)
+#               path = '%s/%s/3_gevp-data/' % (outpath, ensemble)
+#               filename = '%s_p%1i_%s_%s.h5' % (process, p_cm, irrep, tirr)
+#               utils.write_hdf5_correlators(path, filename, select, 'data',
+#                            verbose)
+#
+#               path = '%s/%s/3_gevp-data/p%1i/%s/%s/' % (outpath, ensemble,
+#                                   p_cm, irrep, tirr)
+#               utils.write_ascii_gevp(path, process, select, verbose)
+
+                ########################################################################
+                # Plotting
+
+                if flag['create gevp'] and flag['plot']:
+
+                    if verbose:
+                        print "Plotting Gevp data for ", irrep
+
+                    path = '%s/%s/4_plots/p%1i/%s/' % (outpath, ensemble, p_cm, irrep)
+
                     if plot_avg:
+                        filename = 'Gevp_p%1d_%s_beta%s_avg.pdf' % (p_cm, irrep, beta)
+                        pdfplot = utils.create_pdfplot(path, filename)
+                        plot.gevp(plot.average, gevp_data, bootstrapsize, pdfplot,
+                            logscale, verbose)
+                        pdfplot.close()
+    
+                    if plot_pcm_and_mu:
+    #                 for p_cm_vec in list_of_pcm:
+                        filename = 'Gevp_p%1d_%s_beta%s_pcm-and-mu.pdf' % (p_cm, irrep, beta)
+                        pdfplot = utils.create_pdfplot(path, filename)
+                        plot.gevp(plot.pcm_and_mu, gevp_data, bootstrapsize, pdfplot,
+                            logscale, verbose)
+                        pdfplot.close()
+    
 
-                        for beta in np.unique(contracted_data[ci].index.get_level_values(r'\beta')):
+#                     for p_cm_vec in list_of_pcm:
+#                     filename = 'Gevp_p001_%s.pdf' % (irrep)
+#                     pdfplot = utils.create_pdfplot(path, filename)
+#                     plot.gevp(plot.pcm_and_mu, gevp_data.xs(str((0,0,1)), level="p_{cm}", drop_level=False), bootstrapsize, pdfplot,
+#                         logscale, verbose)
+#                     pdfplot.close()
 
-                            for correlator in correlators:
-                                ci = ContractionType(correlator, irrep)
-
-                                # Only real part is physically relevant at that point
-                                contracted_data_avg[ci] = contracted_data[ci].apply(
-                                  np.real)
-                                contracted_data_avg[ci] = contracted_data_avg[ci].xs(beta, level=r'\beta')
-                                gevp_labels = ['Irrep', 'mult', 'gevp_row', 'gevp_col']
-                                momentum_labels = \
-                                  [col for col in contracted_data_avg[ci].columns if 'p^{' in col]
-                                gamma_labels = \
-                                  [col for col in contracted_data_avg[ci].columns if 'gamma' in col]
-
-                                # sum over gamma structures.
-                                contracted_data_avg[ci] = contracted_data_avg[ci].sum(
-                                  level=gevp_labels + ['p_{cm}'] + ['\mu'] + momentum_labels)
-                                # sum over equivalent momenta
-                                contracted_data_avg[ci] = contracted_data_avg[ci].sum(
-                                  level=gevp_labels + ['p_{cm}'] + ['\mu'])
-                                # average over rows.
-                                contracted_data_avg[ci] = contracted_data_avg[ci].mean(
-                                  level=gevp_labels + ['p_{cm}'])
-                                # average over p_cm.
-                                contracted_data_avg[ci] = contracted_data_avg[ci].mean(
-                                  level=gevp_labels)
-
-                            if flag['create gevp']:
-                                if process == 'rho':
-                                    gevp_data = setup_gevp.build_gevp(contracted_data_avg, 'rho',
-                                                      irrep, verbose)
-
-                                    gevp_data = gevp_data.xs((irrep, 1), level=('Irrep', 'mult'))
-                                elif process == 'pipi':
-                                    print "Warning: I=2 Gevp currently not implemented"
-
-#                 for p_cm_vec in list_of_pcm:
-                                filename = 'Gevp_p%1d_%s_beta%s.pdf' % (p_cm, irrep, beta)
-                                pdfplot = utils.create_pdfplot(path, filename)
-                                plot.gevp(plot.pcm_and_mu, gevp_data, bootstrapsize, pdfplot,
-                                    logscale, verbose)
-                                pdfplot.close()
-
-#                 for p_cm_vec in list_of_pcm:
-#                 filename = 'Gevp_p001_%s.pdf' % (irrep)
-#                 pdfplot = utils.create_pdfplot(path, filename)
-#                 plot.gevp(plot.pcm_and_mu, gevp_data.xs(str((0,0,1)), level="p_{cm}", drop_level=False), bootstrapsize, pdfplot,
-#                     logscale, verbose)
-#                 pdfplot.close()
-
-                            else:
-                                print 'Warning: skipped plot_avg because gevp is incomplete'
     except KeyboardInterrupt:
         pass

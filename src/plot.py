@@ -465,13 +465,12 @@ def gevp(plotting_function, plotdata, bootstrapsize, pdfplot, logscale=False, ve
 #        ax.tick_params(labelleft='off')  
         ax.set_yticks([])
 
-
-
         # Select data for plot
         graphdata = plotdata.xs(graphlabel, level=['gevp_row', 'gevp_col'])
 
         plotting_function(graphdata, ax, scale=gevp_size)
-        ax.legend_.remove()
+        if ax.legend_:
+            ax.legend_.remove()
 
 #    plt.locator_params(axis='y', numticks=2)
     plt.tight_layout(h_pad=0.1, w_pad=0.15)
