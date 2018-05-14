@@ -155,14 +155,17 @@ if __name__ == '__main__':
             ########################################################################
             # read diagrams for correlators contributing to rho
             if flag['read']:
-                raw_data.read(T, diagrams, directories, sta_cnfg, end_cnfg, del_cnfg,
+                path = '%s/%s/0_raw-data/' % (outpath, ensemble)
+                raw_data.read(path, T, diagrams, directories, sta_cnfg, end_cnfg, del_cnfg,
                         missing_configs, process, p_cm, p_cutoff, gamma_input, verbose)
 
             # TODO: Is gamma_input giving the right quantum numbers?
             if flag_pion:
-                raw_data.read(T, ['C2c'], directories[:1], sta_cnfg, end_cnfg, del_cnfg,
+                path = '%s/%s/0_raw-data/' % (outpath, ensemble)
+                raw_data.read(path, T, ['C2c'], directories[:1], sta_cnfg, end_cnfg, del_cnfg,
                         missing_configs, process, p_cm, p_cutoff, gamma_input, verbose)
 
+                pion_data = utils.read_hdf5_correlators(path + 'C2c_p%1i.h5' % p_cm, 'data')
                 path = '%s/%s/3_gevp-data/' % (outpath, ensemble)
                 filename = 'pi_p%1i.dat' % (p_cm)
                 utils.write_ascii_correlators(
@@ -172,7 +175,7 @@ if __name__ == '__main__':
             ########################################################################
             # Setup of list of pcm and irrep to loop over
             path = '%s/%s/0_raw-data/' % (outpath, ensemble)
-            filename = '%s_p%1i_qn.h5' % (diagram[0], p_cm)
+            filename = '%s_p%1i_qn.h5' % (diagrams[0], p_cm)
             lookup_qn = utils.read_hdf5_correlators(path + filename, 'qn')
 
             # Angular momentum for particles of interest
@@ -239,16 +242,16 @@ if __name__ == '__main__':
                         # write data to disc
                         path = '%s/%s/1_subduced-data/' % (outpath, ensemble)
 
+                        filename = '/%s_p%1i_%s.h5' % (diagram, p_cm, irrep)
+                        utils.write_hdf5_correlators(
+                          path, filename, subduced_data[(diagram,
+                                           irrep)], 'data', verbose)
+
                         lattice_operators.sort_index().\
                             reset_index(["operator_label_{so}", "operator_label_{si}"],
                                 drop=True).\
                             to_csv(path+"lattice-operators_{}_p{}_{}.tsv".format(
                                 di.diagram, p_cm, di.irrep), sep="\t")
-
-                        filename = '/%s_p%1i_%s.h5' % (diagram, p_cm, irrep)
-                        utils.write_hdf5_correlators(
-                          path, filename, subduced_data[(diagram,
-                                           irrep)], 'data', verbose)
 
                     elif (flag['contract'] or flag['create gevp'] or flag['plot']):
 
