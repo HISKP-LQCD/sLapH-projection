@@ -1,10 +1,12 @@
 #!/usr/bin/python
+import argparse
+import ConfigParser
+
 import numpy as np
 
 import collections
 import sys
 
-import src.infile_handler as infile_handler
 import src.raw_data as raw_data
 import src.utils as utils
 import src.wick as wick
@@ -25,11 +27,36 @@ if __name__ == '__main__':
     # TODO: replace that by with statement
     try:
 
-        ###########################################################################
-        # Parameters ##############################################################
-
-        args, config = infile_handler.get_parameters()
-
+        ##################################################################################
+        # Argument parsing ###############################################################
+    
+        parser = argparse.ArgumentParser()
+        # parse the name of the infile and load its contents into the parser
+        parser.add_argument("infile", help="name of input file")
+        # verbosity is also parsed
+        parser.add_argument("-v", "--verbose", action="count", default=0, \
+                                                       help="increase output verbosity")
+        # TODO: Only allow certain options, specify standard behavior, etc.
+        parser.add_argument("-b", "--basis", choices=['cartesian', 'cyclic', \
+                              'cyclic-christian', 'dudek', 'marcus-cov', 'marcus-con', 'test'], \
+                              default='marcus-cov',
+                              help="continuum basis to be used in the program")
+    
+        args = parser.parse_args()
+    
+        ##################################################################################
+        # Reading infile #################################################################
+    
+        config = ConfigParser.SafeConfigParser(
+                {'list of p_cm' : None,
+                    'Dirac structure' : 'gamma_i',
+                    'list of q' : None,
+                    'beta' : '1'})
+    
+        if(config.read(args.infile) == []):
+            print "Error! Could not open infile: ", args.infile
+            exit(-1)
+    
         verbose = args.verbose
         continuum_basis_string = args.basis
 
@@ -190,25 +217,25 @@ if __name__ == '__main__':
             elif process == 'pipi':
                 j = 0
 
-            # helper function to read all subduced data from disk
-            if list_of_pcm == None:
-                list_of_pcm = lookup_qn['p_{cm}'].apply(literal_eval).unique()
-            else:
-                list_of_pcm = [literal_eval(p_cm.strip()) for p_cm in list_of_pcm.split(';')]
-            assert all([utils._abs2(p) == p_cm_sq for p in list_of_pcm]), \
-                    'list_of_pcm contains momenta with the wrong absolute value squared'
-            list_of_pcm = [str(p) for p in list_of_pcm]
-
-            if list_of_q != None: 
-                list_of_q = [str(literal_eval(q.strip())) for q in list_of_q.split(';')]
-
-#            list_of_q = [(0.,0.,1.), (0.,1.,1.),(1.,0.,1.)]
-            list_of_irreps = projection.get_list_of_irreps(list_of_pcm, path_to_sc, j)
+            list_of_irreps = projection.get_list_of_irreps(
+                    lookup_qn['p_{cm}'].apply(literal_eval).unique(), path_to_sc, j)
             correlators = wick.set_lookup_correlators(diagrams)
-
 
             for irrep in list_of_irreps:
                 print '\t  Subducing into %s' % irrep
+
+                # helper function to read all subduced data from disk
+                if list_of_pcm == None:
+                    list_of_pcm = lookup_qn['p_{cm}'].apply(literal_eval).unique()
+                else:
+                    list_of_pcm = [literal_eval(p_cm.strip()) for p_cm in list_of_pcm.split(';')]
+                assert all([utils._abs2(p) == p_cm_sq for p in list_of_pcm]), \
+                        'list_of_pcm contains momenta with the wrong absolute value squared'
+                list_of_pcm = [str(p) for p in list_of_pcm]
+
+                if list_of_q != None: 
+                    list_of_q = [str(literal_eval(q.strip())) for q in list_of_q.split(';')]
+
 
                 contracted_data_avg = {}
                 for correlator, diagrams in correlators.iteritems():
