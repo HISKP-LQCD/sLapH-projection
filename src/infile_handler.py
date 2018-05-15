@@ -23,7 +23,8 @@ def get_parameters():
   ##############################################################################
   # Reading infile #############################################################
   
-  config = ConfigParser.SafeConfigParser({'use old data format' : 'False'})
+  config = ConfigParser.SafeConfigParser(
+          {'use old data format' : False, 'beta' : 1, 'list of q' : None, 'list of p_cm' : None})
   
   if(config.read(args.infile) == []):
     print "Error! Could not open infile: ", args.infile

@@ -78,33 +78,30 @@ if __name__ == '__main__':
             print 'Reading configs', sta_cnfg, '-', end_cnfg, ' in steps of ', del_cnfg
             print 'Skipping ', missing_configs
 
-        ensemble = config.get('ensemble parameters', 'Ensemble Name')
-        T = config.getint('ensemble parameters', 'T')
+        ensemble = config.get('ensemble and frame', 'Ensemble Name')
+        T = config.getint('ensemble and frame', 'T')
+        list_of_pcm_sq = config.get('ensemble and frame', 'p_cm^2')
+        list_of_pcm_sq = [int(p) for p in list_of_pcm_sq.split(',')]
+        p_cutoff = config.getint('ensemble and frame', 'p_cutoff')
 
         if verbose >= 2:
             print ensemble
             print T
+            print 'p_cm = ', p
+            print 'p_cutoff = ', p_cutoff
 
-        beta = config.get('phase conventions', 'beta')
+        beta = config.get('gevp parameters', 'beta')
 
-        if verbose >= 2:
-            print 'beta = ', beta
-
-        p_cutoff = config.getint('gevp parameters', 'p_cutoff')
-        p = config.get('gevp parameters', 'p_cm')
-        p = [int(k) for k in p.split(',')]
         gamma_input = config.get('gevp parameters', 'Dirac structure')
         # translates list of names for gamma structures to indices used in
         # contraction code
         gamma_input = gamma_input.replace(" ", "").split(';')
         gamma_input = {0: ['gamma_5'], 1: gamma_input}
+        list_of_pcm = config.get('gevp parameters', 'list of p_cm')
         list_of_q = config.get('gevp parameters', 'list of q')
-        list_of_q = None if list_of_q == 'None' else \
-                [literal_eval(q.strip()) for q in list_of_q.split(';')]
 
         if verbose >= 2:
-            print 'p_cm = ', p
-            print 'p_cutoff = ', p_cutoff
+            print 'beta = ', beta
             print 'Gamma structures: ', gamma_input
             print 'list of q = ', list_of_q
 
@@ -156,27 +153,27 @@ if __name__ == '__main__':
         # Main
         # TODO: pull out irrep as outer loop and do not use it in any of the files
         # TODO: refactor towards a more objectoriented design
-        for p_cm in p:
+        for p_cm_sq in list_of_pcm_sq:
             if verbose:
                 print 80 * '#'
-                print 'p_cm = ', p_cm
+                print 'p_cm_sq = ', p_cm_sq
 
             ########################################################################
             # read diagrams for correlators contributing to rho
             if flag['read']:
                 path = '%s/%s/0_raw-data/' % (outpath, ensemble)
                 raw_data.read(path, T, diagrams, directories, sta_cnfg, end_cnfg, del_cnfg,
-                        missing_configs, process, p_cm, p_cutoff, gamma_input, verbose)
+                        missing_configs, process, p_cm_sq, p_cutoff, gamma_input, verbose)
 
             # TODO: Is gamma_input giving the right quantum numbers?
             if flag_pion:
                 path = '%s/%s/0_raw-data/' % (outpath, ensemble)
                 raw_data.read(path, T, ['C2c'], directories[:1], sta_cnfg, end_cnfg, del_cnfg,
-                        missing_configs, process, p_cm, p_cutoff, gamma_input, verbose)
+                        missing_configs, process, p_cm_sq, p_cutoff, gamma_input, verbose)
 
-                pion_data = utils.read_hdf5_correlators(path + 'C2c_p%1i.h5' % p_cm, 'data')
+                pion_data = utils.read_hdf5_correlators(path + 'C2c_p%1i.h5' % p_cm_sq, 'data')
                 path = '%s/%s/3_gevp-data/' % (outpath, ensemble)
-                filename = 'pi_p%1i.dat' % (p_cm)
+                filename = 'pi_p%1i.dat' % (p_cm_sq)
                 utils.write_ascii_correlators(
                   path, filename, pion_data.mean(axis=1).apply(np.real), verbose)
 
@@ -184,7 +181,7 @@ if __name__ == '__main__':
             ########################################################################
             # Setup of list of pcm and irrep to loop over
             path = '%s/%s/0_raw-data/' % (outpath, ensemble)
-            filename = '%s_p%1i_qn.h5' % (diagrams[0], p_cm)
+            filename = '%s_p%1i_qn.h5' % (diagrams[0], p_cm_sq)
             lookup_qn = utils.read_hdf5_correlators(path + filename, 'qn')
 
             # Angular momentum for particles of interest
@@ -194,19 +191,21 @@ if __name__ == '__main__':
                 j = 0
 
             # helper function to read all subduced data from disk
-            list_of_pcm = lookup_qn['p_{cm}'].unique()
+            if list_of_pcm == None:
+                list_of_pcm = lookup_qn['p_{cm}'].unique()
+            else:
+                list_of_pcm = [literal_eval(p_cm.strip()) for p_cm in list_of_pcm.split(';')]
+            assert all([utils._abs2(p) == p_cm_sq for p in list_of_pcm]), \
+                    'list_of_pcm contains momenta with the wrong absolute value squared'
+            list_of_pcm = [str(p) for p in list_of_pcm]
+
+            if list_of_q != None: 
+                list_of_q = [str(literal_eval(q.strip())) for q in list_of_q.split(';')]
+
 #            list_of_q = [(0.,0.,1.), (0.,1.,1.),(1.,0.,1.)]
             list_of_irreps = projection.get_list_of_irreps(list_of_pcm, path_to_sc, j)
             correlators = wick.set_lookup_correlators(diagrams)
 
-
-            ########################################################################
-            # Subduction
-
-            # Introduce named tuple to identify quark line diagram and irreducible
-            # representation of little group it transforms under
-            ContractionType = collections.namedtuple('ContractionType',
-                                 ['diagram', 'irrep'])
 
             for irrep in list_of_irreps:
                 print '\t  Subducing into %s' % irrep
@@ -224,7 +223,8 @@ if __name__ == '__main__':
                     lattice_operators = lattice_operators.xs(
                             (irrep, 1), level=('Irrep', 'mult'))
 
-                    print lattice_operators
+                    ######################################################################
+                    # Subduction
 
                     subduced_data = {}
                     for diagram in diagrams:
@@ -233,21 +233,22 @@ if __name__ == '__main__':
                             print '\tSubducing data for %s' % diagram
 
                             path = '%s/%s/0_raw-data/' % (outpath, ensemble)
-                            filename = '%s_p%1i.h5' % (diagram, p_cm)
+                            filename = '%s_p%1i.h5' % (diagram, p_cm_sq)
                             data = utils.read_hdf5_correlators(path + filename, 'data')
-                            filename = '%s_p%1i_qn.h5' % (diagram, p_cm)
+                            filename = '%s_p%1i_qn.h5' % (diagram, p_cm_sq)
                             lookup_qn = utils.read_hdf5_correlators(path + filename, 'qn')
 
                             lookup_corr = subduction.set_lookup_corr(
                               lattice_operators, lookup_qn, verbose)
 
-                            subduced_data[diagram] = subduction.project_correlators(data, lookup_corr)
+                            subduced_data[diagram] = subduction.project_correlators(data, 
+                                    lookup_corr)
                             del data
 
                             # write data to disc
                             path = '%s/%s/1_subduced-data/' % (outpath, ensemble)
 
-                            filename = '/%s_p%1i_%s.h5' % (diagram, p_cm, irrep)
+                            filename = '/%s_p%1i_%s.h5' % (diagram, p_cm_sq, irrep)
                             utils.write_hdf5_correlators(
                               path, filename, subduced_data[diagram], 'data', verbose)
 
@@ -255,20 +256,18 @@ if __name__ == '__main__':
                                 reset_index(["operator_label_{so}", "operator_label_{si}"],
                                     drop=True).\
                                 to_csv(path+"lattice-operators_{}_p{}_{}.tsv".format(
-                                    diagram, p_cm, irrep), sep="\t")
+                                    diagram, p_cm_sq, irrep), sep="\t")
 
                         elif flag['contract']:
 
                             path = '%s/%s/1_subduced-data/' % (outpath, ensemble)
 
-                            filename = '/%s_p%1i_%s.h5' % (diagram, p_cm, irrep)
+                            filename = '/%s_p%1i_%s.h5' % (diagram, p_cm_sq, irrep)
                             subduced_data[diagram] = utils.read_hdf5_correlators(
                               path + filename, 'data')
 
-                ############################################################################
-                # Wick contraction
-
-                    ci = ContractionType(correlator, irrep)
+                    ######################################################################
+                    # Wick contraction
 
                     if flag['contract']:
                         print '\tContracting data for %s' % correlator
@@ -285,7 +284,7 @@ if __name__ == '__main__':
 
                         # write data to disc
                         path = '%s/%s/2_contracted-data/' % (outpath, ensemble)
-                        filename = '/%s_p%1i_%s.h5' % (correlator, p_cm, irrep)
+                        filename = '/%s_p%1i_%s.h5' % (correlator, p_cm_sq, irrep)
                         utils.write_hdf5_correlators(
                           path, filename, contracted_data, 'data', verbose)
 
@@ -293,20 +292,19 @@ if __name__ == '__main__':
 
                         path = '%s/%s/2_contracted-data/' % (outpath, ensemble)
 
-                        filename = '/%s_p%1i_%s.h5' % (correlator, p_cm, irrep)
+                        filename = '/%s_p%1i_%s.h5' % (correlator, p_cm_sq, irrep)
                         contracted_data = \
                           utils.read_hdf5_correlators(path+filename, 'data')
 
-                ########################################################################
-                # Plotting
+                    ######################################################################
+                    # Plotting correlators seperately
 
                     if flag['contract'] and flag['plot']:
 
                         if verbose:
-                            print "Plotting data for ", irrep
+                            print "Plotting data for ", irrep, correlator
 
-                        path = '%s/%s/4_plots/p%1i/%s/' % (outpath, ensemble, p_cm,
-                                           irrep)
+                        path = '%s/%s/4_plots/p%1i/%s/' % (outpath, ensemble, p_cm_sq, irrep)
 
                         gevp_labels = ['gevp_row', 'gevp_col']
                         momentum_labels = \
@@ -320,7 +318,7 @@ if __name__ == '__main__':
                             plotdata_tmp = contracted_data.apply(np.real)
 
                             filename = './%s_p%1i_%s_gammas_%s.html' % (
-                              correlator, p_cm, irrep, continuum_basis_string)
+                              correlator, p_cm_sq, irrep, continuum_basis_string)
                             bokeh.experimental(plotdata_tmp, correlator, bootstrapsize,
                               filename, logscale, verbose)
 
@@ -332,7 +330,7 @@ if __name__ == '__main__':
                             plotdata_tmp = plotdata_tmp.mean(level=gevp_labels)
 
                             filename = '/%s_p%1i_%s_avg_%s.pdf' % (
-                              correlator, p_cm, irrep, continuum_basis_string)
+                              correlator, p_cm_sq, irrep, continuum_basis_string)
                             pdfplot = utils.create_pdfplot(path, filename)
                             plot.for_each_gevp_element(plot.average, plotdata_tmp,
                                 bootstrapsize, pdfplot, logscale, verbose)
@@ -346,7 +344,7 @@ if __name__ == '__main__':
                               level=gevp_labels + ['p_{cm}', '\mu'])
 
                             filename = '/%s_p%1i_%s_pcm-and-mu_%s.pdf' % (
-                              correlator, p_cm, irrep, continuum_basis_string)
+                              correlator, p_cm_sq, irrep, continuum_basis_string)
                             pdfplot = utils.create_pdfplot(path, filename)
                             plot.for_each_gevp_element(plot.pcm_and_mu, plotdata_tmp,
                                 bootstrapsize, pdfplot, logscale, verbose)
@@ -357,7 +355,7 @@ if __name__ == '__main__':
                             # Todo: Want to have imaginary part as well
                             plotdata_tmp = contracted_data.copy()
                             filename = '/%s_p%1i_%s_gammas_%s.pdf' % (
-                              correlator, p_cm, irrep, continuum_basis_string)
+                              correlator, p_cm_sq, irrep, continuum_basis_string)
                             pdfplot = utils.create_pdfplot(path, filename)
                             plot.p_and_gammas(plotdata_tmp, correlator, bootstrapsize,
                                   pdfplot, logscale, verbose)
@@ -382,11 +380,11 @@ if __name__ == '__main__':
                     # average over rows.
                     contracted_data_avg[correlator] = contracted_data_avg[correlator].mean(
                       level=gevp_labels + ['p_{cm}'])
-                    # average over p_cm.
+                    # average over p_cm_sq.
                     contracted_data_avg[correlator] = contracted_data_avg[correlator].mean(
                       level=gevp_labels)
 
-                ########################################################################
+                ##########################################################################
                 # Gevp construction
 
                 if flag['create gevp']:
@@ -396,39 +394,39 @@ if __name__ == '__main__':
                                       verbose)
 
                     path = '%s/%s/3_gevp-data/' % (outpath, ensemble)
-                    filename = '%s_p%1i_%s_%d.h5' % (process, p_cm, irrep, 1)
+                    filename = '%s_p%1i_%s_%d.h5' % (process, p_cm_sq, irrep, 1)
                     utils.write_hdf5_correlators(path, filename, gevp_data, 'data', verbose)
 
-                    path = '%s/%s/3_gevp-data/p%1i/%s/' % (outpath, ensemble, p_cm, irrep)
+                    path = '%s/%s/3_gevp-data/p%1i/%s/' % (outpath, ensemble, p_cm_sq, irrep)
                     utils.write_ascii_gevp(path, process, gevp_data, verbose)
 
-                ########################################################################
-                # Plotting
+                ##########################################################################
+                # Plotting everything together
 
                 if flag['create gevp'] and flag['plot']:
 
                     if verbose:
                         print "Plotting Gevp data for ", irrep
 
-                    path = '%s/%s/4_plots/p%1i/%s/' % (outpath, ensemble, p_cm, irrep)
+                    path = '%s/%s/4_plots/p%1i/%s/' % (outpath, ensemble, p_cm_sq, irrep)
 
                     if plot_avg:
-                        filename = 'Gevp_p%1d_%s_avg.pdf' % (p_cm, irrep)
+                        filename = 'Gevp_p%1d_%s_avg.pdf' % (p_cm_sq, irrep)
                         pdfplot = utils.create_pdfplot(path, filename)
                         plot.gevp(plot.average, gevp_data, bootstrapsize, pdfplot,
                             logscale, verbose)
                         pdfplot.close()
     
 #                    if plot_pcm_and_mu:
-#    #                 for p_cm_vec in list_of_pcm:
-#                        filename = 'Gevp_p%1d_%s_pcm-and-mu.pdf' % (p_cm, irrep)
+#    #                 for p_cm_sq_vec in list_of_pcm:
+#                        filename = 'Gevp_p%1d_%s_pcm-and-mu.pdf' % (p_cm_sq, irrep)
 #                        pdfplot = utils.create_pdfplot(path, filename)
 #                        plot.gevp(plot.pcm_and_mu, gevp_data, bootstrapsize, pdfplot,
 #                            logscale, verbose)
 #                        pdfplot.close()
     
 
-#                     for p_cm_vec in list_of_pcm:
+#                     for p_cm_sq_vec in list_of_pcm:
 #                     filename = 'Gevp_p001_%s.pdf' % (irrep)
 #                     pdfplot = utils.create_pdfplot(path, filename)
 #                     plot.gevp(plot.pcm_and_mu, gevp_data.xs(str((0,0,1)), level="p_{cm}", drop_level=False), bootstrapsize, pdfplot,

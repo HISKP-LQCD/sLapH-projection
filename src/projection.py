@@ -371,14 +371,16 @@ def select_q(list_of_q, operators_so, operators_si):
 
         label = 'q_{so}'
         if label in operators_so.columns:
-            operators_so = operators_so[
-                operators_so[label].apply(literal_eval).isin(list_of_q)]
+            operators_so[label] = operators_so[label].apply(literal_eval)
+            operators_so = operators_so[operators_so[label].isin(list_of_q)]
+            operators_so[label] = operators_so[label].apply(str)
 
         # Code doubled. May be refactored out.
         label = 'q_{si}'
         if label in operators_si.columns:
-            operators_si = operators_si[
-                operators_si[label].apply(literal_eval).isin(list_of_q)]
+            operators_si[label] = operators_si[label].apply(literal_eval)
+            operators_si = operators_si[operators_si[label].isin(list_of_q)]
+            operators_si[label] = operators_si[label].apply(str)
 
     return operators_so, operators_si
 
