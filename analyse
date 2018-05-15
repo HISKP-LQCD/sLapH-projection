@@ -218,11 +218,27 @@ if __name__ == '__main__':
                 j = 0
 
             list_of_irreps = projection.get_list_of_irreps(
-                    lookup_qn['p_{cm}'].apply(literal_eval).unique(), path_to_sc, j)
+                    lookup_qn['p_{cm}'].unique(), path_to_sc, j)
             correlators = wick.set_lookup_correlators(diagrams)
 
             for irrep in list_of_irreps:
                 print '\t  Subducing into %s' % irrep
+
+                ##########################################################################
+                # Handling of gevp parameters
+                gevp_parameters = ConfigParser.SafeConfigParser(
+                        {'list of p_cm' : None,
+                            'list of q' : None,
+                            'beta' : '1'})
+    
+                if(gevp_parameters.read('%s/%s/3_gevp-data/%s_p%1d_%s.ini' % 
+                        (outpath, ensemble, ensemble, p_cm_sq, irrep)) == []):
+                    print 'Did not find gevp parameters for {}. ' \
+                        'Continuing with default values'.format(irrep)
+                else:
+                    list_of_pcm = gevp_parameters.get('gevp parameters', 'list of p_cm')
+                    list_of_q = gevp_parameters.get('gevp parameters', 'list of q')
+                    beta = gevp_parameters.get('gevp parameters', 'beta')
 
                 # helper function to read all subduced data from disk
                 if list_of_pcm == None:
@@ -232,13 +248,15 @@ if __name__ == '__main__':
                 assert all([utils._abs2(p) == p_cm_sq for p in list_of_pcm]), \
                         'list_of_pcm contains momenta with the wrong absolute value squared'
                 list_of_pcm = [str(p) for p in list_of_pcm]
-
+ 
                 if list_of_q != None: 
                     list_of_q = [str(literal_eval(q.strip())) for q in list_of_q.split(';')]
 
-
                 contracted_data_avg = {}
                 for correlator, diagrams in correlators.iteritems():
+
+                    ######################################################################
+                    #Projection
 
                     lattice_operators = projection.project(j, correlator, 
                             continuum_basis_string, gamma_input, list_of_pcm, list_of_q,
