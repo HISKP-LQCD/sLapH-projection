@@ -86,6 +86,7 @@ if __name__ == '__main__':
             print T
 
         beta = config.get('phase conventions', 'beta')
+
         if verbose >= 2:
             print 'beta = ', beta
 
@@ -95,13 +96,17 @@ if __name__ == '__main__':
         gamma_input = config.get('gevp parameters', 'Dirac structure')
         # translates list of names for gamma structures to indices used in
         # contraction code
-        gamma_input = gamma_input.replace(" ", "").split(',')
+        gamma_input = gamma_input.replace(" ", "").split(';')
         gamma_input = {0: ['gamma_5'], 1: gamma_input}
+        list_of_q = config.get('gevp parameters', 'list of q')
+        list_of_q = None if list_of_q == 'None' else \
+                [literal_eval(q.strip()) for q in list_of_q.split(';')]
 
         if verbose >= 2:
             print 'p_cm = ', p
             print 'p_cutoff = ', p_cutoff
             print 'Gamma structures: ', gamma_input
+            print 'list of q = ', list_of_q
 
         diagrams = config.get('contraction details', 'Diagram')
         diagrams = diagrams.replace(" ", "").split(',')
@@ -190,6 +195,7 @@ if __name__ == '__main__':
 
             # helper function to read all subduced data from disk
             list_of_pcm = lookup_qn['p_{cm}'].unique()
+#            list_of_q = [(0.,0.,1.), (0.,1.,1.),(1.,0.,1.)]
             list_of_irreps = projection.get_list_of_irreps(list_of_pcm, path_to_sc, j)
             correlators = wick.set_lookup_correlators(diagrams)
 
@@ -208,7 +214,6 @@ if __name__ == '__main__':
                 contracted_data_avg = {}
                 for correlator, diagrams in correlators.iteritems():
 
-                    list_of_q = [(0.0,0.0,1.0), (0.0,1.0,1.0),(1.0,0.0,1.0)]
                     lattice_operators = projection.project(j, correlator, 
                             continuum_basis_string, gamma_input, list_of_pcm, list_of_q,
                             path_to_sc, path_to_sc_2, verbose)
@@ -394,22 +399,8 @@ if __name__ == '__main__':
                     filename = '%s_p%1i_%s_%d.h5' % (process, p_cm, irrep, 1)
                     utils.write_hdf5_correlators(path, filename, gevp_data, 'data', verbose)
 
-
-#               path = '%s/%s/3_gevp-data/p%1i/%s/%s/' % (outpath, ensemble,
-#                                   p_cm, irrep, tirr)
-#               utils.write_ascii_gevp(path, process, select, verbose)
-
-#             for tirr, select in gevp_data.groupby(level=[0]):
-#
-#               #print(select)
-#               path = '%s/%s/3_gevp-data/' % (outpath, ensemble)
-#               filename = '%s_p%1i_%s_%s.h5' % (process, p_cm, irrep, tirr)
-#               utils.write_hdf5_correlators(path, filename, select, 'data',
-#                            verbose)
-#
-#               path = '%s/%s/3_gevp-data/p%1i/%s/%s/' % (outpath, ensemble,
-#                                   p_cm, irrep, tirr)
-#               utils.write_ascii_gevp(path, process, select, verbose)
+                    path = '%s/%s/3_gevp-data/p%1i/%s/' % (outpath, ensemble, p_cm, irrep)
+                    utils.write_ascii_gevp(path, process, gevp_data, verbose)
 
                 ########################################################################
                 # Plotting
@@ -428,13 +419,13 @@ if __name__ == '__main__':
                             logscale, verbose)
                         pdfplot.close()
     
-                    if plot_pcm_and_mu:
-    #                 for p_cm_vec in list_of_pcm:
-                        filename = 'Gevp_p%1d_%s_pcm-and-mu.pdf' % (p_cm, irrep)
-                        pdfplot = utils.create_pdfplot(path, filename)
-                        plot.gevp(plot.pcm_and_mu, gevp_data, bootstrapsize, pdfplot,
-                            logscale, verbose)
-                        pdfplot.close()
+#                    if plot_pcm_and_mu:
+#    #                 for p_cm_vec in list_of_pcm:
+#                        filename = 'Gevp_p%1d_%s_pcm-and-mu.pdf' % (p_cm, irrep)
+#                        pdfplot = utils.create_pdfplot(path, filename)
+#                        plot.gevp(plot.pcm_and_mu, gevp_data, bootstrapsize, pdfplot,
+#                            logscale, verbose)
+#                        pdfplot.close()
     
 
 #                     for p_cm_vec in list_of_pcm:

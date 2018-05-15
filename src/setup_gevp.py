@@ -62,7 +62,8 @@ def build_gevp(data, mode, verbose):
 
         subduced_3pt_T = subduced_3pt.swaplevel('gevp_row','gevp_col')
 
-        index_3pt_T = map({'gevp_row' : 'gevp_col', 'gevp_col' : 'gevp_row'}.get, subduced_3pt_T.index.names, subduced_3pt_T.index.names)
+        index_3pt_T = map({'gevp_row' : 'gevp_col', 'gevp_col' : 'gevp_row'}.get, 
+                subduced_3pt_T.index.names, subduced_3pt_T.index.names)
         subduced_3pt_T.index.set_names(index_3pt_T, inplace=True)
 
         correlator = 'C4'
@@ -79,6 +80,9 @@ def build_gevp(data, mode, verbose):
 
         if verbose >= 1:
             print 'gevp'
+        if verbose == 1:
             print gevp.head()
+        if verbose >= 2:
+            print gevp
 
     return gevp
