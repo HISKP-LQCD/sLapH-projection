@@ -5,311 +5,317 @@ from pandas import Series, DataFrame
 import utils
 
 def rho_2pt(data, verbose=1):
-  """
-  Perform Wick contraction for 2pt function
+    """
+    Perform Wick contraction for 2pt function
 
-  Parameters
-  ----------
-  data : Dictionary of pd.DataFrame, keys in {'C20', 'C3c', 'C4cB', 'C4cD')
+    Parameters
+    ----------
+    data : Dictionary of pd.DataFrame, keys in {'C20', 'C3c', 'C4cB', 'C4cD')
 
-      For each diagram constituting the given `corrrelator` `data` must contain
-      an associated pd.DataFrame with its subduced lattice data
+        For each diagram constituting the given `corrrelator` `data` must contain
+        an associated pd.DataFrame with its subduced lattice data
 
-  Returns
-  -------
-  wick : pd.DataFrame
-      pd.DataFrame with indices like `data['C20']` and Wick contractions 
-      performed.
+    Returns
+    -------
+    wick : pd.DataFrame
+        pd.DataFrame with indices like `data['C20']` and Wick contractions
+        performed.
 
-  Notes
-  -----
-  The rho 2pt function is given by the contraction.
-  C^\text{2pt} = \langle \rho(t_{so})^\dagger \rho(t_si) \rangle
+    Notes
+    -----
+    The rho 2pt function is given by the contraction.
+    C^\text{2pt} = \langle \rho(t_{so})^\dagger \rho(t_si) \rangle
 
-  The gamma strucures that can appear in \rho(t) are hardcoded
-  """
+    The gamma strucures that can appear in \rho(t) are hardcoded
+    """
 
-  gamma_i =   [1, 2, 3]
-  gamma_50i = [13, 14, 15]
+    gamma_i =   [1, 2, 3]
+    gamma_50i = [13, 14, 15]
 
-  wick = data['C20']
+    assert {'C20'} <= set(data.keys()), 'Subduced data must contain C20'
 
-  # Warning: 1j hardcoded
-  wick[wick.index.get_level_values('\gamma^{0}_{so}').isin(gamma_i) & \
-       wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_i)]   *= (2.)
-  wick[wick.index.get_level_values('\gamma^{0}_{so}').isin(gamma_i) & \
-       wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_50i)] *= (2.*1j)
-  wick[wick.index.get_level_values('\gamma^{0}_{so}').isin(gamma_50i) & \
-       wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_i)]   *= (2.*1j)
-  wick[wick.index.get_level_values('\gamma^{0}_{so}').isin(gamma_50i) & \
-       wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_50i)] *= (2.)
+    wick = data['C20']
 
-  if verbose >= 2:
-    print "wick['C2']"
-  if verbose == 2:
-    print wick.head()
-  if verbose == 3:
-    print wick
+    # Warning: 1j hardcoded
+    wick[wick.index.get_level_values('\gamma^{0}_{so}').isin(gamma_i) & \
+         wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_i)]   *= (2.)
+    wick[wick.index.get_level_values('\gamma^{0}_{so}').isin(gamma_i) & \
+         wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_50i)] *= (2.*1j)
+    wick[wick.index.get_level_values('\gamma^{0}_{so}').isin(gamma_50i) & \
+         wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_i)]   *= (2.*1j)
+    wick[wick.index.get_level_values('\gamma^{0}_{so}').isin(gamma_50i) & \
+         wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_50i)] *= (2.)
 
-  return wick
+    if verbose >= 2:
+        print "wick['C2']"
+    if verbose == 2:
+        print wick.head()
+    if verbose == 3:
+        print wick
+
+    return wick
 
 def pipi_2pt(data, verbose=1):
-  """
-  Perform Wick contraction for 2pt function
+    """
+    Perform Wick contraction for 2pt function
 
-  Parameters
-  ----------
-  data : Dictionary of pd.DataFrame, keys in ('C20', 'C3c', 'C4cB', 'C4cD')
+    Parameters
+    ----------
+    data : Dictionary of pd.DataFrame, keys in ('C20', 'C3c', 'C4cB', 'C4cD')
 
-      For each diagram constituting the given `corrrelator` `data` must contain
-      an associated pd.DataFrame with its subduced lattice data
+        For each diagram constituting the given `corrrelator` `data` must contain
+        an associated pd.DataFrame with its subduced lattice data
 
-  Returns
-  -------
-  wick : pd.DataFrame
-      pd.DataFrame with indices like `data['C20']` and Wick contractions 
-      performed.
+    Returns
+    -------
+    wick : pd.DataFrame
+        pd.DataFrame with indices like `data['C20']` and Wick contractions
+        performed.
 
-  Notes
-  -----
-  The gamma strucures that can appear in \pi\pi(t) are hardcoded
-  """
-  wick = data['C2c']
+    Notes
+    -----
+    The gamma strucures that can appear in \pi\pi(t) are hardcoded
+    """
+    wick = data['C2c']
 
-  return wick
+    return wick
 
 ################################################################################
 
 def rho_3pt(data, verbose=1):
-  """
-  Perform Wick contraction for 3pt function
+    """
+    Perform Wick contraction for 3pt function
 
-  Parameters
-  ----------
-  data : Dictionary of pd.DataFrame, keys in ('C20', 'C3c', 'C4cB', 'C4cD')
+    Parameters
+    ----------
+    data : Dictionary of pd.DataFrame, keys in ('C20', 'C3c', 'C4cB', 'C4cD')
 
-      For each diagram constituting the given `corrrelator` `data` must contain
-      an associated pd.DataFrame with its subduced lattice data
+        For each diagram constituting the given `corrrelator` `data` must contain
+        an associated pd.DataFrame with its subduced lattice data
 
-  Returns
-  -------
-  wick : pd.DataFrame
+    Returns
+    -------
+    wick : pd.DataFrame
 
-      pd.DataFrame with indices like `data['C30']` and Wick contractions 
-      performed.
+        pd.DataFrame with indices like `data['C30']` and Wick contractions
+        performed.
 
-  Notes
-  -----
-  The rho 3pt function is given by the contraction.
-  C^\text{3pt} = \langle \pi\pi(t_{so})^\dagger \rho(t_si) \rangle
+    Notes
+    -----
+    The rho 3pt function is given by the contraction.
+    C^\text{3pt} = \langle \pi\pi(t_{so})^\dagger \rho(t_si) \rangle
 
-  The gamma strucures that can appear in \rho(t) are hardcoded
-  """
+    The gamma strucures that can appear in \rho(t) are hardcoded
+    """
 
-  gamma_5 =   [5]
-  gamma_i =   [1, 2, 3]
-  gamma_50i = [13, 14, 15]
+    gamma_5 =   [5]
+    gamma_i =   [1, 2, 3]
+    gamma_50i = [13, 14, 15]
 
-  wick = data['C3c']
+    assert {'C3c'} <= set(data.keys()), 'Subduced data must contain C3c'
 
-  # Warning: 1j hardcoded
-  wick[wick.index.get_level_values('\gamma^{0}_{so}').isin(gamma_5) & \
-       wick.index.get_level_values('\gamma^{1}_{so}').isin(gamma_5) & \
-       wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_i)]   *= ( 2.)   *(-1j)
-  wick[wick.index.get_level_values('\gamma^{0}_{so}').isin(gamma_5) & \
-       wick.index.get_level_values('\gamma^{1}_{so}').isin(gamma_5) & \
-       wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_50i)] *= ( 2.*1j)*(-1j)
+    wick = data['C3c']
 
-  if verbose >= 2:
-    print "wick['C3']"
-  if verbose == 2:
-    print wick.head()
-  if verbose == 3:
-    print wick
+    # Warning: 1j hardcoded
+    wick[wick.index.get_level_values('\gamma^{0}_{so}').isin(gamma_5) & \
+         wick.index.get_level_values('\gamma^{1}_{so}').isin(gamma_5) & \
+         wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_i)]   *= ( 2.)   *(-1j)
+    wick[wick.index.get_level_values('\gamma^{0}_{so}').isin(gamma_5) & \
+         wick.index.get_level_values('\gamma^{1}_{so}').isin(gamma_5) & \
+         wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_50i)] *= ( 2.*1j)*(-1j)
 
-  return wick
+    if verbose >= 2:
+        print "wick['C3']"
+    if verbose == 2:
+        print wick.head()
+    if verbose == 3:
+        print wick
+
+    return wick
 
 ################################################################################
 
 # TODO: catch if keys were not found
 def rho_4pt(data, verbose=0):
-  """
-  Perform Wick contraction for 4pt function
+    """
+    Perform Wick contraction for 4pt function
 
-  Parameters
-  ----------
-  data : Dictionary of pd.DataFrame, keys in ('C20', 'C3c', 'C4cB', 'C4cD')
+    Parameters
+    ----------
+    data : Dictionary of pd.DataFrame, keys in ('C20', 'C3c', 'C4cB', 'C4cD')
 
-      For each diagram constituting the given `corrrelator` `data` must contain
-      an associated pd.DataFrame with its subduced lattice data
+        For each diagram constituting the given `corrrelator` `data` must contain
+        an associated pd.DataFrame with its subduced lattice data
 
-  Returns
-  -------
-  wick : pd.DataFrame
+    Returns
+    -------
+    wick : pd.DataFrame
 
-      pd.DataFrame with indices like the union of indices in `data['C4cB']` and
-      cdata['C4cD']` and Wick contractions performed.
+        pd.DataFrame with indices like the union of indices in `data['C4cB']` and
+        cdata['C4cD']` and Wick contractions performed.
 
-  Notes
-  -----
-  The rho 3pt function is given by the contraction.
-  C^\text{2pt} = \langle \pi\pi(t_{so})^\dagger \pi\pi(t_si) \rangle
+    Notes
+    -----
+    The rho 3pt function is given by the contraction.
+    C^\text{2pt} = \langle \pi\pi(t_{so})^\dagger \pi\pi(t_si) \rangle
 
-  The gamma strucures that can appear in \rho(t) are hardcoded
-  """
+    The gamma strucures that can appear in \rho(t) are hardcoded
+    """
 
-  data_box = data['C4cB']
-  data_dia = data['C4cD']
-  
-  # TODO: support read in if the passed data is incomplete
+    assert {'C4cD', 'C4cB'} <= set(data.keys()), 'Subduced data must contain C4cD and C4cB'
+
+    data_box = data['C4cB']
+    data_dia = data['C4cD']
+
+    # TODO: support read in if the passed data is incomplete
 #  data_box = pd.read_hdf('readdata/%s_p%1i.h5' % (diagrams[0], p_cm), 'data')
 #  data_dia = pd.read_hdf('readdata/%s_p%1i.h5' % (diagrams[1], p_cm), 'data')
 
-  wick = ((-2.)*data_box).add(data_dia, fill_value=0)
+    wick = ((-2.)*data_box).add(data_dia, fill_value=0)
 
-  if verbose >= 2:
-    print "wick['C4']"
-  if verbose == 2:
-    print wick.head()
-  if verbose == 3:
-    print wick
+    if verbose >= 2:
+        print "wick['C4']"
+    if verbose == 2:
+        print wick.head()
+    if verbose == 3:
+        print wick
 
-  return wick
+    return wick
 
 def pipi_4pt(data, verbose=0):
-  """
-  Perform Wick contraction for 4pt function
+    """
+    Perform Wick contraction for 4pt function
 
-  Parameters
-  ----------
-  data : Dictionary of pd.DataFrame, keys in ('C20', 'C3c', 'C4cB', 'C4cD')
+    Parameters
+    ----------
+    data : Dictionary of pd.DataFrame, keys in ('C20', 'C3c', 'C4cB', 'C4cD')
 
-      For each diagram constituting the given `corrrelator` `data` must contain
-      an associated pd.DataFrame with its subduced lattice data
+        For each diagram constituting the given `corrrelator` `data` must contain
+        an associated pd.DataFrame with its subduced lattice data
 
-  Returns
-  -------
-  wick : pd.DataFrame
+    Returns
+    -------
+    wick : pd.DataFrame
 
-      pd.DataFrame with indices like the union of indices in `data['C4cB']` and
-      `data['C4cD']` and Wick contractions performed.
+        pd.DataFrame with indices like the union of indices in `data['C4cB']` and
+        `data['C4cD']` and Wick contractions performed.
 
-  Notes
-  -----
-  The rho 3pt function is given by the contraction.
-  C^\text{2pt} = \langle \pi\pi(t_{so})^\dagger \pi\pi(t_si) \rangle
+    Notes
+    -----
+    The rho 3pt function is given by the contraction.
+    C^\text{2pt} = \langle \pi\pi(t_{so})^\dagger \pi\pi(t_si) \rangle
 
-  The gamma strucures that can appear in \rho(t) are hardcoded
-  """
+    The gamma strucures that can appear in \rho(t) are hardcoded
+    """
 
-  data_cro = data['C4cC']
-  data_dia = data['C4cD']
-  
-  wick = ((-1.)*data_cro).add(data_dia, fill_value=0)
+    data_cro = data['C4cC']
+    data_dia = data['C4cD']
 
-  return wick
+    wick = ((-1.)*data_cro).add(data_dia, fill_value=0)
+
+    return wick
 
 ################################################################################
 
 def set_lookup_correlators(diagrams):
-  """
-  Extracts the correlation functions one can construct from the given diagrams
+    """
+    Extracts the correlation functions one can construct from the given diagrams
 
-  Parameters
-  ----------
-  diagrams : list of string {'C20', 'C3c', 'C4cB', 'C4cD'}
-      Diagram of wick contractions contributing the rho meson correlation 
-      function
+    Parameters
+    ----------
+    diagrams : list of string {'C20', 'C3c', 'C4cB', 'C4cD'}
+        Diagram of wick contractions contributing the rho meson correlation
+        function
 
-  Returns
-  -------
-  lookup_correlators : list of string {'C2', 'C3', 'C4'}
-      Correlation functions constituted by given diagrams
-  """
+    Returns
+    -------
+    lookup_correlators : list of string {'C2', 'C3', 'C4'}
+        Correlation functions constituted by given diagrams
+    """
 
-  lookup_correlators = {}
-  for nb_quarklines in range(2,5):
+    lookup_correlators = {}
+    for nb_quarklines in range(2,5):
 
-    # as a function argument give the names of all diagrams with the correct
-    # number of quarklines
-    mask = [d.startswith('C%1d' % nb_quarklines) for d in diagrams]
-    diagram = list(it.compress(diagrams, mask))
+        # as a function argument give the names of all diagrams with the correct
+        # number of quarklines
+        mask = [d.startswith('C%1d' % nb_quarklines) for d in diagrams]
+        diagram = list(it.compress(diagrams, mask))
 
-    if len(diagram) != 0:
-        lookup_correlators.update({"C%1d" % nb_quarklines : diagram})
+        if len(diagram) != 0:
+            lookup_correlators.update({"C%1d" % nb_quarklines : diagram})
 
-  return lookup_correlators
+    return lookup_correlators
 
 def rho(data, correlator, verbose=0):
-  """
-  Sums all diagrams with the factors they appear in the Wick contractions
+    """
+    Sums all diagrams with the factors they appear in the Wick contractions
 
-  Parameters
-  ----------
-  data : Dictionary of pd.DataFrame, keys in {'C20', 'C3c', 'C4cB', 'C4cD'}
-      For each diagram constituting the given `corrrelator` `data` must contain
-      an associated pd.DataFrame with its subduced lattice data
-  correlator : string {'C2', 'C3', 'C4'}
-      Correlation functions to perform the Wick contraction on
+    Parameters
+    ----------
+    data : Dictionary of pd.DataFrame, keys in {'C20', 'C3c', 'C4cB', 'C4cD'}
+        For each diagram constituting the given `corrrelator` `data` must contain
+        an associated pd.DataFrame with its subduced lattice data
+    correlator : string {'C2', 'C3', 'C4'}
+        Correlation functions to perform the Wick contraction on
 
-  Returns
-  -------
-  contracted : pd.DataFrame
-      A correlation function with completely performed Wick contractions. Rows
-      and columns are unchanged compared to `data`
+    Returns
+    -------
+    contracted : pd.DataFrame
+        A correlation function with completely performed Wick contractions. Rows
+        and columns are unchanged compared to `data`
 
-  Notes
-  -----
-  The correlation functions contributing to the rho gevp can be characterized
-  by the number of quarklines 
-  2pt \langle \rho(t_{so})^\dagger \rho(t_si) \rangle
-  3pt \langle \pi\pi(t_{so})^\dagger \rho(t_si) \rangle
-  4pt \langle \pi\pi(t_{so})^\dagger \pi\pi(t_si) \rangle
-  In the isospin limit the first 2 only have one (linearly independent) diagram
-  contributing, while the last one has two.
-  """
+    Notes
+    -----
+    The correlation functions contributing to the rho gevp can be characterized
+    by the number of quarklines
+    2pt \langle \rho(t_{so})^\dagger \rho(t_si) \rangle
+    3pt \langle \pi\pi(t_{so})^\dagger \rho(t_si) \rangle
+    4pt \langle \pi\pi(t_{so})^\dagger \pi\pi(t_si) \rangle
+    In the isospin limit the first 2 only have one (linearly independent) diagram
+    contributing, while the last one has two.
+    """
 
-  # TODO: I don't think you have to emulate c function pointers for this
-  rho = {'C2' : rho_2pt, 'C3' : rho_3pt, 'C4' : rho_4pt}
+    # TODO: I don't think you have to emulate c function pointers for this
+    rho = {'C2' : rho_2pt, 'C3' : rho_3pt, 'C4' : rho_4pt}
 
-  # call rho_2pt, rho_3pt, rho_4pt from this loop
-  contracted = rho[correlator](data, verbose)
+    # call rho_2pt, rho_3pt, rho_4pt from this loop
+    contracted = rho[correlator](data, verbose)
 
-  return contracted
+    return contracted
 
 def pipi(data, correlator, verbose=0):
-  """
-  Sums all diagrams with the factors they appear in the Wick contractions
+    """
+    Sums all diagrams with the factors they appear in the Wick contractions
 
-  Parameters
-  ----------
-  data : Dictionary of pd.DataFrame, keys in {'C20', 'C4cC', 'C4cD'}
-      For each diagram constituting the given `corrrelator` `data` must contain
-      an associated pd.DataFrame with its subduced lattice data
-  correlator : string {'C2', 'C4'}
-      Correlation functions to perform the Wick contraction on
+    Parameters
+    ----------
+    data : Dictionary of pd.DataFrame, keys in {'C20', 'C4cC', 'C4cD'}
+        For each diagram constituting the given `corrrelator` `data` must contain
+        an associated pd.DataFrame with its subduced lattice data
+    correlator : string {'C2', 'C4'}
+        Correlation functions to perform the Wick contraction on
 
-  Returns
-  -------
-  contracted : pd.DataFrame
-      A correlation function with completely performed Wick contractions. Rows
-      and columns are unchanged compared to `data`
+    Returns
+    -------
+    contracted : pd.DataFrame
+        A correlation function with completely performed Wick contractions. Rows
+        and columns are unchanged compared to `data`
 
-  Notes
-  -----
-  The correlation functions contributing to the rho gevp can be characterized
-  by the number of quarklines 
-  2pt \langle \rho(t_{so})^\dagger \rho(t_si) \rangle
-  3pt \langle \pi\pi(t_{so})^\dagger \rho(t_si) \rangle
-  4pt \langle \pi\pi(t_{so})^\dagger \pi\pi(t_si) \rangle
-  In the isospin limit the first 2 only have one (linearly independent) diagram
-  contributing, while the last one has two.
-  """
+    Notes
+    -----
+    The correlation functions contributing to the rho gevp can be characterized
+    by the number of quarklines
+    2pt \langle \rho(t_{so})^\dagger \rho(t_si) \rangle
+    3pt \langle \pi\pi(t_{so})^\dagger \rho(t_si) \rangle
+    4pt \langle \pi\pi(t_{so})^\dagger \pi\pi(t_si) \rangle
+    In the isospin limit the first 2 only have one (linearly independent) diagram
+    contributing, while the last one has two.
+    """
 
-  # TODO: I don't think you have to emulate c function pointers for this
-  pipi = {'C2' : pipi_2pt, 'C4' : pipi_4pt}
+    # TODO: I don't think you have to emulate c function pointers for this
+    pipi = {'C2' : pipi_2pt, 'C4' : pipi_4pt}
 
-  # call rho_2pt, rho_3pt, rho_4pt from this loop
-  contracted = pipi[correlator](data, verbose)
+    # call rho_2pt, rho_3pt, rho_4pt from this loop
+    contracted = pipi[correlator](data, verbose)
 
-  return contracted
+    return contracted

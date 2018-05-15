@@ -50,6 +50,8 @@ def build_gevp(data, mode, verbose):
 
     elif mode == 'rho':
 
+        assert set(data.keys()) == {'C2', 'C3', 'C4'}, 'Gevp must contain C2, C3 and C4'
+
         ##############################################################################
         # read and prepare correlation function to enter the gevp
         # TODO: 2x2 kinds of operators hardcoded. E.g. for baryons this has to be
