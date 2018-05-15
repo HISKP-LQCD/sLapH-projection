@@ -302,9 +302,9 @@ if __name__ == '__main__':
 
                         gevp_labels = ['gevp_row', 'gevp_col']
                         momentum_labels = \
-                          [col for col in plotdata.index.names if 'p^{' in col]
+                          [col for col in contracted_data.index.names if 'p^{' in col]
                         gamma_labels = \
-                          [col for col in plotdata.index.names if 'gamma' in col]
+                          [col for col in contracted_data.index.names if 'gamma' in col]
 
                         if plot_experimental:
 
@@ -317,8 +317,9 @@ if __name__ == '__main__':
                               filename, logscale, verbose)
 
                         if plot_avg:
+                            plotdata_tmp = contracted_data.apply(np.real)
                             # sum over momenta and gamma structures
-                            plotdata_tmp = plotdata.sum(
+                            plotdata_tmp = plotdata_tmp.sum(
                               level=gevp_labels + ['p_{cm}', '\mu'])
                             plotdata_tmp = plotdata_tmp.mean(level=gevp_labels)
 
@@ -331,8 +332,9 @@ if __name__ == '__main__':
 
 
                         if plot_pcm_and_mu:
+                            plotdata_tmp = contracted_data.apply(np.real)
                             # sum over momenta and gamma structures
-                            plotdata_tmp = plotdata.sum(
+                            plotdata_tmp = plotdata_tmp.sum(
                               level=gevp_labels + ['p_{cm}', '\mu'])
 
                             filename = '/%s_p%1i_%s_pcm-and-mu_%s.pdf' % (
@@ -359,9 +361,9 @@ if __name__ == '__main__':
 
                     gevp_labels = ['gevp_row', 'gevp_col']
                     momentum_labels = \
-                      [col for col in contracted_data_avg[correlator].columns if 'p^{' in col]
+                      [col for col in contracted_data.columns if 'p^{' in col]
                     gamma_labels = \
-                      [col for col in contracted_data_avg[correlator].columns if 'gamma' in col]
+                      [col for col in contracted_data.columns if 'gamma' in col]
 
                     # sum over gamma structures.
                     contracted_data_avg[correlator] = contracted_data_avg[correlator].sum(

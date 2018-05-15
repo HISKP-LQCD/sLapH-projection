@@ -54,11 +54,7 @@ def bootstrap(df, bootstrapsize):
 
     # Also I have to use a list comprehension rather than rnd directly...
     boot = pd.concat(
-        [
-            df.loc[:, idx[[r
-                           for r in rnd]]].mean(axis=1, level=1)
-            for rnd in rnd_samples
-        ],
+        [df.loc[:, idx[[r for r in rnd]]].mean(axis=1, level=1) for rnd in rnd_samples],
         axis=1,
         keys=range(bootstrapsize))
 
