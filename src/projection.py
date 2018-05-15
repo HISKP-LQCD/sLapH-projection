@@ -365,6 +365,24 @@ def project_isospin(operator_so, operator_si):
 
     return operator_so, operator_si
 
+def select_q(list_of_q, operators_so, operators_si):
+
+    if list_of_q != None:
+
+        label = 'q_{so}'
+        if label in operators_so.columns:
+            operators_so = operators_so[
+                operators_so[label].apply(literal_eval).isin(list_of_q)]
+
+        # Code doubled. May be refactored out.
+        label = 'q_{si}'
+        if label in operators_si.columns:
+            operators_si = operators_si[
+                operators_si[label].apply(literal_eval).isin(list_of_q)]
+
+    return operators_so, operators_si
+
+
 def correlate_operators(operator_so, operator_si, verbose):
 
     # inner merge to get linear combinations of contributing correlation functions
@@ -413,8 +431,8 @@ def correlate_operators(operator_so, operator_si, verbose):
 
     return lattice_operators
 
-def project(j, correlator, continuum_basis_string, gamma_input, list_of_pcm, path_to_sc, 
-        path_to_sc_2, verbose):
+def project(j, correlator, continuum_basis_string, gamma_input, list_of_pcm, list_of_q,
+        path_to_sc, path_to_sc_2, verbose):
 
     # Express :math:`O^{J,M}` in terms of physical Dirac operators
     # specified in `gamma_input`
@@ -431,8 +449,9 @@ def project(j, correlator, continuum_basis_string, gamma_input, list_of_pcm, pat
       correlator, lattice_operators_so, lattice_operators_si,
       continuum_operators, verbose)
 
-    operators_so, operators_si = project_isospin(
-      operators_so, operators_si)
+    operators_so, operators_si = project_isospin(operators_so, operators_si)
+
+    operators_so, operators_si = select_q(list_of_q, operators_so, operators_si)
 
     lattice_operators = correlate_operators(
       operators_so, operators_si, verbose)

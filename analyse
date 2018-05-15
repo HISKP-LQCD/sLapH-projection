@@ -208,8 +208,9 @@ if __name__ == '__main__':
                 contracted_data_avg = {}
                 for correlator, diagrams in correlators.iteritems():
 
+                    list_of_q = [(0.0,0.0,1.0), (0.0,1.0,1.0),(1.0,0.0,1.0)]
                     lattice_operators = projection.project(j, correlator, 
-                            continuum_basis_string, gamma_input, list_of_pcm, 
+                            continuum_basis_string, gamma_input, list_of_pcm, list_of_q,
                             path_to_sc, path_to_sc_2, verbose)
                     lattice_operators = lattice_operators.xs(beta, level=r'\beta')
 
@@ -217,6 +218,8 @@ if __name__ == '__main__':
                     # :warning: multiplicity 1 hardcoded
                     lattice_operators = lattice_operators.xs(
                             (irrep, 1), level=('Irrep', 'mult'))
+
+                    print lattice_operators
 
                     subduced_data = {}
                     for diagram in diagrams:
