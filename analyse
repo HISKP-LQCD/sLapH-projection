@@ -117,20 +117,20 @@ if __name__ == '__main__':
             print 'p_cm = ', p
             print 'p_cutoff = ', p_cutoff
 
-        list_of_pcm = config.get('gevp parameters', 'list of p_cm')
+        default_list_of_pcm = config.get('gevp parameters', 'list of p_cm')
         gamma_input = config.get('gevp parameters', 'Dirac structure')
         # translates list of names for gamma structures to indices used in
         # contraction code
         gamma_input = gamma_input.replace(" ", "").split(';')
         gamma_input = {0: ['gamma_5'], 1: gamma_input}
-        list_of_q = config.get('gevp parameters', 'list of q')
-        beta = config.get('gevp parameters', 'beta')
+        default_list_of_q = config.get('gevp parameters', 'list of q')
+        default_beta = config.get('gevp parameters', 'beta')
 
         if verbose >= 2:
-            print 'beta = ', beta
+            print 'list of pcm = ', default_list_of_pcm
             print 'Gamma structures: ', gamma_input
-            print 'list of pcm = ', list_of_pcm
-            print 'list of q = ', list_of_q
+            print 'list of q = ', defaultlist_of_q
+            print 'beta = ', default_beta
 
         diagrams = config.get('contraction details', 'Diagram')
         diagrams = diagrams.replace(" ", "").split(',')
@@ -227,14 +227,17 @@ if __name__ == '__main__':
                 ##########################################################################
                 # Handling of gevp parameters
                 gevp_parameters = ConfigParser.SafeConfigParser(
-                        {'list of p_cm' : None,
-                            'list of q' : None,
-                            'beta' : '1'})
+                        {'list of p_cm' : default_list_of_pcm,
+                            'list of q' : default_list_of_q,
+                            'beta' : default_beta})
     
                 if(gevp_parameters.read('%s/%s/3_gevp-data/%s_p%1d_%s.ini' % 
                         (outpath, ensemble, ensemble, p_cm_sq, irrep)) == []):
                     print 'Did not find gevp parameters for {}. ' \
                         'Continuing with default values'.format(irrep)
+                    list_of_pcm = default_list_of_pcm
+                    list_of_q = default_list_of_q
+                    beta = default_beta
                 else:
                     list_of_pcm = gevp_parameters.get('gevp parameters', 'list of p_cm')
                     list_of_q = gevp_parameters.get('gevp parameters', 'list of q')
