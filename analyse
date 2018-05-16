@@ -132,20 +132,20 @@ if __name__ == '__main__':
             print 'list of q = ', default_list_of_q
             print 'beta = ', default_beta
 
-        diagrams = config.get('contraction details', 'Diagram')
-        diagrams = diagrams.replace(" ", "").split(',')
+        list_of_diagrams = config.get('contraction details', 'Diagram')
+        list_of_diagrams = list_of_diagrams.replace(" ", "").split(',')
         directories = config.get('contraction details', 'Input Path')
         directories = directories.replace(" ", "").replace("\n", "")
         directories = directories.split(',')
 
         if verbose >= 2:
-            print 'Wick diagrams to subduce: ', diagrams
-        # use the same directory for all diagrams if only one is given
+            print 'Wick diagrams to subduce: ', list_of_diagrams
+        # use the same directory for all list_of_diagrams if only one is given
         if (len(directories) == 1):
-            directories = directories * len(diagrams)
+            directories = directories * len(list_of_diagrams)
         if verbose >= 2:
-            for i in range(len(diagrams)):
-                print 'Read data for ', diagrams[i], ' from ', directories[i]
+            for i in range(len(list_of_diagrams)):
+                print 'Read data for ', list_of_diagrams[i], ' from ', directories[i]
 
         path_to_sc = config.get('Environment details',
                     'Path to one-meson subduction coefficients')
@@ -189,7 +189,7 @@ if __name__ == '__main__':
             # read diagrams for correlators contributing to rho
             if flag['read']:
                 path = '%s/%s/0_raw-data/' % (outpath, ensemble)
-                raw_data.read(path, T, diagrams, directories, sta_cnfg, end_cnfg, del_cnfg,
+                raw_data.read(path, T, list_of_diagrams, directories, sta_cnfg, end_cnfg, del_cnfg,
                         missing_configs, process, p_cm_sq, p_cutoff, gamma_input, verbose)
 
             # TODO: Is gamma_input giving the right quantum numbers?
@@ -208,7 +208,7 @@ if __name__ == '__main__':
             ########################################################################
             # Setup of list of pcm and irrep to loop over
             path = '%s/%s/0_raw-data/' % (outpath, ensemble)
-            filename = '%s_p%1i_qn.h5' % (diagrams[0], p_cm_sq)
+            filename = '%s_p%1i_qn.h5' % (list_of_diagrams[0], p_cm_sq)
             lookup_qn = utils.read_hdf5_correlators(path + filename, 'qn')
 
             # Angular momentum for particles of interest
@@ -219,7 +219,7 @@ if __name__ == '__main__':
 
             list_of_irreps = projection.get_list_of_irreps(
                     lookup_qn['p_{cm}'].unique(), path_to_sc, j)
-            correlators = wick.set_lookup_correlators(diagrams)
+            correlators = wick.set_lookup_correlators(list_of_diagrams)
 
             for irrep in list_of_irreps:
                 print '\t  Subducing into %s' % irrep
