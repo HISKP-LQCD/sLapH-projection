@@ -129,7 +129,7 @@ if __name__ == '__main__':
         if verbose >= 2:
             print 'list of pcm = ', default_list_of_pcm
             print 'Gamma structures: ', gamma_input
-            print 'list of q = ', defaultlist_of_q
+            print 'list of q = ', default_list_of_q
             print 'beta = ', default_beta
 
         diagrams = config.get('contraction details', 'Diagram')
@@ -253,7 +253,7 @@ if __name__ == '__main__':
                 list_of_pcm = [str(p) for p in list_of_pcm]
  
                 if list_of_q != None: 
-                    list_of_q = [str(literal_eval(q.strip())) for q in list_of_q.split(';')]
+                    list_of_q = [literal_eval(q.strip()) for q in list_of_q.split(';')]
 
                 contracted_data_avg = {}
                 for correlator, diagrams in correlators.iteritems():
