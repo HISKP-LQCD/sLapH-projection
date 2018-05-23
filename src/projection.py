@@ -338,11 +338,11 @@ def project_isospin(operator_so, operator_si):
     if label in operator_so.columns:
         operator_so[label] = operator_so[label].apply(literal_eval)
 
-        isospin_neg = operator_so[operator_so[label] < (0,0,0)]
+        isospin_neg = operator_so[operator_so[label] <= (0,0,0)]
         isospin_neg.loc[:,'coefficient'] = isospin_neg.loc[:,'coefficient'] * -1
         isospin_neg.loc[:,label] = isospin_neg.loc[:,label].apply(utils._minus)
 
-        isospin_pos = operator_so[operator_so[label] > (0,0,0)]
+        isospin_pos = operator_so[operator_so[label] >= (0,0,0)]
 
         operator_so = pd.concat([isospin_pos, isospin_neg])
         operator_so[label] = operator_so[label].apply(str)

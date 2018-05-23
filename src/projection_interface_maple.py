@@ -65,7 +65,7 @@ def read_sc_2(p_cm_vecs, path, verbose=True, j=1):
 
     # Rho cannot appear in S-wave pipi scattering because of angular momentum 
     # conservation.
-    df = df[(df['p^{0}'] != str((0,0,0))) | (df['p^{1}'] != str((0,0,0)))]
+    df = df[(df['p_{cm}'] != str((0,0,0))) | (df['p^{0}'] != str((0,0,0))) | (df['p^{1}'] != str((0,0,0)))]
 
     # Momentum cutoff: Don't consider momenta (2,1,0) and higher.
     # Currently done in Maple
