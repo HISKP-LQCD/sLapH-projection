@@ -346,6 +346,7 @@ def project_isospin(operator_so, operator_si):
 
         operator_so = pd.concat([isospin_pos, isospin_neg])
         operator_so[label] = operator_so[label].apply(str)
+        operator_so['coefficient'] /= np.sqrt(2)
 
     # Code doubled. May be refactored out.
     # Todo: Do I need to change the sign of q? I don't think so, because the daggering
@@ -362,6 +363,7 @@ def project_isospin(operator_so, operator_si):
 
         operator_si = pd.concat([isospin_pos, isospin_neg])
         operator_si[label] = operator_si[label].apply(str)
+        operator_si['coefficient'] /= np.sqrt(2)
 
     return operator_so, operator_si
 

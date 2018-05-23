@@ -231,8 +231,8 @@ if __name__ == '__main__':
                             'list of q' : default_list_of_q,
                             'beta' : default_beta})
     
-                if(gevp_parameters.read('%s/%s/3_gevp-data/%s_p%1d_%s.ini' % 
-                        (outpath, ensemble, ensemble, p_cm_sq, irrep)) == []):
+                if(gevp_parameters.read('%s/%s/3_gevp-data/p%1d_%s.ini' % 
+                        (outpath, ensemble, p_cm_sq, irrep)) == []):
                     print 'Did not find gevp parameters for {}. ' \
                         'Continuing with default values'.format(irrep)
                     list_of_pcm = default_list_of_pcm
@@ -425,12 +425,6 @@ if __name__ == '__main__':
                     # sum over equivalent momenta
                     contracted_data_avg[correlator] = contracted_data_avg[correlator].sum(
                       level=gevp_labels + ['p_{cm}'] + ['\mu'])
-                    # average over rows.
-                    contracted_data_avg[correlator] = contracted_data_avg[correlator].mean(
-                      level=gevp_labels + ['p_{cm}'])
-                    # average over p_cm_sq.
-                    contracted_data_avg[correlator] = contracted_data_avg[correlator].mean(
-                      level=gevp_labels)
 
                 ##########################################################################
                 # Gevp construction
@@ -445,8 +439,11 @@ if __name__ == '__main__':
                     filename = '%s_p%1i_%s_%d.h5' % (process, p_cm_sq, irrep, 1)
                     utils.write_hdf5_correlators(path, filename, gevp_data, 'data', verbose)
 
+                    # average over rows and  p_cm_sq.
+                    gevp_data_avg = gevp_data.mean(level=gevp_labels)
+
                     path = '%s/%s/3_gevp-data/p%1i/%s/' % (outpath, ensemble, p_cm_sq, irrep)
-                    utils.write_ascii_gevp(path, process, gevp_data, verbose)
+                    utils.write_ascii_gevp(path, process, gevp_data_avg, verbose)
 
                 ##########################################################################
                 # Plotting everything together
@@ -461,25 +458,16 @@ if __name__ == '__main__':
                     if plot_avg:
                         filename = 'Gevp_p%1d_%s_avg.pdf' % (p_cm_sq, irrep)
                         pdfplot = utils.create_pdfplot(path, filename)
-                        plot.gevp(plot.average, gevp_data, bootstrapsize, pdfplot,
+                        plot.gevp(plot.average, gevp_data_avg, bootstrapsize, pdfplot,
                             logscale, verbose)
                         pdfplot.close()
     
-#                    if plot_pcm_and_mu:
-#    #                 for p_cm_sq_vec in list_of_pcm:
-#                        filename = 'Gevp_p%1d_%s_pcm-and-mu.pdf' % (p_cm_sq, irrep)
-#                        pdfplot = utils.create_pdfplot(path, filename)
-#                        plot.gevp(plot.pcm_and_mu, gevp_data, bootstrapsize, pdfplot,
-#                            logscale, verbose)
-#                        pdfplot.close()
-    
-
-#                     for p_cm_sq_vec in list_of_pcm:
-#                     filename = 'Gevp_p001_%s.pdf' % (irrep)
-#                     pdfplot = utils.create_pdfplot(path, filename)
-#                     plot.gevp(plot.pcm_and_mu, gevp_data.xs(str((0,0,1)), level="p_{cm}", drop_level=False), bootstrapsize, pdfplot,
-#                         logscale, verbose)
-#                     pdfplot.close()
+                    if plot_pcm_and_mu:
+                        filename = 'Gevp_p%1d_%s_pcm-and-mu.pdf' % (p_cm_sq, irrep)
+                        pdfplot = utils.create_pdfplot(path, filename)
+                        plot.gevp(plot.pcm_and_mu, gevp_data, bootstrapsize, pdfplot,
+                            logscale, verbose)
+                        pdfplot.close()
 
     except KeyboardInterrupt:
         pass
