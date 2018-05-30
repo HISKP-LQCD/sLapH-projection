@@ -212,6 +212,7 @@ def average(graphdata, ax, scale=1):
 
     return
 
+# TODO: use color for momenta and symbols for rows.
 def pcm_and_mu(graphdata, ax, scale=1):
 
     plot_gevp_el_ax(graphdata, r'$\vec{{P}}_\textnormal{{cm}} = {}$, $\mu = {}$', scale, 
