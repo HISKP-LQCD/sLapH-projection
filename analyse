@@ -233,8 +233,9 @@ if __name__ == '__main__':
     
                 if(gevp_parameters.read('%s/%s/3_gevp-data/p%1d_%s.ini' % 
                         (outpath, ensemble, p_cm_sq, irrep)) == []):
-                    print 'Did not find gevp parameters for {}. ' \
-                        'Continuing with default values'.format(irrep)
+                    print 'Did not find gevp parameters for {} in '\
+                        '{}/{}/3_gevp-data/p{}_{}.ini. Continuing with default values'.\
+                        format(irrep, outpath, ensemble, p_cm_sq, irrep)
                     list_of_pcm = default_list_of_pcm
                     list_of_q = default_list_of_q
                     beta = default_beta
