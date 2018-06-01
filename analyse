@@ -409,6 +409,11 @@ if __name__ == '__main__':
                                   pdfplot, logscale, verbose)
                             pdfplot.close()
 
+                ##########################################################################
+                # Gevp construction
+
+                if flag['create gevp']:
+
                     # Only real part is physically relevant at that point
                     contracted_data_avg[correlator] = contracted_data.apply(
                       np.real)
@@ -426,10 +431,7 @@ if __name__ == '__main__':
                     contracted_data_avg[correlator] = contracted_data_avg[correlator].sum(
                       level=gevp_labels + ['p_{cm}'] + ['\mu'])
 
-                ##########################################################################
-                # Gevp construction
 
-                if flag['create gevp']:
                     print '\tCreating gevp'
 
                     gevp_data = setup_gevp.build_gevp(contracted_data_avg, process,
