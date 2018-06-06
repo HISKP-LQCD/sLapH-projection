@@ -137,7 +137,7 @@ def set_groupname(diagram, s):
         p_si = _minus(eval(s['p^{0}_{si}']))
         g_si = s['\gamma^{0}_{si}']
 
-        groupname = diagram.replace('c', '+') \
+        groupname = diagram \
                       + '_uuu_p%1i%1i%1i.d000.g%1i' % ( p_so_1 + (g_so_1,) ) \
                       +     '_p%1i%1i%1i.d000.g%1i' % ( p_si +   (g_si,) ) \
                       +     '_p%1i%1i%1i.d000.g%1i' % ( p_so_0 + (g_so_0,) )
