@@ -12,7 +12,7 @@ def dlfile(url):
         print "downloading " + url
 
         # Open our local file for writing
-        with open(os.path.expanduser("~") + "/Data/A40.24/" + os.path.basename(url), "wb") as local_file:
+        with open(os.path.expanduser("~") + "/Data/" + os.path.basename(url), "wb") as local_file:
             local_file.write(f.read())
 
     #handle errors
