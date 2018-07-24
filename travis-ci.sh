@@ -18,17 +18,21 @@ cd ..
 
 ubuntu_packages=(
     python
+    python-h5py
     python-scipy 
-    python-matplotlib 
     python-pandas 
+    python-matplotlib 
     python-sympy 
     python-gmpy
-    python-h5py
 )
 
 sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
 sudo apt-get update
 sudo apt-get install -y "${ubuntu_packages[@]}"
+
+python -c 'import sys; print sys.path'
+
+find /usr/lib/python2.7/dist-packages/h5py
 
 ##########################################################################################
 # Setup                                                                     #
