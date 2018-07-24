@@ -24,10 +24,8 @@ sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
 sudo apt-get update
 sudo apt-get install -y "${ubuntu_packages[@]}"
 
-python -c 'import sys; print sys.path'
-
 ##########################################################################################
-# Setup                                                                     #
+# Setup                                                                                  #
 ##########################################################################################
 
 
@@ -38,9 +36,9 @@ cp "$sourcedir/tests/integration/p"*".ini" "$outdir/integration/3_gevp-data/"
 # Set up input data
 mkdir -p "$HOME/Data/A40.24"
 pushd "$sourcedir"
-chmod +x travis-ci_setup.py
 python travis-ci_setup.py
 popd
+tar -C "$HOME/Data/A40.24" -xf "$HOME/Data/A40.24/A40.24_cnfg0714.tar"
 
 ##########################################################################################
 # Run tests                                                                              #
