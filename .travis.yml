@@ -3,6 +3,13 @@
 # Licensed under the MIT/Expat license.
 
 language: python
-script: ./travis-ci.sh
+python:
+  - "2.7"
+# command to install dependencies
+install:
+  - pip install -r requirements.txt
+# command to run tests
+script:
+  - ./travis-ci.sh
 dist: trusty
 sudo: true

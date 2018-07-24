@@ -17,13 +17,7 @@ cd ..
 ###############################################################################
 
 ubuntu_packages=(
-    python
-    python-h5py
-    python-scipy 
-    python-pandas 
-    python-matplotlib 
-    python-sympy 
-    python-gmpy
+  libhdf5-dev
 )
 
 sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
