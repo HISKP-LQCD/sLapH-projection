@@ -8,7 +8,7 @@ set -u
 set -x
 
 sourcedir="$(pwd)"
-outdir="$(HOME)/output"
+outdir="$HOME/output"
 
 cd ..
 
@@ -32,8 +32,8 @@ sudo apt-get install -y "${ubuntu_packages[@]}"
 # Setup output folder                                                                    #
 ##########################################################################################
 
-mkdir -p "$(outdir)/integration/3_gevp-data"
-cp "$(sourcedir)/tests/integration/*.ini" "$(outdir)/integration/3_gevp-data/"
+mkdir -p "$outdir/integration/3_gevp-data"
+cp "$sourcedir/tests/integration/*.ini" "$outdir/integration/3_gevp-data/"
 
 ##########################################################################################
 # Run tests                                                                              #
