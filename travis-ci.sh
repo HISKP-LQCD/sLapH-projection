@@ -45,5 +45,5 @@ tar -C "$HOME/Data/" -xf "$HOME/Data/A40.24-cnfg0714.tar"
 ##########################################################################################
 
 pushd "$sourcedir"
-python analyse tests/integration/A40.24.ini -vv -b marcus-con
+python analyse tests/integration/A40.24.ini -b marcus-con
 popd
