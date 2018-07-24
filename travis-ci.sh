@@ -47,5 +47,5 @@ popd
 ##########################################################################################
 
 pushd "$sourcedir"
-python analyse -i tests/integration/A40.24.ini -vv
+python analyse tests/integration/A40.24.ini -vv -b marcus-con
 popd
