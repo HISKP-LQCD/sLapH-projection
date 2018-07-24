@@ -39,6 +39,7 @@ mkdir -p "$outdir/integration/3_gevp-data"
 cp "$sourcedir/tests/integration/p"*".ini" "$outdir/integration/3_gevp-data/"
 
 # Set up input data
+mkdir -p "$HOME/Data/A40.24"
 pushd "$sourcedir"
 chmod +x travis-ci_setup.py
 python travis-ci_setup.py
