@@ -8,7 +8,6 @@
 *.dat
 *.npy
 *.out
-*.h5
 3pt/test
 # swap files
 *.swp

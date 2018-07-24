@@ -22,6 +22,7 @@ ubuntu_packages=(
     python-matplotlib 
     python-pandas 
     python-sympy 
+    python-gmpy
 )
 
 sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
@@ -29,11 +30,17 @@ sudo apt-get update
 sudo apt-get install -y "${ubuntu_packages[@]}"
 
 ##########################################################################################
-# Setup output folder                                                                    #
+# Setup                                                                     #
 ##########################################################################################
 
+
+# Set up output folder
 mkdir -p "$outdir/integration/3_gevp-data"
-cp "$sourcedir/tests/integration/*.ini" "$outdir/integration/3_gevp-data/"
+cp "$sourcedir/tests/integration/p"*".ini" "$outdir/integration/3_gevp-data/"
+
+# Set up input data
+chmod +x travis-ci_setup.py
+python travis-ci_setup.py
 
 ##########################################################################################
 # Run tests                                                                              #
