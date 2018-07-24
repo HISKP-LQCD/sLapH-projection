@@ -1,0 +1,8 @@
+# Copyright © 2017 Martin Ueding <dev@martin-ueding.de>
+# Modified by Markus Werner <markus.werner@uni-bonn.de>
+# Licensed under the MIT/Expat license.
+
+language: python
+script: ./travis-ci.sh
+dist: trusty
+sudo: true
