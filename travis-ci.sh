@@ -23,6 +23,7 @@ ubuntu_packages=(
     python-pandas 
     python-sympy 
     python-gmpy
+    python-h5py
 )
 
 sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
