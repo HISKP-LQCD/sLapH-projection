@@ -39,13 +39,15 @@ mkdir -p "$outdir/integration/3_gevp-data"
 cp "$sourcedir/tests/integration/p"*".ini" "$outdir/integration/3_gevp-data/"
 
 # Set up input data
+pushd "$sourcedir"
 chmod +x travis-ci_setup.py
 python travis-ci_setup.py
+popd
 
 ##########################################################################################
 # Run tests                                                                              #
 ##########################################################################################
 
-pushd $(sourcedir)
+pushd "$sourcedir"
 python analyse -i tests/integration/A40.24.ini -vv
 popd
