@@ -1,6 +1,7 @@
 h5py
 pandas
 matplotlib
+bokeh
 sympy
 asteval
 gmpy
