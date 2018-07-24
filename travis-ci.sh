@@ -38,7 +38,7 @@ mkdir -p "$HOME/Data/A40.24"
 pushd "$sourcedir"
 python travis-ci_setup.py
 popd
-tar -C "$HOME/Data/A40.24" -xf "$HOME/Data/A40.24/A40.24_cnfg0714.tar"
+tar -C "$HOME/Data/A40.24" -xf "$HOME/Data/A40.24/A40.24-cnfg0714.tar"
 
 ##########################################################################################
 # Run tests                                                                              #
