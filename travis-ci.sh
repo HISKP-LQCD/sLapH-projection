@@ -29,5 +29,5 @@ sudo apt-get install -y "${ubuntu_packages[@]}"
 ##########################################################################################
 
 pushd "$sourcedir"
-python analyse tests/integration/A40.24.ini -b marcus-con
+python integration-test.py
 popd

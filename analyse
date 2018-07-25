@@ -30,8 +30,7 @@ if __name__ == '__main__':
         verbose = args.verbose
         continuum_basis_string = args.basis
 
-        main(**(infile.read(args.infile, verbose).update(
-            {'continuum_basis_string' : continuum_basis_string, 'verbose' : verbose})))
+        main(continuum_basis_string=continuum_basis_string, verbose=verbose, **infile.read(args.infile, verbose))
  
     except KeyboardInterrupt:
         pass
