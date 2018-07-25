@@ -24,7 +24,7 @@ def main(flag_pion, process, flag, sta_cnfg, end_cnfg, del_cnfg, missing_configs
         T, list_of_pcm_sq, p_cutoff, default_list_of_pcm, gamma_input, default_list_of_q,
         default_beta, list_of_diagrams, directories, path_to_sc, path_to_sc_2, outpath,
         plot_p_and_g, plot_pcm_and_mu, plot_avg, plot_experimental, logscale,
-        bootstrapsize, continuum_basis_string='marcus-con', verbose=0):
+        bootstrapsize, continuum_basis_string, verbose):
 
     for p_cm_sq in list_of_pcm_sq:
         if verbose:

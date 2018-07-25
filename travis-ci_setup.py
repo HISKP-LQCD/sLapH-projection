@@ -4,7 +4,6 @@
 import os
 from urllib2 import urlopen, URLError, HTTPError
 
-
 def dlfile(url):
     # Open the url
     try:
