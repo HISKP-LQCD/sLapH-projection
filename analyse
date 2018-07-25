@@ -22,7 +22,7 @@ if __name__ == '__main__':
         # TODO: Only allow certain options, specify standard behavior, etc.
         parser.add_argument("-b", "--basis", choices=['cartesian', 'cyclic', \
                               'cyclic-christian', 'dudek', 'marcus-cov', 'marcus-con', 'test'], \
-                              default='marcus-cov',
+                              default='marcus-con',
                               help="continuum basis to be used in the program")
     
         args = parser.parse_args()
@@ -30,7 +30,8 @@ if __name__ == '__main__':
         verbose = args.verbose
         continuum_basis_string = args.basis
 
-        main(*infile.read(args.infile, verbose), continuum_basis_string=continuum_basis_string, verbose=verbose)
+        main(**(infile.read(args.infile, verbose).update(
+            {'continuum_basis_string' : continuum_basis_string, 'verbose' : verbose})))
  
     except KeyboardInterrupt:
         pass
