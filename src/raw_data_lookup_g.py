@@ -4,7 +4,6 @@ from pandas import Series, DataFrame
 
 
 # TODO: gamma_5 is hardcoded. That should be generelized in the future
-# TODO: combine set_lookup_p and set_lookup_g (and set_lookup_d) to possible set_lookup_qn?
 # TODO: Refactor set_lookup with different lists for scalar,  vector, etc.
 # TODO: Is there a more elegent method to get a product than merging 
 #       Dataframes with index set to 0? itertools? :D
@@ -33,7 +32,7 @@ def set_lookup_g(gamma_labels, diagram):
   """
 
   gamma_dic = { 'gamma_5' :   DataFrame({'\gamma' : [5]}),
-                'gamma_05':   DataFrame({'\gamma' : [6]}),
+                'gamma_0':   DataFrame({'\gamma' :  [0]}),
                 'gamma_i' :   DataFrame({'\gamma' : [1,2,3]}),
                 'gamma_50i' : DataFrame({'\gamma' : [13,14,15]})
               }

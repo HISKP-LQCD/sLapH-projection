@@ -73,11 +73,13 @@ def read(infile, verbose):
         print 'p_cutoff = ', p_cutoff
     
     default_list_of_pcm = config.get('gevp parameters', 'list of p_cm')
-    gamma_input = config.get('gevp parameters', 'Dirac structure')
+    operators_J0 = config.get('gevp parameters', 'Operators J0')
+    operators_J1 = config.get('gevp parameters', 'Operators J1')
     # translates list of names for gamma structures to indices used in
     # contraction code
-    gamma_input = gamma_input.replace(" ", "").split(';')
-    gamma_input = {0: ['gamma_5'], 1: gamma_input}
+    operators_J0 = operators_J0.replace(" ", "").split(';')
+    operators_J1 = operators_J1.replace(" ", "").split(';')
+    gamma_input = {0: operators_J0, 1: operators_J1}
     default_list_of_q = config.get('gevp parameters', 'list of q')
     default_beta = config.get('gevp parameters', 'beta')
     
