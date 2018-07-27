@@ -1,4 +1,4 @@
-
+import argparse
 import glob
 import unittest
 import pandas as pd
@@ -18,30 +18,31 @@ class TestIntegration(unittest.TestCase):
     def setUp(self):
 
         self.outpath = tempfile.mkdtemp()
-        self.datapath = tempfile.mkdtemp()
+#        self.datapath = tempfile.mkdtemp()
+        self.datapath = '/home/maow/Data/'
         self.ensemble = 'integration'
 
-        # Download raw data from url
-        url = "https://www.itkp.uni-bonn.de/~werner/sLapH-projection_integration-test_data/A40.24-cnfg0714.tar" 
-
-        # Taken from stackoverflow and modified
-# https://stackoverflow.com/questions/4028697/how-do-i-download-a-zip-file-in-python-using-urllib2
-        try:
-            f = urlopen(url)
-            print "downloading " + url
-    
-            with open(self.datapath +  '/' + os.path.basename(url), "wb") as local_file:
-                local_file.write(f.read())
-
-        except HTTPError, e:
-            print "HTTP Error:", e.code, url
-        except URLError, e:
-            print "URL Error:", e.reason, url
-
-        tar = tarfile.open(self.datapath +  '/' + os.path.basename(url))
-        tar.extractall(self.datapath)
-        tar.close()
-
+#        # Download raw data from url
+#        url = "https://www.itkp.uni-bonn.de/~werner/sLapH-projection_integration-test_data/A40.24-cnfg0714.tar" 
+#
+#        # Taken from stackoverflow and modified
+## https://stackoverflow.com/questions/4028697/how-do-i-download-a-zip-file-in-python-using-urllib2
+#        try:
+#            f = urlopen(url)
+#            print "downloading " + url
+#    
+#            with open(self.datapath +  '/' + os.path.basename(url), "wb") as local_file:
+#                local_file.write(f.read())
+#
+#        except HTTPError, e:
+#            print "HTTP Error:", e.code, url
+#        except URLError, e:
+#            print "URL Error:", e.reason, url
+#
+#        tar = tarfile.open(self.datapath +  '/' + os.path.basename(url))
+#        tar.extractall(self.datapath)
+#        tar.close()
+#
         try:
             os.makedirs(self.outpath + '/' + self.ensemble + '/3_gevp-data/')
         except OSError as e:
@@ -55,7 +56,7 @@ class TestIntegration(unittest.TestCase):
     def tearDown(self):
 
         shutil.rmtree(self.outpath)
-        shutil.rmtree(self.datapath)
+        #shutil.rmtree(self.datapath)
 
     def testGevp(self):
 
@@ -76,4 +77,14 @@ class TestIntegration(unittest.TestCase):
         assert_frame_equal(expected, calculated)
 
 if __name__ == '__main__':
+
+    # TODO: Allow to change datapath on commandline
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("--datapath", 
+                        default='',
+                          help="path to test ensemble")
+    
+    args = parser.parse_args()
+    
     unittest.main()
