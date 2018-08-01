@@ -167,6 +167,8 @@ def set_continuum_basis(names, basis_type, verbose):
 
     gamma_5 = DataFrame({'\gamma' : [5],
                            'operator_label' : '\gamma_{5}'})
+    gamma_0 = DataFrame({'\gamma' : [0],
+                           'operator_label' : '\gamma_{0}'})
 
     gamma = pd.concat([eval(n) for n in names[0]])
 
@@ -342,6 +344,9 @@ def project_isospin(operator_so, operator_si):
         isospin_neg.loc[:,'coefficient'] = isospin_neg.loc[:,'coefficient'] * -1
         isospin_neg.loc[:,label] = isospin_neg.loc[:,label].apply(utils._minus)
 
+        isospin_neg.rename(columns={'\gamma^{0}_{so}' : '\gamma^{1}_{so}',
+                                    '\gamma^{1}_{so}' : '\gamma^{0}_{so}'}, inplace=True)
+
         isospin_pos = operator_so[operator_so[label] >= (0,0,0)]
 
         operator_so = pd.concat([isospin_pos, isospin_neg])
@@ -358,6 +363,10 @@ def project_isospin(operator_so, operator_si):
         isospin_neg = operator_si[operator_si[label] < (0,0,0)]
         isospin_neg.loc[:,'coefficient'] = isospin_neg.loc[:,'coefficient'] * -1
         isospin_neg.loc[:,label] = isospin_neg.loc[:,label].apply(utils._minus)
+
+        isospin_neg.rename(columns={'\gamma^{0}_{si}' : '\gamma^{1}_{si}',
+                                    '\gamma^{1}_{si}' : '\gamma^{0}_{si}'}, inplace=True)
+
 
         isospin_pos = operator_si[operator_si[label] > (0,0,0)]
 
