@@ -58,9 +58,28 @@ class TestIntegration(unittest.TestCase):
         shutil.rmtree(self.outpath)
         #shutil.rmtree(self.datapath)
 
-    def testGevp(self):
+    def testPi(self):
 
-        test_parameters = infile.read('tests/integration/A40.24.ini', verbose=0)
+        test_parameters = infile.read('tests/integration/pi.ini', verbose=0)
+        # Modify test parameters to work with temporary paths
+        test_parameters.update({'outpath' : self.outpath})
+        test_parameters.update({'ensemble' : self.ensemble})
+        test_parameters.update(
+            {'directories' : [self.datapath+'/A40.24/'] * len(test_parameters['list_of_diagrams'])})
+
+        main(continuum_basis_string='marcus-con', verbose=0, **test_parameters)
+
+        calculated = utils.read_hdf5_correlators(test_parameters['outpath'] + '/' + 
+                test_parameters['ensemble'] + '/3_gevp-data/pi_p0_A1_1.h5', 'data')
+
+        expected = utils.read_hdf5_correlators('tests/integration/pi_p0.h5', 'data')
+        
+        assert_frame_equal(expected, calculated)
+
+
+    def testRho(self):
+
+        test_parameters = infile.read('tests/integration/rho.ini', verbose=0)
         # Modify test parameters to work with temporary paths
         test_parameters.update({'outpath' : self.outpath})
         test_parameters.update({'ensemble' : self.ensemble})

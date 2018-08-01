@@ -39,17 +39,19 @@ def main(process, flag, sta_cnfg, end_cnfg, del_cnfg, missing_configs, ensemble,
                     missing_configs, process, p_cm_sq, p_cutoff, gamma_input, verbose)
     
 #        # TODO: Is gamma_input giving the right quantum numbers?
-#        if flag_pion:
-#            path = '%s/%s/0_raw-data/' % (outpath, ensemble)
-#            raw_data.read(path, T, ['C2c'], directories[:1], sta_cnfg, end_cnfg, del_cnfg,
-#                    missing_configs, process, p_cm_sq, p_cutoff, gamma_input, verbose)
-#    
-#            pion_data = utils.read_hdf5_correlators(path + 'C2c_p%1i.h5' % p_cm_sq, 'data')
-#            path = '%s/%s/3_gevp-data/' % (outpath, ensemble)
-#            filename = 'pi_p%1i.dat' % (p_cm_sq)
-#            utils.write_ascii_correlators(
-#              path, filename, pion_data.mean(axis=1).apply(np.real), verbose)
-    
+#        path = '%s/%s/0_raw-data/' % (outpath, ensemble)
+#        raw_data.read(path, T, ['C2c'], directories[:1], sta_cnfg, end_cnfg, del_cnfg,
+#                missing_configs, process, p_cm_sq, p_cutoff, gamma_input, verbose)
+#
+#        pion_data = utils.read_hdf5_correlators(path + 'C2c_p%1i.h5' % p_cm_sq, 'data')
+#        path = '%s/%s/3_gevp-data/' % (outpath, ensemble)
+#        filename = 'pi_p%1i.dat' % (p_cm_sq)
+#        utils.write_ascii_correlators(
+#          path, filename, pion_data.mean(axis=1).apply(np.real), verbose)
+#        path = '%s/%s/3_gevp-data/' % (outpath, ensemble)
+#        filename = '%s_p%1i.h5' % ('pi', p_cm_sq)
+#        utils.write_hdf5_correlators(path, filename, pion_data, 'data', verbose)
+
     
         ########################################################################
         # Setup of list of pcm and irrep to loop over
@@ -60,7 +62,7 @@ def main(process, flag, sta_cnfg, end_cnfg, del_cnfg, missing_configs, ensemble,
         # Angular momentum for particles of interest
         if process == 'rho':
             j = 1
-        elif process == 'pipi':
+        elif process == 'pi':
             j = 0
     
         list_of_irreps = projection.get_list_of_irreps(
