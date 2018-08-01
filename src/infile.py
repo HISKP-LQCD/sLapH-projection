@@ -15,13 +15,10 @@ def read(infile, verbose):
         print "Error! Could not open infile: ", infile
         exit(-1)
     
-    # optional parameter, Default: False
-    flag_pion = config.getboolean('parameters', 'Read pion')
-    
     # Choices: ['rho', 'pipi']
     process = config.get('parameters', 'Process to analyse').lower()
-    if process not in ['rho', 'pipi']:
-        print 'Only analysis for "rho" and "pipi" are supported!'
+    if process not in set(['pi', 'rho', 'pipi']):
+        print 'Only analysis for "pi", rho" and "pipi" supported!'
         sys.exit(0)
     
     if verbose:
@@ -134,31 +131,30 @@ def read(infile, verbose):
         print 'Logscale: ', logscale
     
     return {
-  'flag_pion' :           flag_pion, 
-  'process' :             process, 
-  'flag' :                flag, 
-  'sta_cnfg' :            sta_cnfg, 
-  'end_cnfg' :            end_cnfg, 
-  'del_cnfg' :            del_cnfg, 
-  'missing_configs' :     missing_configs, 
-  'ensemble' :            ensemble, 
-  'T' :                   T, 
-  'list_of_pcm_sq' :      list_of_pcm_sq, 
-  'p_cutoff' :            p_cutoff, 
-  'default_list_of_pcm' : default_list_of_pcm, 
-  'gamma_input' :         gamma_input, 
-  'default_list_of_q' :   default_list_of_q, 
-  'default_beta' :        default_beta, 
-  'list_of_diagrams' :    list_of_diagrams, 
-  'directories' :         directories, 
-  'path_to_sc' :          path_to_sc, 
-  'path_to_sc_2' :        path_to_sc_2, 
-  'outpath' :             outpath,
-  'plot_p_and_g' :        plot_p_and_g, 
-  'plot_pcm_and_mu' :     plot_pcm_and_mu, 
-  'plot_avg' :            plot_avg, 
-  'plot_experimental' :   plot_experimental, 
-  'logscale' :            logscale,
-  'bootstrapsize' :       bootstrapsize
+  'process' :              process, 
+  'flag' :                 flag, 
+  'sta_cnfg' :             sta_cnfg, 
+  'end_cnfg' :             end_cnfg, 
+  'del_cnfg' :             del_cnfg, 
+  'missing_configs' :      missing_configs, 
+  'ensemble' :             ensemble, 
+  'T' :                    T, 
+  'list_of_pcm_sq' :       list_of_pcm_sq, 
+  'p_cutoff' :             p_cutoff, 
+  'default_list_of_pcm' :  default_list_of_pcm, 
+  'gamma_input' :          gamma_input, 
+  'default_list_of_q' :    default_list_of_q, 
+  'default_beta' :         default_beta, 
+  'list_of_diagrams' :     list_of_diagrams, 
+  'directories' :          directories, 
+  'path_to_sc' :           path_to_sc, 
+  'path_to_sc_2' :         path_to_sc_2, 
+  'outpath' :              outpath,
+  'plot_p_and_g' :         plot_p_and_g, 
+  'plot_pcm_and_mu' :      plot_pcm_and_mu, 
+  'plot_avg' :             plot_avg, 
+  'plot_experimental' :    plot_experimental, 
+  'logscale' :             logscale,
+  'bootstrapsize' :        bootstrapsize
 }
    
