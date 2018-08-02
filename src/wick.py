@@ -101,7 +101,14 @@ def pi_2pt(data, verbose=1):
     -----
     The gamma strucures that can appear in \pi\pi(t) are hardcoded
     """
+
+    gamma_5 = [5]
+    gamma_0 = [0]
+
     wick = data['C2c']
+
+    wick[wick.index.get_level_values('\gamma^{0}_{so}').isin(gamma_0)] *= (1j)
+    wick[wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_0)] *= (1j)
 
     return wick
 

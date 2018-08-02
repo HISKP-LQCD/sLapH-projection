@@ -97,8 +97,5 @@ def set_lookup_g(gamma_labels, diagram):
                       suffixes=['_{so}', '_{si}'])
   del(lookup_g['tmp'])
 
-  print diagram
-  print lookup_g
-
   return lookup_g
 

@@ -87,7 +87,6 @@ def set_lookup_qn(diagram, p_cm, p_max, gammas, process='pipi', verbose=0):
     lookup_qn = pd.merge(lookup_p, lookup_g, how='left', left_index=True, right_index=True)
     lookup_qn.reset_index(drop=True, inplace=True)
 
-    print lookup_qn
     return lookup_qn
 
 # TODO: possible speedup if strings are directly used rather than the
@@ -292,7 +291,7 @@ def read(path, T, diagrams, directories, sta_cnfg, end_cnfg, del_cnfg, missing_c
 
         # write data
         # TODO: Writing into same file only works in append mode
-        filename = '%s_p%1i.h5' % (diagram, p_cm)
+        filename = '%s_p%1i_%s.h5' % (process, p_cm, diagram)
         utils.write_hdf5_correlators(path, filename, data, 'data', verbose)
-        filename = '%s_p%1i_qn.h5' % (diagram, p_cm)
+        filename = '%s_p%1i_%s_qn.h5' % (process, p_cm, diagram)
         utils.write_hdf5_correlators(path, filename, lookup_qn, 'qn', verbose=False)
