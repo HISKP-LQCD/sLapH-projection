@@ -280,6 +280,8 @@ def main(process, flag, sta_cnfg, end_cnfg, del_cnfg, missing_configs, ensemble,
     
                 gevp_data = setup_gevp.build_gevp(contracted_data_avg, process,
                                   verbose)
+
+                print gevp_data
     
                 path = '%s/%s/3_gevp-data/' % (outpath, ensemble)
                 filename = '%s_p%1i_%s_%d.h5' % (process, p_cm_sq, irrep, 1)

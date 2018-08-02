@@ -26,7 +26,6 @@ def read(infile, verbose):
         print 'Reading infile'
     
     if verbose >= 2:
-        print 'Reading data for pion: {}'.format(flag_pion)
         print 'Process to analyse: {}'.format(process)
     
     flag = {}

@@ -41,14 +41,7 @@ def build_gevp(data, mode, verbose):
         number and timeslice
     """
 
-    if mode == 'pipi':
-
-        print "Warning: I=2 Gevp currently not implemented"
-        gevp = data["C4"]
-        # NOTE: Delete all rows and colums with only NaN's
-        gevp = gevp.dropna(axis=0,how='all').dropna(axis=1,how='all')
-
-    elif mode == 'rho':
+    if mode == 'rho':
 
         assert set(data.keys()) == {'C2', 'C3', 'C4'}, 'Gevp must contain C2, C3 and C4'
 
@@ -86,5 +79,15 @@ def build_gevp(data, mode, verbose):
             print gevp.head()
         if verbose >= 2:
             print gevp
+
+    elif mode == 'pipi':
+
+        print "Warning: I=2 Gevp currently not implemented"
+        gevp = data["C4"]
+        # NOTE: Delete all rows and colums with only NaN's
+        gevp = gevp.dropna(axis=0,how='all').dropna(axis=1,how='all')
+
+    elif mode == 'pi':
+        gevp = data["C2"]
 
     return gevp
