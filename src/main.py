@@ -169,19 +169,8 @@ def main(process, flag, sta_cnfg, end_cnfg, del_cnfg, missing_configs, ensemble,
                 if flag['contract']:
                     print '\tContracting data for %s' % correlator
     
-                    if process == 'rho':
-                        # rho analysis
-                        contracted_data = wick.rho(
-                          subduced_data, correlator, verbose)
-                    elif process == 'pipi':
-                        # pipi I=2 analysis
-                        contracted_data = wick.pipi(
-                          subduced_data, correlator, verbose)
-                    elif process == 'pi':
-                        # pipi I=2 analysis
-                        contracted_data = wick.pi(
-                          subduced_data, correlator, verbose)
-
+                    contracted_data = wick.contract_correlators(
+                            process, subduced_data, correlator, verbose)
                     del subduced_data
     
                     # write data to disc

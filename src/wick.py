@@ -80,6 +80,32 @@ def pipi_2pt(data, verbose=1):
 
     return wick
 
+def pi_2pt(data, verbose=1):
+    """
+    Perform Wick contraction for 2pt function
+
+    Parameters
+    ----------
+    data : Dictionary of pd.DataFrame, keys in ('C20', 'C3c', 'C4cB', 'C4cD')
+
+        For each diagram constituting the given `corrrelator` `data` must contain
+        an associated pd.DataFrame with its subduced lattice data
+
+    Returns
+    -------
+    wick : pd.DataFrame
+        pd.DataFrame with indices like `data['C20']` and Wick contractions
+        performed.
+
+    Notes
+    -----
+    The gamma strucures that can appear in \pi\pi(t) are hardcoded
+    """
+    wick = data['C2c']
+
+    return wick
+
+
 ################################################################################
 
 def rho_3pt(data, verbose=1):
@@ -246,7 +272,7 @@ def set_lookup_correlators(diagrams):
 
     return lookup_correlators
 
-def rho(data, correlator, verbose=0):
+def contract_correlators(process, data, correlator, verbose=0):
     """
     Sums all diagrams with the factors they appear in the Wick contractions
 
@@ -277,45 +303,17 @@ def rho(data, correlator, verbose=0):
 
     # TODO: I don't think you have to emulate c function pointers for this
     rho = {'C2' : rho_2pt, 'C3' : rho_3pt, 'C4' : rho_4pt}
-
-    # call rho_2pt, rho_3pt, rho_4pt from this loop
-    contracted = rho[correlator](data, verbose)
-
-    return contracted
-
-def pipi(data, correlator, verbose=0):
-    """
-    Sums all diagrams with the factors they appear in the Wick contractions
-
-    Parameters
-    ----------
-    data : Dictionary of pd.DataFrame, keys in {'C20', 'C4cC', 'C4cD'}
-        For each diagram constituting the given `corrrelator` `data` must contain
-        an associated pd.DataFrame with its subduced lattice data
-    correlator : string {'C2', 'C4'}
-        Correlation functions to perform the Wick contraction on
-
-    Returns
-    -------
-    contracted : pd.DataFrame
-        A correlation function with completely performed Wick contractions. Rows
-        and columns are unchanged compared to `data`
-
-    Notes
-    -----
-    The correlation functions contributing to the rho gevp can be characterized
-    by the number of quarklines
-    2pt \langle \rho(t_{so})^\dagger \rho(t_si) \rangle
-    3pt \langle \pi\pi(t_{so})^\dagger \rho(t_si) \rangle
-    4pt \langle \pi\pi(t_{so})^\dagger \pi\pi(t_si) \rangle
-    In the isospin limit the first 2 only have one (linearly independent) diagram
-    contributing, while the last one has two.
-    """
-
-    # TODO: I don't think you have to emulate c function pointers for this
     pipi = {'C2' : pipi_2pt, 'C4' : pipi_4pt}
+    pi = {'C2' : pi_2pt}
 
-    # call rho_2pt, rho_3pt, rho_4pt from this loop
-    contracted = pipi[correlator](data, verbose)
+    if process == 'rho':
+        # rho analysis
+        contracted = rho[correlator](data, verbose)
+    elif process == 'pipi':
+        # pipi I=2 analysis
+        contracted = pipi[correlator](data, verbose)
+    elif process == 'pi':
+        # pi analysis
+        contracted = pi[correlator](data, verbose)
 
     return contracted
