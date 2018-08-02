@@ -107,8 +107,8 @@ def pi_2pt(data, verbose=1):
 
     wick = data['C2c']
 
-    wick[wick.index.get_level_values('\gamma^{0}_{so}').isin(gamma_0)] *= (1j)
-    wick[wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_0)] *= (1j)
+#    wick[wick.index.get_level_values('\gamma^{0}_{so}').isin(gamma_0)] *= (1j)
+#    wick[wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_0)] *= (1j)
 
     return wick
 

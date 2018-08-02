@@ -45,14 +45,14 @@ class TestIntegration(unittest.TestCase):
 #        tar.close()
 #
         try:
-            os.makedirs(self.outpath + '/' + self.ensemble + '/3_gevp-data/')
+            os.makedirs(self.outpath + '/' + self.ensemble)
         except OSError as e:
             if e.errno != errno.EEXIST:
                 raise
 
         for filename in glob.glob(r'tests/integration/*.ini'):
             shutil.copy(filename, 
-                self.outpath + '/' + self.ensemble + '/3_gevp-data/')
+                self.outpath + '/' + self.ensemble + '/')
 
     def tearDown(self):
 
@@ -68,10 +68,10 @@ class TestIntegration(unittest.TestCase):
         test_parameters.update(
             {'directories' : [self.datapath+'/A40.24/'] * len(test_parameters['list_of_diagrams'])})
 
-        main(continuum_basis_string='marcus-con', verbose=2, **test_parameters)
+        main(continuum_basis_string='marcus-con', verbose=0, **test_parameters)
 
         calculated = utils.read_hdf5_correlators(test_parameters['outpath'] + '/' + 
-                test_parameters['ensemble'] + '/3_gevp-data/pi_p0_A1g_1.h5', 'data')
+                test_parameters['ensemble'] + '/3_gevp-data/pi_p0_A1g.h5', 'data')
 
         expected = utils.read_hdf5_correlators('tests/integration/pi_p0_A1g_1.h5', 'data')
         
@@ -90,7 +90,7 @@ class TestIntegration(unittest.TestCase):
         main(continuum_basis_string='marcus-con', verbose=0, **test_parameters)
 
         calculated = utils.read_hdf5_correlators(test_parameters['outpath'] + '/' + 
-                test_parameters['ensemble'] + '/3_gevp-data/rho_p1_A1_1.h5', 'data')
+                test_parameters['ensemble'] + '/3_gevp-data/rho_p1_A1.h5', 'data')
 
         expected = utils.read_hdf5_correlators('tests/integration/rho_p1_A1_1.h5', 'data')
         
