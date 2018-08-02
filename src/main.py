@@ -58,7 +58,7 @@ def main(process, flag, sta_cnfg, end_cnfg, del_cnfg, missing_configs, ensemble,
         path = '%s/%s/0_raw-data/' % (outpath, ensemble)
         filename = '%s_p%1i_qn.h5' % (list_of_diagrams[0], p_cm_sq)
         lookup_qn = utils.read_hdf5_correlators(path + filename, 'qn')
-    
+
         # Angular momentum for particles of interest
         if process == 'rho':
             j = 1
@@ -68,7 +68,7 @@ def main(process, flag, sta_cnfg, end_cnfg, del_cnfg, missing_configs, ensemble,
         list_of_irreps = projection.get_list_of_irreps(
                 lookup_qn['p_{cm}'].unique(), path_to_sc, j)
         correlators = wick.set_lookup_correlators(list_of_diagrams)
-    
+
         for irrep in list_of_irreps:
             print '\t  Subducing into %s' % irrep
     
@@ -177,6 +177,11 @@ def main(process, flag, sta_cnfg, end_cnfg, del_cnfg, missing_configs, ensemble,
                         # pipi I=2 analysis
                         contracted_data = wick.pipi(
                           subduced_data, correlator, verbose)
+                    elif process == 'pi':
+                        # pipi I=2 analysis
+                        contracted_data = wick.pi(
+                          subduced_data, correlator, verbose)
+
                     del subduced_data
     
                     # write data to disc

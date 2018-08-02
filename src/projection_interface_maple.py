@@ -115,7 +115,7 @@ def read_sc(p_cm_vecs, path, verbose=True, j=1):
       print 'Warning: Could not find {}'.format(name)
       continue
 
-    df = pd.read_csv(name, sep="\t", dtype=str)
+    df = pd.read_csv(name, sep="\s+", dtype=str)
     df.rename(columns=lambda x: x.strip(), inplace=True)
 
     df['mult'] = 1
