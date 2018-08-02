@@ -8,6 +8,7 @@ import tempfile
 import tarfile
 from urllib2 import urlopen, URLError, HTTPError
 import shutil
+import numpy as np
 
 import src.utils as utils
 import src.infile as infile
@@ -72,7 +73,7 @@ class TestIntegration(unittest.TestCase):
         calculated = utils.read_hdf5_correlators(test_parameters['outpath'] + '/' + 
                 test_parameters['ensemble'] + '/3_gevp-data/pi_p0_A1g_1.h5', 'data')
 
-        expected = utils.read_hdf5_correlators('tests/integration/pi_p0.h5', 'data')
+        expected = utils.read_hdf5_correlators('tests/integration/pi_p0_A1g_1.h5', 'data')
         
         assert_frame_equal(expected, calculated)
 
