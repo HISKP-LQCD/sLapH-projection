@@ -3,7 +3,7 @@ import pandas as pd
 from pandas import Series, DataFrame
 
 import bokeh.palettes
-from bokeh.models import ColumnDataSource, Whisker, HoverTool 
+from bokeh.models import ColumnDataSource, Whisker, HoverTool
 from bokeh.plotting import figure, output_file, show
 from bokeh.layouts import column
 
@@ -74,12 +74,12 @@ def mean_and_std(df, bootstrapsize):
   Returns:
   --------
   pd.DataFrame
-      Table with identical indices as `df` The column level 0 is replaced by 
+      Table with identical indices as `df` The column level 0 is replaced by
       mean and std while level 1 remains unchanged
 
   Notes
   -----
-  Must be taken for real and imaginary part seperately because that apparently 
+  Must be taken for real and imaginary part seperately because that apparently
   breaks pandas.
   """
 
@@ -95,16 +95,16 @@ def p_and_gammas(p, data):
   Plot all rows of given pd.DataFrame into a single page as seperate graphs
 
   data : pd.DataFrame
-      
+
       Table with any quantity as rows and multicolumns where level 0 contains
       {'mean', 'std'} and level 1 contains 'T'
-  
+
   label_template : string
 
       Format string that will be used to label the graphs. The format must fit
       the index of `data`
   """
-  
+
     row_names = data.index.names
     row_values = data.index.values
     data = data.T.unstack().T
@@ -119,17 +119,17 @@ def p_and_gammas(p, data):
         df['upper'] = df['mean'] + df['std']
         df['lower'] = df['mean'] - df['std']
 
-        for name,value in zip(row_names, rv):
+        for name, value in zip(row_names, rv):
             df[name] = value
-        df.rename(columns={'p^{0}_{so}' : 'p0so',
-                           'p^{1}_{so}' : 'p1so',
-                           'p^{0}_{si}' : 'p0si',
-                           'p^{1}_{si}' : 'p1si',
-                           '\gamma^{0}_{so}' : 'g0so',
-                           '\gamma^{1}_{so}' : 'g1so',
-                           '\gamma^{0}_{si}' : 'g0si',
-                           '\gamma^{1}_{si}' : 'g1si'}, inplace=True)
-   
+        df.rename(columns={'p^{0}_{so}': 'p0so',
+                           'p^{1}_{so}': 'p1so',
+                           'p^{0}_{si}': 'p0si',
+                           'p^{1}_{si}': 'p1si',
+                           '\gamma^{0}_{so}': 'g0so',
+                           '\gamma^{1}_{so}': 'g1so',
+                           '\gamma^{0}_{si}': 'g0si',
+                           '\gamma^{1}_{si}': 'g1si'}, inplace=True)
+
 #        # prepare parameters for plot design
         if len(rv) == 1:
             cmap_brg = ['red']
@@ -137,13 +137,13 @@ def p_and_gammas(p, data):
             cmap_brg = bokeh.palettes.viridis(len(row_values))
 #        shift = 2. / 5 / len(rows)
 
-        w = Whisker(source=ColumnDataSource(df), base="T", upper="upper", lower="lower", 
-                line_color=cmap_brg[counter])
+        w = Whisker(source=ColumnDataSource(df), base="T", upper="upper", lower="lower",
+                    line_color=cmap_brg[counter])
         w.upper_head.line_color = cmap_brg[counter]
         w.lower_head.line_color = cmap_brg[counter]
-	p.add_layout(w)
+        p.add_layout(w)
 
-	p.circle(x='T', y='mean', source=ColumnDataSource(df), color=cmap_brg[counter])
+        p.circle(x='T', y='mean', source=ColumnDataSource(df), color=cmap_brg[counter])
 
 #        # plot
 #        plt.errorbar(
@@ -161,8 +161,6 @@ def p_and_gammas(p, data):
 #            linewidth='0.0')
 
 
-
-
 def experimental(plotdata, diagram, bootstrapsize, name, logscale=True, verbose=False):
     """
     Create a multipage plot with a page for every element of the rho gevp. Each
@@ -176,7 +174,7 @@ def experimental(plotdata, diagram, bootstrapsize, name, logscale=True, verbose=
         Table with physical quantum numbers as rows 'gevp_row' x 'gevp_col' x
         'p_{cm}' x \mu' '\gamma_{so}' x '\gamma_{si}' and columns 'cnfg' x 'T'.
         Contains the linear combinations of correlation functions transforming
-        like what the parameters qn_irrep was created with, i.e. the subduced 
+        like what the parameters qn_irrep was created with, i.e. the subduced
         data
 
     diagram : string
@@ -187,7 +185,7 @@ def experimental(plotdata, diagram, bootstrapsize, name, logscale=True, verbose=
         The number of bootstrap samples being drawn from `gevp_data`.
 
     pdfplot : mpl.PdfPages object
-        
+
         Plots will be written to the path `pdfplot` was created with.
 
     See also
@@ -198,7 +196,7 @@ def experimental(plotdata, diagram, bootstrapsize, name, logscale=True, verbose=
 
     # output to static HTML file
     output_file(name)
-   
+
     plotdata = mean_and_std(plotdata, bootstrapsize)
 
     # abs of smallest positive value
@@ -217,22 +215,28 @@ def experimental(plotdata, diagram, bootstrapsize, name, logscale=True, verbose=
             print '\tplotting p_cm = ', graphlabel[2], ', \mu = ', graphlabel[3]
 
         # prepare data to plot
-        graphdata = plotdata.xs(graphlabel, level=['gevp_row', 'gevp_col', 'p_{cm}', '\mu'])
+        graphdata = plotdata.xs(
+            graphlabel,
+            level=[
+                'gevp_row',
+                'gevp_col',
+                'p_{cm}',
+                '\mu'])
 
         # prepare plot
-	title = r'Gevp Element ${}$ - ${}$, $\vec{{P}}_\textnormal{{cm}} = {}$, $\mu = {}$'.format(
+        title = r'Gevp Element ${}$ - ${}$, $\vec{{P}}_\textnormal{{cm}} = {}$, $\mu = {}$'.format(
             graphlabel[0], graphlabel[1], graphlabel[2], graphlabel[3])
 
-        #TODO: add color to hovertool
+        # TODO: add color to hovertool
         hover = HoverTool(tooltips=[
             ("T", "@T"),
-            ("p^{0}_{so}", "@{p0so}"), 
+            ("p^{0}_{so}", "@{p0so}"),
             ("p^{1}_{so}", "@{p1so}"),
             ("p^{0}_{si}", "@{p0si}"),
             ("p^{1}_{si}", "@{p1si}"),
-            ("\gamma^{0}_{so}", "@{g0so}"), 
+            ("\gamma^{0}_{so}", "@{g0so}"),
             ("\gamma^{1}_{so}", "@{g1so}"),
-            ("\gamma^{0}_{si}", "@{g0si}"),  
+            ("\gamma^{0}_{si}", "@{g0si}"),
             ("\gamma^{1}_{si}", "@{g1si}")])
 
         # create a new plot
@@ -240,11 +244,10 @@ def experimental(plotdata, diagram, bootstrapsize, name, logscale=True, verbose=
             tools=[hover],
             y_axis_type="linear", title=title,
             x_axis_label=r'$t/a$', y_axis_label=r'${}(t/a)$'.format(diagram)
-            )
+        )
         )
 
         # plot
         p_and_gammas(ss[-1], graphdata)
 
     show(column(ss))
-

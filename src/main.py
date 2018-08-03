@@ -152,7 +152,8 @@ def main(process, flag, sta_cnfg, end_cnfg, del_cnfg, missing_configs, ensemble,
                         # Write data and lattice operators to disc
                         path = '%s/%s/1_subduced-data/' % (outpath, ensemble)
 
-                        filename = '/%s_p%1i_%s_%s.h5' % (process, p_cm_sq, irrep, diagram)
+                        filename = '/%s_p%1i_%s_%s.h5' % (process,
+                                                          p_cm_sq, irrep, diagram)
                         utils.write_hdf5_correlators(
                             path, filename, subduced_data[diagram], 'data', verbose)
 
@@ -192,7 +193,8 @@ def main(process, flag, sta_cnfg, end_cnfg, del_cnfg, missing_configs, ensemble,
 
                     path = '%s/%s/2_contracted-data/' % (outpath, ensemble)
 
-                    filename = '/%s_p%1i_%s_%s.h5' % (process, p_cm_sq, irrep, correlator)
+                    filename = '/%s_p%1i_%s_%s.h5' % (process,
+                                                      p_cm_sq, irrep, correlator)
                     contracted_data = \
                         utils.read_hdf5_correlators(path + filename, 'data')
 

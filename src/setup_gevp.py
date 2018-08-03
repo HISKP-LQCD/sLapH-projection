@@ -9,6 +9,8 @@ import utils
 
 # TODO: factor out the setup of subduced_npt and just pass a
 # list of lists of pd.DataFrame
+
+
 def build_gevp(data, mode, verbose):
     """
     Create a single pd.DataFrame containing all correlators contributing to the
@@ -55,15 +57,14 @@ def build_gevp(data, mode, verbose):
         correlator = 'C3'
         subduced_3pt = data[correlator]
 
-        subduced_3pt_T = subduced_3pt.swaplevel('gevp_row','gevp_col')
+        subduced_3pt_T = subduced_3pt.swaplevel('gevp_row', 'gevp_col')
 
-        index_3pt_T = map({'gevp_row' : 'gevp_col', 'gevp_col' : 'gevp_row'}.get, 
-                subduced_3pt_T.index.names, subduced_3pt_T.index.names)
+        index_3pt_T = map({'gevp_row': 'gevp_col', 'gevp_col': 'gevp_row'}.get,
+                          subduced_3pt_T.index.names, subduced_3pt_T.index.names)
         subduced_3pt_T.index.set_names(index_3pt_T, inplace=True)
 
         correlator = 'C4'
         subduced_4pt = data[correlator]
-
 
         ##############################################################################
 
@@ -85,7 +86,7 @@ def build_gevp(data, mode, verbose):
         print "Warning: I=2 Gevp currently not implemented"
         gevp = data["C4"]
         # NOTE: Delete all rows and colums with only NaN's
-        gevp = gevp.dropna(axis=0,how='all').dropna(axis=1,how='all')
+        gevp = gevp.dropna(axis=0, how='all').dropna(axis=1, how='all')
 
     elif mode == 'pi':
         gevp = data["C2"]

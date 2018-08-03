@@ -8,6 +8,7 @@ from ast import literal_eval
 from projection_interface_maple import read_sc, read_sc_2
 import utils
 
+
 def select_irrep(df, irrep):
     """
     Restrict table of basis vectors to one irreducible representation.
@@ -60,7 +61,8 @@ def select_irrep_mult(df, irrep, mult):
       read_sc()
     """
 
-    return df.xs((irrep,mult), level=('Irrep','mult'), drop_level=False)
+    return df.xs((irrep, mult), level=('Irrep', 'mult'), drop_level=False)
+
 
 def get_list_of_irreps(p_cm_vecs, path_to_one_particle_coeffs, j):
     """
@@ -88,8 +90,10 @@ def get_list_of_irreps(p_cm_vecs, path_to_one_particle_coeffs, j):
 
 # The coefficients are read again for each diagram, but that is not the
 # performance-critical part
+
+
 def read_lattice_basis(correlator, p_cm_vecs, path_to_one_particle_coeffs,
-        path_to_two_particle_coeffs, j=1, verbose=1):
+                       path_to_two_particle_coeffs, j=1, verbose=1):
     """
     Distinguish by diagram whether one- or two-particle diagrams are needed at source and
     sink and read projection coefficients
@@ -139,6 +143,8 @@ def read_lattice_basis(correlator, p_cm_vecs, path_to_one_particle_coeffs,
 # TODO: actually use names to restrict basis_table to what was in the infile
 # TODO: Unify that with set_lookup_g
 # Bug: flag for wanted gamma structures is not used
+
+
 def set_continuum_basis(names, basis_type, verbose):
     """
     Get table with chosen operators to transform as the *continuum* eigenstates
@@ -160,21 +166,26 @@ def set_continuum_basis(names, basis_type, verbose):
         independent Lorentz structure.
     """
 
-    basis_J0 = DataFrame({'J' : [0],
-                          'M' : [0],
-                          'gamma_id' : range(1)*1,
-                          'coordinate' : [1]})
+    basis_J0 = DataFrame({'J': [0],
+                          'M': [0],
+                          'gamma_id': range(1) * 1,
+                          'coordinate': [1]})
 
-    gamma_5 = DataFrame({'\gamma' : [5],
-                           'operator_label' : '\gamma_{5}'})
-    gamma_0 = DataFrame({'\gamma' : [0],
-                           'operator_label' : '\gamma_{0}'})
+    gamma_5 = DataFrame({'\gamma': [5],
+                         'operator_label': '\gamma_{5}'})
+    gamma_0 = DataFrame({'\gamma': [0],
+                         'operator_label': '\gamma_{0}'})
 
     gamma = pd.concat([eval(n) for n in names[0]])
 
-    basis_J0 = pd.merge(basis_J0, gamma, how='left', left_on=['gamma_id'], right_index=True)
+    basis_J0 = pd.merge(
+        basis_J0,
+        gamma,
+        how='left',
+        left_on=['gamma_id'],
+        right_index=True)
     del(basis_J0['gamma_id'])
-    basis_J0 = basis_J0.set_index(['J','M'])
+    basis_J0 = basis_J0.set_index(['J', 'M'])
 
     # implement trivial cartesian basis as it is taken account for in
     # cg coefficients
@@ -188,48 +199,53 @@ def set_continuum_basis(names, basis_type, verbose):
                             [0, 0, 1]]
     elif basis_type == "cyclic":
         # Standard ladder operators; default choice
-        ladder_operators = [[1./sqrt2, -1j/sqrt2, 0],
-                            [0,         0,        1],
-                            [1./sqrt2, +1j/sqrt2, 0]]
+        ladder_operators = [[1. / sqrt2, -1j / sqrt2, 0],
+                            [0, 0, 1],
+                            [1. / sqrt2, +1j / sqrt2, 0]]
     elif basis_type == "cyclic-christian":
-        ladder_operators = [[1./sqrt2, -1j/sqrt2, 0],
-                            [0,         0,        -1.],
-                            [-1./sqrt2, -1j/sqrt2, 0]]
+        ladder_operators = [[1. / sqrt2, -1j / sqrt2, 0],
+                            [0, 0, -1.],
+                            [-1. / sqrt2, -1j / sqrt2, 0]]
     elif basis_type == "marcus-cov":
-        ladder_operators = [[1/sqrt2,   -1j/sqrt2, 0],
-                            [0,          0,        1],
-                            [-1/sqrt2,  -1j/sqrt2,  0]]
+        ladder_operators = [[1 / sqrt2, -1j / sqrt2, 0],
+                            [0, 0, 1],
+                            [-1 / sqrt2, -1j / sqrt2, 0]]
     elif basis_type == "marcus-con":
-        ladder_operators = [[1/sqrt2,   1j/sqrt2, 0],
-                            [0,          0,        1],
-                            [-1/sqrt2,  1j/sqrt2,  0]]
+        ladder_operators = [[1 / sqrt2, 1j / sqrt2, 0],
+                            [0, 0, 1],
+                            [-1 / sqrt2, 1j / sqrt2, 0]]
     elif basis_type == "dudek":
-        ladder_operators = [[1j/sqrt2,  -1./sqrt2, 0],
-                            [0,         0,         1j],
-                            [-1j/sqrt2, -1./sqrt2, 0]]
+        ladder_operators = [[1j / sqrt2, -1. / sqrt2, 0],
+                            [0, 0, 1j],
+                            [-1j / sqrt2, -1. / sqrt2, 0]]
     elif basis_type == "test":
-        ladder_operators = [[-1j/sqrt2,  -1/sqrt2, 0],
-                            [0,           0,        1],
-                            [ 1j/sqrt2,  -1/sqrt2,  0]]
+        ladder_operators = [[-1j / sqrt2, -1 / sqrt2, 0],
+                            [0, 0, 1],
+                            [1j / sqrt2, -1 / sqrt2, 0]]
     else:
         print "In set_continuum_basis: continuum_basis type ", basis_type, " not known!"
         exit()
 
-    basis_J1 = DataFrame({'J' : [1]*9,
-                          'M' : [-1]*3+[0]*3+[1]*3,
-                          'gamma_id' : range(3)*3,
-                          'coordinate' : np.array(ladder_operators).flatten()})
+    basis_J1 = DataFrame({'J': [1] * 9,
+                          'M': [-1] * 3 + [0] * 3 + [1] * 3,
+                          'gamma_id': range(3) * 3,
+                          'coordinate': np.array(ladder_operators).flatten()})
 
-    gamma_i   = DataFrame({'\gamma' : [1,2,3],
-                           'operator_label' : '\gamma_{i}'})
-    gamma_50i = DataFrame({'\gamma' : [13,14,15],
-                           'operator_label' : '\gamma_{50i}'})
+    gamma_i = DataFrame({'\gamma': [1, 2, 3],
+                         'operator_label': '\gamma_{i}'})
+    gamma_50i = DataFrame({'\gamma': [13, 14, 15],
+                           'operator_label': '\gamma_{50i}'})
 
     gamma = pd.concat([eval(n) for n in names[1]])
 
-    basis_J1 = pd.merge(basis_J1, gamma, how='left', left_on=['gamma_id'], right_index=True)
+    basis_J1 = pd.merge(
+        basis_J1,
+        gamma,
+        how='left',
+        left_on=['gamma_id'],
+        right_index=True)
     del(basis_J1['gamma_id'])
-    basis_J1 = basis_J1.set_index(['J','M'])
+    basis_J1 = basis_J1.set_index(['J', 'M'])
 
     basis = pd.concat([basis_J0, basis_J1])
 
@@ -245,7 +261,8 @@ def set_continuum_basis(names, basis_type, verbose):
 
 # TODO: find a better name for diagram after Wick contraction
 # TODO: No restriction to multiplicacy currently done
-def project_operators(correlator, operator_so, operator_si, continuum_operators, verbose):
+def project_operators(correlator, operator_so, operator_si,
+                      continuum_operators, verbose):
     """
     Project continuum operators to lattice using subduction coefficients
 
@@ -276,15 +293,15 @@ def project_operators(correlator, operator_so, operator_si, continuum_operators,
     """
 
     if correlator == 'C2':
-        continuum_labels_so = [['J^{0}','M^{0}']]
-        continuum_labels_si = [['J^{0}','M^{0}']]
+        continuum_labels_so = [['J^{0}', 'M^{0}']]
+        continuum_labels_si = [['J^{0}', 'M^{0}']]
     elif correlator == 'C3':
         # for 3pt function we have pipi operator at source and rho operator at sink
-        continuum_labels_so = [['J^{0}','M^{0}'], ['J^{1}','M^{1}']]
-        continuum_labels_si = [['J^{0}','M^{0}']]
+        continuum_labels_so = [['J^{0}', 'M^{0}'], ['J^{1}', 'M^{1}']]
+        continuum_labels_si = [['J^{0}', 'M^{0}']]
     elif correlator == 'C4':
-        continuum_labels_so = [['J^{0}','M^{0}'], ['J^{1}','M^{1}']]
-        continuum_labels_si = [['J^{0}','M^{0}'], ['J^{1}','M^{1}']]
+        continuum_labels_so = [['J^{0}', 'M^{0}'], ['J^{1}', 'M^{1}']]
+        continuum_labels_si = [['J^{0}', 'M^{0}'], ['J^{1}', 'M^{1}']]
     else:
         print 'in project_operators: correlator unknown! Quantum numbers corrupted.'
         return
@@ -298,7 +315,7 @@ def project_operators(correlator, operator_so, operator_si, continuum_operators,
         # Combine coefficients and clean columns no longer needed: Labels for continuum
         # basis and factors entering the final coefficient
         operator_so['coefficient'] = \
-                 operator_so['coefficient'] * operator_so['coordinate']
+            operator_so['coefficient'] * operator_so['coordinate']
         operator_so.drop(cl_so + ['coordinate'],
                          axis=1, inplace=True)
 
@@ -309,45 +326,57 @@ def project_operators(correlator, operator_so, operator_si, continuum_operators,
         # Combine coefficients and clean columns no longer needed: Labels for continuum
         # basis and factors entering the final coefficient
         operator_si['coefficient'] = \
-                 operator_si['coefficient'] * operator_si['coordinate']
+            operator_si['coefficient'] * operator_si['coordinate']
         operator_si.drop(cl_si + ['coordinate'],
                          axis=1, inplace=True)
 
     # Munging for C3: Rename if merge has not appended a suffix
-    operator_so.rename(columns={'\gamma' : '\gamma^{0}', 'p^{1}' : 'p^{1}_{so}'}, inplace=True)
-    operator_so['operator_label'] = operator_so[[col for col in operator_so.columns if 'label' in col]].apply(lambda x: ', '.join(x), axis=1)
+    operator_so.rename(
+        columns={
+            '\gamma': '\gamma^{0}',
+            'p^{1}': 'p^{1}_{so}'},
+        inplace=True)
+    operator_so['operator_label'] = operator_so[[
+        col for col in operator_so.columns if 'label' in col]].apply(lambda x: ', '.join(x), axis=1)
     operator_so.drop(['operator_label^{0}', 'operator_label^{1}'],
-                      axis=1, inplace=True, errors='ignore')
+                     axis=1, inplace=True, errors='ignore')
 
-    operator_si.rename(columns={'\gamma' : '\gamma^{0}', 'p^{1}' : 'p^{1}_{si}'}, inplace=True)
-    operator_si['operator_label'] = operator_si[[col for col in operator_si.columns if 'label' in col]].apply(lambda x: ', '.join(x), axis=1)
+    operator_si.rename(
+        columns={
+            '\gamma': '\gamma^{0}',
+            'p^{1}': 'p^{1}_{si}'},
+        inplace=True)
+    operator_si['operator_label'] = operator_si[[
+        col for col in operator_si.columns if 'label' in col]].apply(lambda x: ', '.join(x), axis=1)
     operator_si.drop(['operator_label^{0}', 'operator_label^{1}'],
-                      axis=1, inplace=True, errors='ignore')
+                     axis=1, inplace=True, errors='ignore')
 
-    operator_so.rename(columns={'\gamma^{0}' : '\gamma^{0}_{so}',
-                                '\gamma^{1}' : '\gamma^{1}_{so}',
-                                'q' : 'q_{so}'}, inplace=True)
-    operator_si.rename(columns={'\gamma^{0}' : '\gamma^{0}_{si}',
-                                '\gamma^{1}' : '\gamma^{1}_{si}',
-                                'q' : 'q_{si}'}, inplace=True)
+    operator_so.rename(columns={'\gamma^{0}': '\gamma^{0}_{so}',
+                                '\gamma^{1}': '\gamma^{1}_{so}',
+                                'q': 'q_{so}'}, inplace=True)
+    operator_si.rename(columns={'\gamma^{0}': '\gamma^{0}_{si}',
+                                '\gamma^{1}': '\gamma^{1}_{si}',
+                                'q': 'q_{si}'}, inplace=True)
 
     return operator_so, operator_si
 
 # Create combinations of definite isospin
+
+
 def project_isospin(operator_so, operator_si):
 
     label = 'q_{so}'
     if label in operator_so.columns:
         operator_so[label] = operator_so[label].apply(literal_eval)
 
-        isospin_neg = operator_so[operator_so[label] <= (0,0,0)]
-        isospin_neg.loc[:,'coefficient'] = isospin_neg.loc[:,'coefficient'] * -1
-        isospin_neg.loc[:,label] = isospin_neg.loc[:,label].apply(utils._minus)
+        isospin_neg = operator_so[operator_so[label] <= (0, 0, 0)]
+        isospin_neg.loc[:, 'coefficient'] = isospin_neg.loc[:, 'coefficient'] * -1
+        isospin_neg.loc[:, label] = isospin_neg.loc[:, label].apply(utils._minus)
 
-        isospin_neg.rename(columns={'\gamma^{0}_{so}' : '\gamma^{1}_{so}',
-                                    '\gamma^{1}_{so}' : '\gamma^{0}_{so}'}, inplace=True)
+        isospin_neg.rename(columns={'\gamma^{0}_{so}': '\gamma^{1}_{so}',
+                                    '\gamma^{1}_{so}': '\gamma^{0}_{so}'}, inplace=True)
 
-        isospin_pos = operator_so[operator_so[label] >= (0,0,0)]
+        isospin_pos = operator_so[operator_so[label] >= (0, 0, 0)]
 
         operator_so = pd.concat([isospin_pos, isospin_neg])
         operator_so[label] = operator_so[label].apply(str)
@@ -360,15 +389,14 @@ def project_isospin(operator_so, operator_si):
     if label in operator_si.columns:
         operator_si[label] = operator_si[label].apply(literal_eval)
 
-        isospin_neg = operator_si[operator_si[label] < (0,0,0)]
-        isospin_neg.loc[:,'coefficient'] = isospin_neg.loc[:,'coefficient'] * -1
-        isospin_neg.loc[:,label] = isospin_neg.loc[:,label].apply(utils._minus)
+        isospin_neg = operator_si[operator_si[label] < (0, 0, 0)]
+        isospin_neg.loc[:, 'coefficient'] = isospin_neg.loc[:, 'coefficient'] * -1
+        isospin_neg.loc[:, label] = isospin_neg.loc[:, label].apply(utils._minus)
 
-        isospin_neg.rename(columns={'\gamma^{0}_{si}' : '\gamma^{1}_{si}',
-                                    '\gamma^{1}_{si}' : '\gamma^{0}_{si}'}, inplace=True)
+        isospin_neg.rename(columns={'\gamma^{0}_{si}': '\gamma^{1}_{si}',
+                                    '\gamma^{1}_{si}': '\gamma^{0}_{si}'}, inplace=True)
 
-
-        isospin_pos = operator_si[operator_si[label] > (0,0,0)]
+        isospin_pos = operator_si[operator_si[label] > (0, 0, 0)]
 
         operator_si = pd.concat([isospin_pos, isospin_neg])
         operator_si[label] = operator_si[label].apply(str)
@@ -376,9 +404,10 @@ def project_isospin(operator_so, operator_si):
 
     return operator_so, operator_si
 
+
 def select_q(list_of_q, operators_so, operators_si):
 
-    if list_of_q != None:
+    if list_of_q is not None:
 
         label = 'q_{so}'
         if label in operators_so.columns:
@@ -404,29 +433,30 @@ def correlate_operators(operator_so, operator_si, verbose):
                                  suffixes=['_{so}', '_{si}'])
 
     lattice_operators['coefficient'] = lattice_operators['coefficient_{so}'].apply(np.conj) \
-                                          * lattice_operators['coefficient_{si}']
-    lattice_operators.drop(['coefficient_{so}', 'coefficient_{si}'], axis=1, inplace=True)
+        * lattice_operators['coefficient_{si}']
+    lattice_operators.drop(
+        ['coefficient_{so}', 'coefficient_{si}'], axis=1, inplace=True)
 
     lattice_operators.reset_index(inplace=True)
     index = lattice_operators.columns.difference(['coefficient']).tolist()
-    order = { r'Irrep' : 0,
-              r'mult' : 1,
-              r'p_{cm}' : 2,
-              r'operator_label_{so}' : 3,
-              r'operator_label_{si}' : 4,
-              r'\mu' : 5,
-              r'\beta' : 6,
-              r'q_{so}' : 7,
-              r'q_{si}' : 8,
-              r'p^{0}_{so}' : 9,
-              r'p^{1}_{so}' : 10,
-              r'p^{0}_{si}' : 11,
-              r'p^{1}_{si}' : 12,
-              r'\gamma^{0}_{so}' : 13,
-              r'\gamma^{1}_{so}' : 14,
-              r'\gamma^{0}_{si}' : 15,
-              r'\gamma^{1}_{si}' : 16}
-    index = sorted(index, key=lambda x : order[x])
+    order = {r'Irrep': 0,
+             r'mult': 1,
+             r'p_{cm}': 2,
+             r'operator_label_{so}': 3,
+             r'operator_label_{si}': 4,
+             r'\mu': 5,
+             r'\beta': 6,
+             r'q_{so}': 7,
+             r'q_{si}': 8,
+             r'p^{0}_{so}': 9,
+             r'p^{1}_{so}': 10,
+             r'p^{0}_{si}': 11,
+             r'p^{1}_{si}': 12,
+             r'\gamma^{0}_{so}': 13,
+             r'\gamma^{1}_{so}': 14,
+             r'\gamma^{0}_{si}': 15,
+             r'\gamma^{1}_{si}': 16}
+    index = sorted(index, key=lambda x: order[x])
     lattice_operators.set_index(index, inplace=True)
 
     lattice_operators = lattice_operators.sum(axis=0, level=index)
@@ -444,29 +474,30 @@ def correlate_operators(operator_so, operator_si, verbose):
 
     return lattice_operators
 
+
 def project(j, correlator, continuum_basis_string, gamma_input, list_of_pcm, list_of_q,
-        path_to_sc, path_to_sc_2, verbose):
+            path_to_sc, path_to_sc_2, verbose):
 
     # Express :math:`O^{J,M}` in terms of physical Dirac operators
     # specified in `gamma_input`
     continuum_operators = set_continuum_basis(
-      gamma_input, continuum_basis_string, verbose)
+        gamma_input, continuum_basis_string, verbose)
 
     # read coefficients for correlation function, little group
     # and irreducible representation given by correlator, p_cm
     # irrep and mult
     lattice_operators_so, lattice_operators_si = read_lattice_basis(
-      correlator, list_of_pcm, path_to_sc, path_to_sc_2, j, verbose)
+        correlator, list_of_pcm, path_to_sc, path_to_sc_2, j, verbose)
 
     operators_so, operators_si = project_operators(
-      correlator, lattice_operators_so, lattice_operators_si,
-      continuum_operators, verbose)
+        correlator, lattice_operators_so, lattice_operators_si,
+        continuum_operators, verbose)
 
     operators_so, operators_si = project_isospin(operators_so, operators_si)
 
     operators_so, operators_si = select_q(list_of_q, operators_so, operators_si)
 
     lattice_operators = correlate_operators(
-      operators_so, operators_si, verbose)
+        operators_so, operators_si, verbose)
 
     return lattice_operators

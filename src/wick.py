@@ -4,6 +4,7 @@ from pandas import Series, DataFrame
 
 import utils
 
+
 def rho_2pt(data, verbose=1):
     """
     Perform Wick contraction for 2pt function
@@ -29,7 +30,7 @@ def rho_2pt(data, verbose=1):
     The gamma strucures that can appear in \rho(t) are hardcoded
     """
 
-    gamma_i =   [1, 2, 3]
+    gamma_i = [1, 2, 3]
     gamma_50i = [13, 14, 15]
 
     assert {'C20'} <= set(data.keys()), 'Subduced data must contain C20'
@@ -37,13 +38,13 @@ def rho_2pt(data, verbose=1):
     wick = data['C20']
 
     # Warning: 1j hardcoded
-    wick[wick.index.get_level_values('\gamma^{0}_{so}').isin(gamma_i) & \
-         wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_i)]   *= (2.)
-    wick[wick.index.get_level_values('\gamma^{0}_{so}').isin(gamma_i) & \
-         wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_50i)] *= (2.*1j)
-    wick[wick.index.get_level_values('\gamma^{0}_{so}').isin(gamma_50i) & \
-         wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_i)]   *= (2.*1j)
-    wick[wick.index.get_level_values('\gamma^{0}_{so}').isin(gamma_50i) & \
+    wick[wick.index.get_level_values('\gamma^{0}_{so}').isin(gamma_i) &
+         wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_i)] *= (2.)
+    wick[wick.index.get_level_values('\gamma^{0}_{so}').isin(gamma_i) &
+         wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_50i)] *= (2. * 1j)
+    wick[wick.index.get_level_values('\gamma^{0}_{so}').isin(gamma_50i) &
+         wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_i)] *= (2. * 1j)
+    wick[wick.index.get_level_values('\gamma^{0}_{so}').isin(gamma_50i) &
          wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_50i)] *= (2.)
 
     if verbose >= 2:
@@ -54,6 +55,7 @@ def rho_2pt(data, verbose=1):
         print wick
 
     return wick
+
 
 def pipi_2pt(data, verbose=1):
     """
@@ -79,6 +81,7 @@ def pipi_2pt(data, verbose=1):
     wick = data['C2c']
 
     return wick
+
 
 def pi_2pt(data, verbose=1):
     """
@@ -141,8 +144,8 @@ def rho_3pt(data, verbose=1):
     The gamma strucures that can appear in \rho(t) are hardcoded
     """
 
-    gamma_5 =   [5]
-    gamma_i =   [1, 2, 3]
+    gamma_5 = [5]
+    gamma_i = [1, 2, 3]
     gamma_50i = [13, 14, 15]
 
     assert {'C3c'} <= set(data.keys()), 'Subduced data must contain C3c'
@@ -150,12 +153,12 @@ def rho_3pt(data, verbose=1):
     wick = data['C3c']
 
     # Warning: 1j hardcoded
-    wick[wick.index.get_level_values('\gamma^{0}_{so}').isin(gamma_5) & \
-         wick.index.get_level_values('\gamma^{1}_{so}').isin(gamma_5) & \
-         wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_i)]   *= ( 2.)   *(-1j)
-    wick[wick.index.get_level_values('\gamma^{0}_{so}').isin(gamma_5) & \
-         wick.index.get_level_values('\gamma^{1}_{so}').isin(gamma_5) & \
-         wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_50i)] *= ( 2.*1j)*(-1j)
+    wick[wick.index.get_level_values('\gamma^{0}_{so}').isin(gamma_5) &
+         wick.index.get_level_values('\gamma^{1}_{so}').isin(gamma_5) &
+         wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_i)] *= (2.) * (-1j)
+    wick[wick.index.get_level_values('\gamma^{0}_{so}').isin(gamma_5) &
+         wick.index.get_level_values('\gamma^{1}_{so}').isin(gamma_5) &
+         wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_50i)] *= (2. * 1j) * (-1j)
 
     if verbose >= 2:
         print "wick['C3']"
@@ -169,6 +172,8 @@ def rho_3pt(data, verbose=1):
 ################################################################################
 
 # TODO: catch if keys were not found
+
+
 def rho_4pt(data, verbose=0):
     """
     Perform Wick contraction for 4pt function
@@ -195,7 +200,8 @@ def rho_4pt(data, verbose=0):
     The gamma strucures that can appear in \rho(t) are hardcoded
     """
 
-    assert {'C4cD', 'C4cB'} <= set(data.keys()), 'Subduced data must contain C4cD and C4cB'
+    assert {'C4cD', 'C4cB'} <= set(
+        data.keys()), 'Subduced data must contain C4cD and C4cB'
 
     data_box = data['C4cB']
     data_dia = data['C4cD']
@@ -204,7 +210,7 @@ def rho_4pt(data, verbose=0):
 #  data_box = pd.read_hdf('readdata/%s_p%1i.h5' % (diagrams[0], p_cm), 'data')
 #  data_dia = pd.read_hdf('readdata/%s_p%1i.h5' % (diagrams[1], p_cm), 'data')
 
-    wick = ((-2.)*data_box).add(data_dia, fill_value=0)
+    wick = ((-2.) * data_box).add(data_dia, fill_value=0)
 
     if verbose >= 2:
         print "wick['C4']"
@@ -214,6 +220,7 @@ def rho_4pt(data, verbose=0):
         print wick
 
     return wick
+
 
 def pipi_4pt(data, verbose=0):
     """
@@ -244,11 +251,12 @@ def pipi_4pt(data, verbose=0):
     data_cro = data['C4cC']
     data_dia = data['C4cD']
 
-    wick = ((-1.)*data_cro).add(data_dia, fill_value=0)
+    wick = ((-1.) * data_cro).add(data_dia, fill_value=0)
 
     return wick
 
 ################################################################################
+
 
 def set_lookup_correlators(diagrams):
     """
@@ -267,7 +275,7 @@ def set_lookup_correlators(diagrams):
     """
 
     lookup_correlators = {}
-    for nb_quarklines in range(2,5):
+    for nb_quarklines in range(2, 5):
 
         # as a function argument give the names of all diagrams with the correct
         # number of quarklines
@@ -275,9 +283,10 @@ def set_lookup_correlators(diagrams):
         diagram = list(it.compress(diagrams, mask))
 
         if len(diagram) != 0:
-            lookup_correlators.update({"C%1d" % nb_quarklines : diagram})
+            lookup_correlators.update({"C%1d" % nb_quarklines: diagram})
 
     return lookup_correlators
+
 
 def contract_correlators(process, data, correlator, verbose=0):
     """
@@ -309,9 +318,9 @@ def contract_correlators(process, data, correlator, verbose=0):
     """
 
     # TODO: I don't think you have to emulate c function pointers for this
-    rho = {'C2' : rho_2pt, 'C3' : rho_3pt, 'C4' : rho_4pt}
-    pipi = {'C2' : pipi_2pt, 'C4' : pipi_4pt}
-    pi = {'C2' : pi_2pt}
+    rho = {'C2': rho_2pt, 'C3': rho_3pt, 'C4': rho_4pt}
+    pipi = {'C2': pipi_2pt, 'C4': pipi_4pt}
+    pi = {'C2': pi_2pt}
 
     if process == 'rho':
         # rho analysis

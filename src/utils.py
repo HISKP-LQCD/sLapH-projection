@@ -20,6 +20,8 @@ from matplotlib.backends.backend_pdf import PdfPages
 ################################################################################
 # checks if the directory where the file will be written does exist
 # See https://stackoverflow.com/questions/600268/mkdir-p-functionality-in-python
+
+
 def ensure_dir(f):
     """Helper function to create a directory if it does not exist"""
 #  if not os.path.exists(f):
@@ -33,18 +35,23 @@ def ensure_dir(f):
 
 ################################################################################
 # Convenience function to work with three-momenta in pd.DataFrames
+
+
 def _scalar_mul(x, y):
     return sum(it.imap(operator.mul, x, y))
+
 
 def _abs2(x):
     return _scalar_mul(x, x)
 
+
 def _minus(x):
     # Python distinguishes +0 and -0. I explicitly want the + for string output
-    return tuple(-np.array(x)+0)
+    return tuple(-np.array(x) + 0)
 
 ################################################################################
 # IO routines
+
 
 def read_hdf5_correlators(path, key):
     """
@@ -67,6 +74,7 @@ def read_hdf5_correlators(path, key):
 
     return data
 
+
 def write_hdf5_correlators(path, filename, data, key, verbose=1):
     """
     write pd.DataFrame as hdf5 file
@@ -85,13 +93,15 @@ def write_hdf5_correlators(path, filename, data, key, verbose=1):
     """
 
     ensure_dir(path)
-    data.to_hdf(path+filename, key, mode='w')
+    data.to_hdf(path + filename, key, mode='w')
 
     if verbose >= 1:
         print '\tFinished writing', filename
 
 ################################################################################
 # TODO: write that for a pandas dataframe with hierarchical index nb_cnfg x T
+
+
 def write_data_ascii(data, filename, verbose=1):
     """
     Writes the data into a file.
@@ -120,19 +130,20 @@ def write_data_ascii(data, filename, verbose=1):
     # init variables
     nsamples = data.shape[0]
     T = data.shape[1]
-    L = int(T/2)
+    L = int(T / 2)
     # write header
     head = "%i %i %i %i %i" % (nsamples, T, 0, L, 0)
     # prepare data and counter
     #_data = data.flatten()
-    _data = data.reshape((T*nsamples), -1)
-    _counter = np.fromfunction(lambda i, *j: i%T,
-                               (_data.shape[0],) + (1,)*(len(_data.shape)-1), dtype=int)
-    _fdata = np.concatenate((_counter,_data), axis=1)
+    _data = data.reshape((T * nsamples), -1)
+    _counter = np.fromfunction(lambda i, *j: i % T,
+                               (_data.shape[0],) + (1,) * (len(_data.shape) - 1), dtype=int)
+    _fdata = np.concatenate((_counter, _data), axis=1)
     # generate format string
     fmt = ('%.0f',) + ('%.14f',) * _data[0].size
     # write data to file
     np.savetxt(filename, _fdata, header=head, comments='', fmt=fmt)
+
 
 def pd_series_to_np_array(series):
     """
@@ -152,6 +163,7 @@ def pd_series_to_np_array(series):
 
     return np.asarray(series.values).reshape(series.unstack().shape)
 
+
 def write_ascii_correlators(path, filename, data, verbose=1):
     """
     write pd.DataFrame as ascii file in Liuming's format
@@ -170,6 +182,7 @@ def write_ascii_correlators(path, filename, data, verbose=1):
     fname = os.path.join(path, filename)
     write_data_ascii(np.asarray(pd_series_to_np_array(data)), fname, verbose)
 
+
 def write_ascii_gevp(path, name, data, verbose=1):
 
     assert np.all(data.notnull()), ('Gevp contains null entires')
@@ -181,13 +194,13 @@ def write_ascii_gevp(path, name, data, verbose=1):
         print 'Creating a %d x %d Gevp' % (data_size, data_size)
 
     ensure_dir(path)
-    f = open(os.path.join(path, name+'_indices.txt'), 'w')
+    f = open(os.path.join(path, name + '_indices.txt'), 'w')
     f.write("%8s\tphysical content\n" % "Element")
 
     for counter in range(len(data.index)):
 
         ensure_dir(path)
-        filename = name + '.%d.%d.dat' % (counter/data_size, counter%data_size)
+        filename = name + '.%d.%d.dat' % (counter / data_size, counter % data_size)
 
         # Write file with physical content corresponding to index number (gevp_col)
         if counter < data_size:
@@ -200,12 +213,13 @@ def write_ascii_gevp(path, name, data, verbose=1):
 ################################################################################
 # Convenience function to create pdf files
 
+
 def create_pdfplot(path, filename):
     """
     Helper function to create a pdfplot object and ensure existence of the path
     """
 
     ensure_dir(path)
-    pdfplot = PdfPages(path+filename)
+    pdfplot = PdfPages(path + filename)
 
     return pdfplot

@@ -1,5 +1,5 @@
 import matplotlib
-#matplotlib.use('QT4Agg')
+# matplotlib.use('QT4Agg')
 import matplotlib.pyplot as plt
 plt.rc('text', usetex=True)
 from matplotlib.backends.backend_pdf import PdfPages
@@ -22,6 +22,8 @@ import utils
 # TODO: this does not work if I work with the column indices directly rather
 # than the config numbers. Using np.random.randint and iloc should be
 # considerably faster
+
+
 def bootstrap(df, bootstrapsize):
     """
   Apply the bootstrap method to randomly resample gauge configurations
@@ -60,6 +62,7 @@ def bootstrap(df, bootstrapsize):
 
     return boot
 
+
 def mean_and_std(df, bootstrapsize):
     """
   Mean and standard deviation over all configurations/bootstrap samples
@@ -76,12 +79,12 @@ def mean_and_std(df, bootstrapsize):
   Returns:
   --------
   pd.DataFrame
-      Table with identical indices as `df` The column level 0 is replaced by 
+      Table with identical indices as `df` The column level 0 is replaced by
       mean and std while level 1 remains unchanged
 
   Notes
   -----
-  Must be taken for real and imaginary part seperately because that apparently 
+  Must be taken for real and imaginary part seperately because that apparently
   breaks pandas.
   """
 
@@ -93,15 +96,16 @@ def mean_and_std(df, bootstrapsize):
 
 ################################################################################
 
+
 def plot_gevp_el_ax(data, label_template, scale, ax, multiindex=False):
     """
   Plot all rows of given pd.DataFrame into a single page as seperate graphs
 
   data : pd.DataFrame
-      
+
       Table with any quantity as rows and multicolumns where level 0 contains
       {'mean', 'std'} and level 1 contains 'T'
-  
+
   label_template : string
 
       Format string that will be used to label the graphs. The format must fit
@@ -137,18 +141,19 @@ def plot_gevp_el_ax(data, label_template, scale, ax, multiindex=False):
 
         # plot
         ax.errorbar(
-            T - 1./5 + shift * counter,
+            T - 1. / 5 + shift * counter,
             mean,
             std,
             fmt=symbol[counter % len(symbol)],
             color=cmap_brg[counter],
             label=label,
-            markersize=3./scale,
-            capsize=3./scale,
-            capthick=0.5/scale,
-            elinewidth=0.5/scale,
+            markersize=3. / scale,
+            capsize=3. / scale,
+            capthick=0.5 / scale,
+            elinewidth=0.5 / scale,
             markeredgecolor=cmap_brg[counter],
             linewidth='0.0')
+
 
 def plot_mean(data, scale, ax):
 
@@ -167,10 +172,10 @@ def plot_mean(data, scale, ax):
         fmt='o',
         color='black',
         label='mean',
-        markersize=3./scale,
-        capsize=3./scale,
-        capthick=0.5/scale,
-        elinewidth=0.5/scale,
+        markersize=3. / scale,
+        capsize=3. / scale,
+        capthick=0.5 / scale,
+        elinewidth=0.5 / scale,
         markeredgecolor='black',
         linewidth='0.0')
 
@@ -180,27 +185,27 @@ def plot_mean(data, scale, ax):
 def average(graphdata, ax, scale=1):
     """
     Create a multipage plot with a page for every element of the rho gevp
-  
+
     Parameters
     ----------
-  
+
     gevp_data : pd.DataFrame
-  
+
         Table with a row for each gevp element (sorted by gevp column running
-        faster than gevp row) and hierarchical columns for gauge configuration 
+        faster than gevp row) and hierarchical columns for gauge configuration
         number and timeslice
-  
+
     bootstrapsize : int
-  
+
         The number of bootstrap samples being drawn from `gevp_data`.
-  
+
     pdfplot : mpl.PdfPages object
-        
+
         Plots will be written to the path `pdfplot` was created with.
-  
+
     See also
     --------
-  
+
     utils.create_pdfplot()
     """
 
@@ -213,21 +218,24 @@ def average(graphdata, ax, scale=1):
     return
 
 # TODO: use color for momenta and symbols for rows.
+
+
 def pcm_and_mu(graphdata, ax, scale=1):
 
-    plot_gevp_el_ax(graphdata, r'$\vec{{P}}_\textnormal{{cm}} = {}$, $\mu = {}$', scale, 
-            ax, multiindex=True)
+    plot_gevp_el_ax(graphdata, r'$\vec{{P}}_\textnormal{{cm}} = {}$, $\mu = {}$', scale,
+                    ax, multiindex=True)
 
-     # This takes the mean over all operators for the mean and std over 
-    # bootstrapsamples. That is not entirelly correct. The operations should 
+    # This takes the mean over all operators for the mean and std over
+    # bootstrapsamples. That is not entirelly correct. The operations should
     # be the over way round. good enough for a consistency check.
     graphdata_mean = graphdata.mean(axis=0)
-    
+
     plot_mean(graphdata_mean, scale, ax)
-    
+
     ax.legend(numpoints=1, loc='best', fontsize=6)
 
     return
+
 
 def p_and_gammas(data, diagram, bootstrapsize, pdfplot, logscale=True, verbose=False):
     """
@@ -242,7 +250,7 @@ def p_and_gammas(data, diagram, bootstrapsize, pdfplot, logscale=True, verbose=F
         Table with physical quantum numbers as rows 'gevp_row' x 'gevp_col' x
         'p_{cm}' x \mu' '\gamma_{so}' x '\gamma_{si}' and columns 'cnfg' x 'T'.
         Contains the linear combinations of correlation functions transforming
-        like what the parameters qn_irrep was created with, i.e. the subduced 
+        like what the parameters qn_irrep was created with, i.e. the subduced
         data
 
     diagram : string
@@ -253,7 +261,7 @@ def p_and_gammas(data, diagram, bootstrapsize, pdfplot, logscale=True, verbose=F
         The number of bootstrap samples being drawn from `gevp_data`.
 
     pdfplot : mpl.PdfPages object
-        
+
         Plots will be written to the path `pdfplot` was created with.
 
     See also
@@ -274,7 +282,7 @@ def p_and_gammas(data, diagram, bootstrapsize, pdfplot, logscale=True, verbose=F
 #    plotlabel = list(set([(i[0], i[1], i[2], i[3]) for i in plotdata_real.index.values]))
     # Create unique list of gevp elements to loop over while keeping order intact
     seen = set()
-    plotlabel= []
+    plotlabel = []
     for item in [(i[0], i[1], i[2], i[3]) for i in plotdata_real.index.values]:
         if item not in seen:
             seen.add(item)
@@ -288,14 +296,14 @@ def p_and_gammas(data, diagram, bootstrapsize, pdfplot, logscale=True, verbose=F
 
         # Select data for plot
         graphdata_real = plotdata_real.xs(
-                graphlabel, level=['gevp_row', 'gevp_col', 'p_{cm}', '\mu'])
+            graphlabel, level=['gevp_row', 'gevp_col', 'p_{cm}', '\mu'])
         graphdata_imag = plotdata_imag.xs(
-                graphlabel, level=['gevp_row', 'gevp_col', 'p_{cm}', '\mu'])
+            graphlabel, level=['gevp_row', 'gevp_col', 'p_{cm}', '\mu'])
 
         # Prepare Figure
-        fig, (ax_r, ax_i) = plt.subplots(1,2, sharex=True, sharey=True)
-        fig.suptitle(r'Gevp Element ${}$ - ${}$, $\vec{{P}}_\textnormal{{cm}} = {}$, $\mu = {}$'.\
-            format(graphlabel[0], graphlabel[1], graphlabel[2], graphlabel[3]))
+        fig, (ax_r, ax_i) = plt.subplots(1, 2, sharex=True, sharey=True)
+        fig.suptitle(r'Gevp Element ${}$ - ${}$, $\vec{{P}}_\textnormal{{cm}} = {}$, $\mu = {}$'.
+                     format(graphlabel[0], graphlabel[1], graphlabel[2], graphlabel[3]))
 
         # Prepare Axes
         ax_r.set_title('Real')
@@ -318,7 +326,6 @@ def p_and_gammas(data, diagram, bootstrapsize, pdfplot, logscale=True, verbose=F
             ax_r.set_yscale('symlog', linthreshy=linthreshy)
             ax_i.set_yscale('symlog', linthreshy=linthreshy)
 
-
         # plot
         plot_gevp_el_ax(graphdata_imag, 'None', 1, ax_i)
         plot_mean(graphdata_imag.mean(axis=0), 1, ax_i)
@@ -329,32 +336,33 @@ def p_and_gammas(data, diagram, bootstrapsize, pdfplot, logscale=True, verbose=F
         pdfplot.savefig(fig)
         plt.close(fig)
 
+
 def for_each_gevp_element(plotting_function, plotdata, bootstrapsize, pdfplot,
-                    logscale=False,
-                    verbose=False):
+                          logscale=False,
+                          verbose=False):
     """
     Create a multipage plot with a page for every element of the rho gevp
-  
+
     Parameters
     ----------
-  
+
     gevp_data : pd.DataFrame
-  
+
         Table with a row for each gevp element (sorted by gevp column running
-        faster than gevp row) and hierarchical columns for gauge configuration 
+        faster than gevp row) and hierarchical columns for gauge configuration
         number and timeslice
-  
+
     bootstrapsize : int
-  
+
         The number of bootstrap samples being drawn from `gevp_data`.
-  
+
     pdfplot : mpl.PdfPages object
-        
+
         Plots will be written to the path `pdfplot` was created with.
-  
+
     See also
     --------
-  
+
     utils.create_pdfplot()
     """
 
@@ -374,7 +382,7 @@ def for_each_gevp_element(plotting_function, plotdata, bootstrapsize, pdfplot,
             print '\tplotting ', graphlabel[0], ' - ', graphlabel[1]
 
         # Prepare Figure
-        fig, ax = plt.subplots(1,1)
+        fig, ax = plt.subplots(1, 1)
 
         # Prepare Axes
         ax.set_title(r'Gevp Element ${}$ - ${}$'.format(graphlabel[0], graphlabel[1]))
@@ -393,7 +401,9 @@ def for_each_gevp_element(plotting_function, plotdata, bootstrapsize, pdfplot,
 
     return
 
-def gevp(plotting_function, plotdata, bootstrapsize, pdfplot, logscale=False, verbose=False):
+
+def gevp(plotting_function, plotdata, bootstrapsize,
+         pdfplot, logscale=False, verbose=False):
     """
   Create a multipage plot with a page for every element of the rho gevp
 
@@ -403,7 +413,7 @@ def gevp(plotting_function, plotdata, bootstrapsize, pdfplot, logscale=False, ve
   plotdata: pd.DataFrame
 
       Table with a row for each gevp element (sorted by gevp column running
-      faster than gevp row) and hierarchical columns for gauge configuration 
+      faster than gevp row) and hierarchical columns for gauge configuration
       number and timeslice
 
   bootstrapsize : int
@@ -411,7 +421,7 @@ def gevp(plotting_function, plotdata, bootstrapsize, pdfplot, logscale=False, ve
       The number of bootstrap samples being drawn from `plotdata`.
 
   pdfplot : mpl.PdfPages object
-      
+
       Plots will be written to the path `pdfplot` was created with.
 
   See also
@@ -426,11 +436,12 @@ def gevp(plotting_function, plotdata, bootstrapsize, pdfplot, logscale=False, ve
     # abs of smallest positive value
     #linthreshy = plotdata['mean'][plotdata['mean'] > 0].min().min()
     # abs of value closest to zero
-    linthreshy = 1e3 * plotdata['mean'].iloc[plotdata.loc[:,('mean',0)].nonzero()].abs().min().min()
+    linthreshy = 1e3 * plotdata['mean'].iloc[plotdata.loc[:,
+                                                          ('mean', 0)].nonzero()].abs().min().min()
 
     # Create unique list of gevp elements to loop over while keeping order intact
     seen = set()
-    plotlabel= []
+    plotlabel = []
     for item in [(i[0], i[1]) for i in plotdata.index.values]:
         if item not in seen:
             seen.add(item)
@@ -450,16 +461,16 @@ def gevp(plotting_function, plotdata, bootstrapsize, pdfplot, logscale=False, ve
         ax = axes[counter // gevp_size, counter % gevp_size]
 #        ax.set_title(r'Gevp Element ${}$ - ${}$'.format(graphlabel[0], graphlabel[1]))
         ax.set_xlabel(r'$%s$' % graphlabel[1], fontsize=3, rotation=30)
-        ax.set_ylabel(r'$%s$' % graphlabel[0], fontsize=3, rotation=30)	
+        ax.set_ylabel(r'$%s$' % graphlabel[0], fontsize=3, rotation=30)
         # https://stackoverflow.com/questions/4209467/matplotlib-share-x-axis-but-dont-show-x-axis-tick-labels-for-both-just-one
         ax.label_outer()
 
         if logscale:
-#            ax.locator_params(axis='y', numticks=3)
+            #            ax.locator_params(axis='y', numticks=3)
             ax.set_yscale('symlog', linthreshy=linthreshy)
 
         ax.set_xticks([])
-#        ax.tick_params(labelleft='off')  
+#        ax.tick_params(labelleft='off')
         ax.set_yticks([])
 
         # Select data for plot
@@ -475,4 +486,3 @@ def gevp(plotting_function, plotdata, bootstrapsize, pdfplot, logscale=False, ve
     plt.close(fig)
 
     return
-

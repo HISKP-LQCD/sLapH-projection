@@ -15,6 +15,8 @@ import pandas as pd
 from pandas import Series, DataFrame
 
 # TODO: nb_cnfg is spurious, can just use len(lookup_cnfg)
+
+
 def set_lookup_cnfg(sta_cnfg, end_cnfg, del_cnfg, missing_configs, verbose=0):
     """
     Get a list of all gauge configurations contractions where performed on
@@ -40,7 +42,7 @@ def set_lookup_cnfg(sta_cnfg, end_cnfg, del_cnfg, missing_configs, verbose=0):
     # calculate number of configurations
     nb_cnfg = 0
     lookup_cnfg = []
-    for cnfg in range(sta_cnfg, end_cnfg+1, del_cnfg):
+    for cnfg in range(sta_cnfg, end_cnfg + 1, del_cnfg):
         if cnfg in missing_configs:
             continue
         lookup_cnfg.append(cnfg)
@@ -48,6 +50,7 @@ def set_lookup_cnfg(sta_cnfg, end_cnfg, del_cnfg, missing_configs, verbose=0):
         print '\t\tNumber of configurations: %i' % len(lookup_cnfg)
 
     return lookup_cnfg
+
 
 def set_lookup_qn(diagram, p_cm, p_max, gammas, process='pipi', verbose=0):
     """
@@ -84,13 +87,20 @@ def set_lookup_qn(diagram, p_cm, p_max, gammas, process='pipi', verbose=0):
     lookup_g = set_lookup_g(gammas, diagram)
     lookup_g.index = np.repeat(0, len(lookup_g))
 
-    lookup_qn = pd.merge(lookup_p, lookup_g, how='left', left_index=True, right_index=True)
+    lookup_qn = pd.merge(
+        lookup_p,
+        lookup_g,
+        how='left',
+        left_index=True,
+        right_index=True)
     lookup_qn.reset_index(drop=True, inplace=True)
 
     return lookup_qn
 
 # TODO: possible speedup if strings are directly used rather than the
 #       components of tuples
+
+
 def set_groupname(diagram, s):
     """
     Creates string with filename of the desired diagram calculated by the
@@ -126,8 +136,8 @@ def set_groupname(diagram, s):
         g_si = s['\gamma^{0}_{si}']
 
         groupname = diagram \
-                      + '_uu_p%1i%1i%1i.d000.g%i' % ( p_so + (g_so,) ) \
-                      +    '_p%1i%1i%1i.d000.g%i' % ( p_si + (g_si,) )
+            + '_uu_p%1i%1i%1i.d000.g%i' % (p_so + (g_so,)) \
+            + '_p%1i%1i%1i.d000.g%i' % (p_si + (g_si,))
     elif diagram.startswith('C3'):
         p_so_0 = eval(s['p^{0}_{so}'])
         p_so_1 = eval(s['p^{1}_{so}'])
@@ -137,9 +147,9 @@ def set_groupname(diagram, s):
         g_si = s['\gamma^{0}_{si}']
 
         groupname = diagram \
-                      + '_uuu_p%1i%1i%1i.d000.g%1i' % ( p_so_1 + (g_so_1,) ) \
-                      +     '_p%1i%1i%1i.d000.g%1i' % ( p_si +   (g_si,) ) \
-                      +     '_p%1i%1i%1i.d000.g%1i' % ( p_so_0 + (g_so_0,) )
+            + '_uuu_p%1i%1i%1i.d000.g%1i' % (p_so_1 + (g_so_1,)) \
+            + '_p%1i%1i%1i.d000.g%1i' % (p_si + (g_si,)) \
+            + '_p%1i%1i%1i.d000.g%1i' % (p_so_0 + (g_so_0,))
     elif diagram == 'C4cD' or diagram == 'C4cC':
         p_so_0 = eval(s['p^{0}_{so}'])
         p_so_1 = eval(s['p^{1}_{so}'])
@@ -151,10 +161,10 @@ def set_groupname(diagram, s):
         g_si_1 = s['\gamma^{1}_{si}']
 
         groupname = diagram \
-                      + '_uuuu_p%1i%1i%1i.d000.g%1i' % ( p_so_0 + (g_so_0,) ) \
-                      +      '_p%1i%1i%1i.d000.g%1i' % ( p_si_0 + (g_si_0,) ) \
-                      +      '_p%1i%1i%1i.d000.g%1i' % ( p_so_1 + (g_so_1,) ) \
-                      +      '_p%1i%1i%1i.d000.g%1i' % ( p_si_1 + (g_si_1,) )
+            + '_uuuu_p%1i%1i%1i.d000.g%1i' % (p_so_0 + (g_so_0,)) \
+            + '_p%1i%1i%1i.d000.g%1i' % (p_si_0 + (g_si_0,)) \
+            + '_p%1i%1i%1i.d000.g%1i' % (p_so_1 + (g_so_1,)) \
+            + '_p%1i%1i%1i.d000.g%1i' % (p_si_1 + (g_si_1,))
     elif diagram == 'C4cB':
         p_so_0 = eval(s['p^{0}_{so}'])
         p_so_1 = eval(s['p^{1}_{so}'])
@@ -166,10 +176,10 @@ def set_groupname(diagram, s):
         g_si_1 = s['\gamma^{1}_{si}']
 
         groupname = diagram \
-                      + '_uuuu_p%1i%1i%1i.d000.g%1i' % ( p_so_0 + (g_so_0,) ) \
-                      +      '_p%1i%1i%1i.d000.g%1i' % ( p_si_0 + (g_si_0,) ) \
-                      +      '_p%1i%1i%1i.d000.g%1i' % ( p_si_1 + (g_si_1,) ) \
-                      +      '_p%1i%1i%1i.d000.g%1i' % ( p_so_1 + (g_so_1,) )
+            + '_uuuu_p%1i%1i%1i.d000.g%1i' % (p_so_0 + (g_so_0,)) \
+            + '_p%1i%1i%1i.d000.g%1i' % (p_si_0 + (g_si_0,)) \
+            + '_p%1i%1i%1i.d000.g%1i' % (p_si_1 + (g_si_1,)) \
+            + '_p%1i%1i%1i.d000.g%1i' % (p_so_1 + (g_so_1,))
     else:
         print 'in set_groupname: diagram unknown! Quantum numbers corrupted.'
         return
@@ -178,6 +188,7 @@ def set_groupname(diagram, s):
 
 ################################################################################
 # reading configurations
+
 
 def read_diagram(lookup_cnfg, lookup_qn, diagram, T, directory, verbose=0):
     """
@@ -239,9 +250,9 @@ def read_diagram(lookup_cnfg, lookup_qn, diagram, T, directory, verbose=0):
             # because b, d are noise
             if comb:
                 # reshaping so we can extract the data easier
-                tmp = tmp.reshape((-1,2))
+                tmp = tmp.reshape((-1, 2))
                 # extracting right combination, assuming ImIm contains only noise
-                dtmp = 1.j * (tmp[:,1].real + tmp[:,0].imag) + tmp[:,0].real
+                dtmp = 1.j * (tmp[:, 1].real + tmp[:, 0].imag) + tmp[:, 0].real
                 tmp = dtmp.copy()
 
             # save data into data frame
@@ -249,8 +260,7 @@ def read_diagram(lookup_cnfg, lookup_qn, diagram, T, directory, verbose=0):
         data.append(data_fh)
     data = pd.concat(data, keys=lookup_cnfg, axis=0, names=['cnfg', 'T'])
 
-
-    data.sort_index(level=[0,1], inplace=True)
+    data.sort_index(level=[0, 1], inplace=True)
 
     if verbose >= 1:
         print '\tfinished reading\n'
@@ -265,9 +275,11 @@ def read_diagram(lookup_cnfg, lookup_qn, diagram, T, directory, verbose=0):
 
     return data
 
-##########################################################################################
+##########################################################################
+
+
 def read(path, T, diagrams, directories, sta_cnfg, end_cnfg, del_cnfg, missing_configs,
-        process, p_cm, p_cutoff, gamma_input, verbose):
+         process, p_cm, p_cutoff, gamma_input, verbose):
 
     for diagram, directory in zip(diagrams, directories):
 
@@ -275,17 +287,17 @@ def read(path, T, diagrams, directories, sta_cnfg, end_cnfg, del_cnfg, missing_c
             print '\tReading data for %s' % (diagram)
 
         lookup_cnfg = set_lookup_cnfg(
-          sta_cnfg, end_cnfg, del_cnfg, missing_configs, verbose)
+            sta_cnfg, end_cnfg, del_cnfg, missing_configs, verbose)
 
         # TODO: That needs to be refactored when going to a larger operator
         #     basis
         lookup_qn = set_lookup_qn(
-          diagram,
-          p_cm,
-          p_cutoff,
-          gamma_input,
-          process=process,
-          verbose=verbose)
+            diagram,
+            p_cm,
+            p_cutoff,
+            gamma_input,
+            process=process,
+            verbose=verbose)
 
         data = read_diagram(lookup_cnfg, lookup_qn, diagram, T, directory, verbose)
 
