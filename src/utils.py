@@ -1,3 +1,4 @@
+from ast import literal_eval
 import gmpy
 import numpy as np
 import pandas as pd
@@ -182,31 +183,50 @@ def write_ascii_correlators(filename, data, verbose=1):
 
 def write_ascii_gevp(path, basename, data, verbose=1):
 
+    ensure_dir(path)
+
+    # Cast data into longish data format with only gevp_row and gevp_col as index
+    print data
     data = data.T.reset_index().set_index(['cnfg', 'T']).stack(level=['gevp_row', 'gevp_col', 'p_{cm}', '\mu']).reset_index(['p_{cm}', '\mu', 'cnfg', 'T'])
 
-    assert np.all(data.notnull()), ('Gevp contains null entires')
-    assert gmpy.is_square(len(data.index.unique())), 'Gevp is not a square matrix'
+    print data['p_{cm}'].apply(literal_eval).apply(pd.Series)
+    data[['p_x', 'p_y', 'p_z']] = data['p_{cm}'].apply(literal_eval).apply(pd.Series)
+    del data['p_{cm}']
+    data.rename(columns={0 : 'value', '\mu' : 'alpha'}, inplace=True)
+    
+    indices = data.index.unique()
+    print indices
 
-    data_size = gmpy.sqrt(len(data.index.unique()))
+    assert np.all(data.notnull()), ('Gevp contains null entires')
+    assert gmpy.is_square(len(indices)), 'Gevp is not a square matrix'
+
+    data_size = gmpy.sqrt(len(indices))
 
     if verbose:
         print 'Creating a %d x %d Gevp' % (data_size, data_size)
 
-    ensure_dir(path)
-    f = open(os.path.join(path, basename + '_indices.txt'), 'w')
-    f.write("%8s\tphysical content\n" % "Element")
+    # Write file with physical content corresponding to index number (gevp_col)
+    gevp_elements = [i[1] for i in indices.values[:data_size]]
+    np.savetxt(os.path.join(path, basename + '_indices.txt'), np.array(zip(range(data_size), gevp_elements)), fmt='%s', delimiter='\t')
 
-    for counter in range(len(data.index)):
+    print np.loadtxt(os.path.join(path, basename + '_indices.txt'), dtype=str, delimiter='\t')
+    exit(0)
+
+    for counter, index in enumerate(indices):
 
         filename = os.path.join(path, basename + '.%d.%d.dat' % (counter / data_size, counter % data_size))
 
-        # Write file with physical content corresponding to index number (gevp_col)
-        if counter < data_size:
-            f.write("%12d\t%s\n" % (counter, data.index[counter][1]))
+
+        tmp = data.loc[index].set_index(['p_x', 'p_y', 'p_z', 'alpha'])
+        el_indicies = tmp.index.unique()
+
+        exit(0)
+            
+#        data.to_csv(filename, data.loc[index])
 
         # TODO: with to_csv this becomes a onliner but Liumings head format will
         # be annoying. Also the loop can probably run over data.iterrows()
-        write_ascii_correlators(filename, data.ix[counter], verbose)
+#        write_ascii_correlators(filename, data.ix[counter], verbose)
 
 ################################################################################
 # Convenience function to create pdf files
