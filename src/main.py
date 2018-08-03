@@ -296,16 +296,15 @@ def main(process, flag, sta_cnfg, end_cnfg, del_cnfg, missing_configs, ensemble,
                                                   verbose)
 
                 filename = os.path.join(
-                    path, '3_gevp-data', '%s_p%1i_%s.h5' %
-                    (process, p_cm_sq, irrep))
+                    path, '3_gevp-data', '%s_p%1i_%s.h5' % (process, p_cm_sq, irrep))
                 utils.write_hdf5_correlators(filename, gevp_data, verbose)
+
+                basename = '%s_p%1i_%s' % (process, p_cm_sq, irrep)
+                utils.write_ascii_gevp(
+                    os.path.join(path, '3_gevp-data'), basename, gevp_data, verbose)
 
                 # average over rows and  p_cm_sq.
                 gevp_data_avg = gevp_data.mean(level=gevp_labels)
-                basename = '%s_p%1i_%s' % (process, p_cm_sq, irrep)
-
-                utils.write_ascii_gevp(
-                    os.path.join(path, '3_gevp-data'), basename, gevp_data_avg, verbose)
 
             ##########################################################################
             # Plotting everything together

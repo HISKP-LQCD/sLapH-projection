@@ -182,10 +182,12 @@ def write_ascii_correlators(filename, data, verbose=1):
 
 def write_ascii_gevp(path, basename, data, verbose=1):
 
-    assert np.all(data.notnull()), ('Gevp contains null entires')
-    assert gmpy.is_square(len(data.index)), 'Gevp is not a square matrix'
+    data = data.T.reset_index().set_index(['cnfg', 'T']).stack(level=['gevp_row', 'gevp_col', 'p_{cm}', '\mu']).reset_index(['p_{cm}', '\mu', 'cnfg', 'T'])
 
-    data_size = gmpy.sqrt(len(data.index))
+    assert np.all(data.notnull()), ('Gevp contains null entires')
+    assert gmpy.is_square(len(data.index.unique())), 'Gevp is not a square matrix'
+
+    data_size = gmpy.sqrt(len(data.index.unique()))
 
     if verbose:
         print 'Creating a %d x %d Gevp' % (data_size, data_size)
