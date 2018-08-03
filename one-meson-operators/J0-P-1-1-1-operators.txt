@@ -1,0 +1,2 @@
+ Irrep 	 alpha 	 beta 	 M 	 coefficient
+A1	1	1	0	1
