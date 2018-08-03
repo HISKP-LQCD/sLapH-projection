@@ -3,6 +3,7 @@
 import h5py
 import numpy as np
 import itertools as it
+import os
 
 import utils
 from utils import _minus
@@ -278,8 +279,8 @@ def read_diagram(lookup_cnfg, lookup_qn, diagram, T, directory, verbose=0):
 ##########################################################################
 
 
-def read(path, T, diagrams, directories, sta_cnfg, end_cnfg, del_cnfg, missing_configs,
-         process, p_cm, p_cutoff, gamma_input, verbose):
+def read(process, path, T, diagrams, directories, sta_cnfg, end_cnfg, del_cnfg, missing_configs,
+         p_cm, p_cutoff, gamma_input, verbose):
 
     for diagram, directory in zip(diagrams, directories):
 
@@ -303,7 +304,7 @@ def read(path, T, diagrams, directories, sta_cnfg, end_cnfg, del_cnfg, missing_c
 
         # write data
         # TODO: Writing into same file only works in append mode
-        filename = path + '%s_p%1i_%s.h5' % (process, p_cm, diagram)
+        filename = os.path.join(path, '0_raw-data', '%s_p%1i_%s.h5' % (process, p_cm, diagram))
         utils.write_hdf5_correlators(filename, data, verbose)
-        filename = path + '%s_p%1i_%s_qn.h5' % (process, p_cm, diagram)
+        filename = os.path.join(path, '0_raw-data', '%s_p%1i_%s_qn.h5' % (process, p_cm, diagram))
         utils.write_hdf5_correlators(filename, lookup_qn, verbose)

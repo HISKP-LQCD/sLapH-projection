@@ -196,7 +196,7 @@ def write_ascii_gevp(path, basename, data, verbose=1):
 
     for counter in range(len(data.index)):
 
-        filename = path + basename + '.%d.%d.dat' % (counter / data_size, counter % data_size)
+        filename = os.path.join(path, basename + '.%d.%d.dat' % (counter / data_size, counter % data_size))
 
         # Write file with physical content corresponding to index number (gevp_col)
         if counter < data_size:
