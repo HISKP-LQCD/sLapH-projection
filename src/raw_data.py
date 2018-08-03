@@ -303,7 +303,7 @@ def read(path, T, diagrams, directories, sta_cnfg, end_cnfg, del_cnfg, missing_c
 
         # write data
         # TODO: Writing into same file only works in append mode
-        filename = '%s_p%1i_%s.h5' % (process, p_cm, diagram)
-        utils.write_hdf5_correlators(path, filename, data, 'data', verbose)
-        filename = '%s_p%1i_%s_qn.h5' % (process, p_cm, diagram)
-        utils.write_hdf5_correlators(path, filename, lookup_qn, 'qn', verbose=False)
+        filename = path + '%s_p%1i_%s.h5' % (process, p_cm, diagram)
+        utils.write_hdf5_correlators(filename, data, verbose)
+        filename = path + '%s_p%1i_%s_qn.h5' % (process, p_cm, diagram)
+        utils.write_hdf5_correlators(filename, lookup_qn, verbose)

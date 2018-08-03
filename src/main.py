@@ -34,6 +34,7 @@ def main(process, flag, sta_cnfg, end_cnfg, del_cnfg, missing_configs, ensemble,
     elif process == 'pi':
         j = 0
 
+    path = '%s/%s/' % (outpath, ensemble)
     for p_cm_sq in list_of_pcm_sq:
         if verbose:
             print 80 * '#'
@@ -42,9 +43,8 @@ def main(process, flag, sta_cnfg, end_cnfg, del_cnfg, missing_configs, ensemble,
         ########################################################################
         # Read diagrams for contributing correlators
         if flag['read']:
-            path = '%s/%s/0_raw-data/' % (outpath, ensemble)
             raw_data.read(
-                path,
+                path + '0_raw-data/',
                 T,
                 list_of_diagrams,
                 directories,
@@ -60,9 +60,9 @@ def main(process, flag, sta_cnfg, end_cnfg, del_cnfg, missing_configs, ensemble,
 
         ########################################################################
         # Setup of list of pcm and irrep to loop over
-        path = '%s/%s/0_raw-data/' % (outpath, ensemble)
-        filename = '%s_p%1i_%s_qn.h5' % (process, p_cm_sq, list_of_diagrams[0])
-        lookup_qn = utils.read_hdf5_correlators(path + filename, 'qn')
+        filename = path + \
+            '0_raw-data/%s_p%1i_%s_qn.h5' % (process, p_cm_sq, list_of_diagrams[0])
+        lookup_qn = utils.read_hdf5_correlators(filename)
 
         list_of_irreps = projection.get_list_of_irreps(
             lookup_qn['p_{cm}'].unique(), path_to_sc, j)
@@ -78,11 +78,11 @@ def main(process, flag, sta_cnfg, end_cnfg, del_cnfg, missing_configs, ensemble,
                  'list of q': default_list_of_q,
                  'beta': default_beta})
 
-            if(gevp_parameters.read('%s/%s/%s_p%1d_%s.ini' %
-                                    (outpath, ensemble, process, p_cm_sq, irrep)) == []):
+            if(gevp_parameters.read(path + '%s_p%1d_%s.ini' %
+                                    (process, p_cm_sq, irrep)) == []):
                 print 'Did not find gevp parameters for {} in '\
-                    '{}/{}/{}_p{}_{}.ini. Continuing with default values'.\
-                    format(irrep, outpath, process, ensemble, p_cm_sq, irrep)
+                    '{}{}_p{}_{}.ini. Continuing with default values'.\
+                    format(irrep, path, process, ensemble, p_cm_sq, irrep)
                 list_of_pcm = default_list_of_pcm
                 list_of_q = default_list_of_q
                 beta = default_beta
@@ -136,11 +136,12 @@ def main(process, flag, sta_cnfg, end_cnfg, del_cnfg, missing_configs, ensemble,
                     if flag['subduce']:
                         print '\tSubducing data for %s' % diagram
 
-                        path = '%s/%s/0_raw-data/' % (outpath, ensemble)
-                        filename = '%s_p%1i_%s.h5' % (process, p_cm_sq, diagram)
-                        data = utils.read_hdf5_correlators(path + filename, 'data')
-                        filename = '%s_p%1i_%s_qn.h5' % (process, p_cm_sq, diagram)
-                        lookup_qn = utils.read_hdf5_correlators(path + filename, 'qn')
+                        filename = path + \
+                            '0_raw-data/%s_p%1i_%s.h5' % (process, p_cm_sq, diagram)
+                        data = utils.read_hdf5_correlators(filename)
+                        filename = path + \
+                            '0_raw-data/%s_p%1i_%s_qn.h5' % (process, p_cm_sq, diagram)
+                        lookup_qn = utils.read_hdf5_correlators(filename)
 
                         lookup_corr = subduction.set_lookup_corr(
                             lattice_operators, lookup_qn, verbose)
@@ -150,27 +151,22 @@ def main(process, flag, sta_cnfg, end_cnfg, del_cnfg, missing_configs, ensemble,
                         del data
 
                         # Write data and lattice operators to disc
-                        path = '%s/%s/1_subduced-data/' % (outpath, ensemble)
-
-                        filename = '/%s_p%1i_%s_%s.h5' % (process,
-                                                          p_cm_sq, irrep, diagram)
+                        filename = path + '1_subduced-data/%s_p%1i_%s_%s.h5' % (process,
+                                                                                p_cm_sq, irrep, diagram)
                         utils.write_hdf5_correlators(
-                            path, filename, subduced_data[diagram], 'data', verbose)
+                            filename, subduced_data[diagram], verbose)
 
                         lattice_operators.sort_index().\
-                            reset_index(["operator_label_{so}", "operator_label_{si}"],
+                            reset_index(['operator_label_{so}', 'operator_label_{si}'],
                                         drop=True).\
-                            to_csv(path + "{}_{}_p{}_{}_lattice-operators.tsv".format(
+                            to_csv(path + '1_subduced-data/{}_{}_p{}_{}_operators.tsv'.format(
                                 process, diagram, p_cm_sq, irrep), sep="\t")
 
                     elif flag['contract']:
 
-                        path = '%s/%s/1_subduced-data/' % (outpath, ensemble)
-
-                        filename = '/%s_p%1i_%s_%s.h5' % (process,
-                                                          p_cm_sq, irrep, diagram)
-                        subduced_data[diagram] = utils.read_hdf5_correlators(
-                            path + filename, 'data')
+                        filename = path + '1_subduced-data/%s_p%1i_%s_%s.h5' % (process,
+                                                                                p_cm_sq, irrep, diagram)
+                        subduced_data[diagram] = utils.read_hdf5_correlators(filename)
 
                 ######################################################################
                 # Wick contraction
@@ -183,20 +179,15 @@ def main(process, flag, sta_cnfg, end_cnfg, del_cnfg, missing_configs, ensemble,
                     del subduced_data
 
                     # write data to disc
-                    path = '%s/%s/2_contracted-data/' % (outpath, ensemble)
-                    filename = '/%s_p%1i_%s_%s.h5' % (process,
-                                                      p_cm_sq, irrep, correlator)
-                    utils.write_hdf5_correlators(
-                        path, filename, contracted_data, 'data', verbose)
+                    filename = path + '2_contracted-data/%s_p%1i_%s_%s.h5' % (process,
+                                                                              p_cm_sq, irrep, correlator)
+                    utils.write_hdf5_correlators(filename, contracted_data, verbose)
 
                 elif (flag['create gevp'] or flag['plot']):
 
-                    path = '%s/%s/2_contracted-data/' % (outpath, ensemble)
-
-                    filename = '/%s_p%1i_%s_%s.h5' % (process,
-                                                      p_cm_sq, irrep, correlator)
-                    contracted_data = \
-                        utils.read_hdf5_correlators(path + filename, 'data')
+                    filename = path + '2_contracted-data/%s_p%1i_%s_%s.h5' % (process,
+                                                                              p_cm_sq, irrep, correlator)
+                    contracted_data = utils.read_hdf5_correlators(filename)
 
                 ######################################################################
                 # Plotting correlators seperately
@@ -205,8 +196,6 @@ def main(process, flag, sta_cnfg, end_cnfg, del_cnfg, missing_configs, ensemble,
 
                     if verbose:
                         print "Plotting data for ", irrep, correlator
-
-                    path = '%s/%s/4_plots/' % (outpath, ensemble)
 
                     gevp_labels = ['gevp_row', 'gevp_col']
                     momentum_labels = \
@@ -231,9 +220,9 @@ def main(process, flag, sta_cnfg, end_cnfg, del_cnfg, missing_configs, ensemble,
                             level=gevp_labels + ['p_{cm}', '\mu'])
                         plotdata_tmp = plotdata_tmp.mean(level=gevp_labels)
 
-                        filename = '/%s_p%1i_%s_%s_avg.pdf' % (
+                        filename = path + '4_plots/%s_p%1i_%s_%s_avg.pdf' % (
                             process, p_cm_sq, irrep, correlator)
-                        pdfplot = utils.create_pdfplot(path, filename)
+                        pdfplot = utils.create_pdfplot(filename)
                         plot.for_each_gevp_element(
                             plot.average, plotdata_tmp, bootstrapsize, pdfplot, logscale, verbose)
                         pdfplot.close()
@@ -244,9 +233,9 @@ def main(process, flag, sta_cnfg, end_cnfg, del_cnfg, missing_configs, ensemble,
                         plotdata_tmp = plotdata_tmp.sum(
                             level=gevp_labels + ['p_{cm}', '\mu'])
 
-                        filename = '/%s_p%1i_%s_%s_pcm-and-mu.pdf' % (
+                        filename = path + '4_plots/%s_p%1i_%s_%s_pcm-and-mu.pdf' % (
                             process, p_cm_sq, irrep, correlator)
-                        pdfplot = utils.create_pdfplot(path, filename)
+                        pdfplot = utils.create_pdfplot(filename)
                         plot.for_each_gevp_element(
                             plot.pcm_and_mu, plotdata_tmp, bootstrapsize, pdfplot, logscale, verbose)
                         pdfplot.close()
@@ -255,9 +244,9 @@ def main(process, flag, sta_cnfg, end_cnfg, del_cnfg, missing_configs, ensemble,
                         # Want to look at all individual contributions
                         # Todo: Want to have imaginary part as well
                         plotdata_tmp = contracted_data.copy()
-                        filename = '/%s_p%1i_%s_%s_gammas.pdf' % (
+                        filename = path + '4_plots/%s_p%1i_%s_%s_gammas.pdf' % (
                             process, p_cm_sq, irrep, correlator)
-                        pdfplot = utils.create_pdfplot(path, filename)
+                        pdfplot = utils.create_pdfplot(filename)
                         plot.p_and_gammas(plotdata_tmp, correlator, bootstrapsize,
                                           pdfplot, logscale, verbose)
                         pdfplot.close()
@@ -291,16 +280,15 @@ def main(process, flag, sta_cnfg, end_cnfg, del_cnfg, missing_configs, ensemble,
                 gevp_data = setup_gevp.build_gevp(contracted_data_avg, process,
                                                   verbose)
 
-                path = '%s/%s/3_gevp-data/' % (outpath, ensemble)
-
-                filename = '%s_p%1i_%s.h5' % (process, p_cm_sq, irrep)
-                utils.write_hdf5_correlators(path, filename, gevp_data, 'data', verbose)
+                filename = path + '3_gevp-data/%s_p%1i_%s.h5' % (process, p_cm_sq, irrep)
+                utils.write_hdf5_correlators(filename, gevp_data, verbose)
 
                 # average over rows and  p_cm_sq.
                 gevp_data_avg = gevp_data.mean(level=gevp_labels)
-                name = '%s_p%1i_%s' % (process, p_cm_sq, irrep)
+                basename = '%s_p%1i_%s' % (process, p_cm_sq, irrep)
 
-                utils.write_ascii_gevp(path, name, gevp_data_avg, verbose)
+                utils.write_ascii_gevp(
+                    path + '3_gevp-data/', basename, gevp_data_avg, verbose)
 
             ##########################################################################
             # Plotting everything together
@@ -310,17 +298,16 @@ def main(process, flag, sta_cnfg, end_cnfg, del_cnfg, missing_configs, ensemble,
                 if verbose:
                     print "Plotting Gevp data for ", irrep
 
-                path = '%s/%s/4_plots/' % (outpath, ensemble)
-
                 if plot_avg:
-                    filename = '%s_p%1d_%s_gevp_avg.pdf' % (process, p_cm_sq, irrep)
+                    filename = path + \
+                        '4_plots/%s_p%1d_%s_gevp_avg.pdf' % (process, p_cm_sq, irrep)
                     pdfplot = utils.create_pdfplot(path, filename)
                     plot.gevp(plot.average, gevp_data_avg, bootstrapsize, pdfplot,
                               logscale, verbose)
                     pdfplot.close()
 
                 if plot_pcm_and_mu:
-                    filename = '%s_p%1d_%s_gevp_pcm-and-mu.pdf' % (
+                    filename = path + '4_plots/%s_p%1d_%s_gevp_pcm-and-mu.pdf' % (
                         process, p_cm_sq, irrep)
                     pdfplot = utils.create_pdfplot(path, filename)
                     plot.gevp(plot.pcm_and_mu, gevp_data, bootstrapsize, pdfplot,

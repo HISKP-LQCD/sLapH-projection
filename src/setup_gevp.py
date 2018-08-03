@@ -9,8 +9,6 @@ import utils
 
 # TODO: factor out the setup of subduced_npt and just pass a
 # list of lists of pd.DataFrame
-
-
 def build_gevp(data, mode, verbose):
     """
     Create a single pd.DataFrame containing all correlators contributing to the
@@ -84,11 +82,15 @@ def build_gevp(data, mode, verbose):
     elif mode == 'pipi':
 
         print "Warning: I=2 Gevp currently not implemented"
-        gevp = data["C4"]
-        # NOTE: Delete all rows and colums with only NaN's
-        gevp = gevp.dropna(axis=0, how='all').dropna(axis=1, how='all')
+        exit(1)
+#        gevp = data["C4"]
+#        # NOTE: Delete all rows and colums with only NaN's
+#        gevp = gevp.dropna(axis=0, how='all').dropna(axis=1, how='all')
 
     elif mode == 'pi':
+
+        assert set(data.keys()) == {'C2'}, 'Gevp must contain C2'
+
         gevp = data["C2"]
 
     return gevp

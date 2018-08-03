@@ -1,37 +1,16 @@
-# Helper functions for IO to store intermediate results of subduction code on
-# hard disk
-# TODO: could be restructured as table format to access individual files and
-# allow appending, but speed is uncritical
-import os
-import errno
-
+import gmpy
 import numpy as np
 import pandas as pd
 from pandas import Series, DataFrame
-import gmpy
 
+import errno
 import itertools as it
 import operator
+import os
 
 import matplotlib
 matplotlib.use('Agg')
 from matplotlib.backends.backend_pdf import PdfPages
-
-################################################################################
-# checks if the directory where the file will be written does exist
-# See https://stackoverflow.com/questions/600268/mkdir-p-functionality-in-python
-
-
-def ensure_dir(f):
-    """Helper function to create a directory if it does not exist"""
-#  if not os.path.exists(f):
-    try:
-        os.makedirs(f)
-    except OSError as exc:  # Python >2.5
-        if exc.errno == errno.EEXIST and os.path.isdir(f):
-            pass
-        else:
-            raise
 
 ################################################################################
 # Convenience function to work with three-momenta in pd.DataFrames
@@ -50,10 +29,26 @@ def _minus(x):
     return tuple(-np.array(x) + 0)
 
 ################################################################################
+# checks if the directory where the file will be written does exist
+# See https://stackoverflow.com/questions/600268/mkdir-p-functionality-in-python
+
+
+def ensure_dir(f):
+    """Helper function to create a directory if it does not exist"""
+#  if not os.path.exists(f):
+    try:
+        os.makedirs(f)
+    except OSError as exc:  # Python >2.5
+        if exc.errno == errno.EEXIST and os.path.isdir(f):
+            pass
+        else:
+            raise
+
+################################################################################
 # IO routines
 
 
-def read_hdf5_correlators(path, key):
+def read_hdf5_correlators(path, key='key'):
     """
     Read pd.DataFrame from hdf5 file
 
@@ -62,7 +57,8 @@ def read_hdf5_correlators(path, key):
     path : string
         Path to the hdf5 file
     key : string
-        The hdf5 groupname to access the given data under.
+        The hdf5 groupname to access the given data under. Defaults to something very
+        imaginative
 
     Returns
     -------
@@ -75,7 +71,7 @@ def read_hdf5_correlators(path, key):
     return data
 
 
-def write_hdf5_correlators(path, filename, data, key, verbose=1):
+def write_hdf5_correlators(filename, data, verbose=0, key='key'):
     """
     write pd.DataFrame as hdf5 file
 
@@ -88,12 +84,13 @@ def write_hdf5_correlators(path, filename, data, key, verbose=1):
     data : pd.DataFrame
         The data to write
     key : string
-        The hdf5 groupname to access the given data under. Specifying multiple
-        keys, different data can be written to the same file
+        The hdf5 groupname to access the given data under. Defaults to something very
+        imaginative
     """
 
+    path = os.path.dirname(filename)
     ensure_dir(path)
-    data.to_hdf(path + filename, key, mode='w')
+    data.to_hdf(filename, key, mode='w')
 
     if verbose >= 1:
         print '\tFinished writing', filename
@@ -102,16 +99,16 @@ def write_hdf5_correlators(path, filename, data, key, verbose=1):
 # TODO: write that for a pandas dataframe with hierarchical index nb_cnfg x T
 
 
-def write_data_ascii(data, filename, verbose=1):
+def write_data_ascii(data, filename, verbose=0):
     """
     Writes the data into a file.
 
     Parameters
     ----------
-    filename: string
-        The filename of the file.
     data: np.array
         A 2d numpy array with data. shape = (nsamples, T)
+    filename: string
+        The filename of the file.
 
     Notes
     -----
@@ -164,7 +161,7 @@ def pd_series_to_np_array(series):
     return np.asarray(series.values).reshape(series.unstack().shape)
 
 
-def write_ascii_correlators(path, filename, data, verbose=1):
+def write_ascii_correlators(filename, data, verbose=1):
     """
     write pd.DataFrame as ascii file in Liuming's format
 
@@ -178,12 +175,12 @@ def write_ascii_correlators(path, filename, data, verbose=1):
         The data to write
     """
 
+    path = os.path.dirname(filename)
     ensure_dir(path)
-    fname = os.path.join(path, filename)
-    write_data_ascii(np.asarray(pd_series_to_np_array(data)), fname, verbose)
+    write_data_ascii(np.asarray(pd_series_to_np_array(data)), filename, verbose)
 
 
-def write_ascii_gevp(path, name, data, verbose=1):
+def write_ascii_gevp(path, basename, data, verbose=1):
 
     assert np.all(data.notnull()), ('Gevp contains null entires')
     assert gmpy.is_square(len(data.index)), 'Gevp is not a square matrix'
@@ -194,13 +191,12 @@ def write_ascii_gevp(path, name, data, verbose=1):
         print 'Creating a %d x %d Gevp' % (data_size, data_size)
 
     ensure_dir(path)
-    f = open(os.path.join(path, name + '_indices.txt'), 'w')
+    f = open(os.path.join(path, basename + '_indices.txt'), 'w')
     f.write("%8s\tphysical content\n" % "Element")
 
     for counter in range(len(data.index)):
 
-        ensure_dir(path)
-        filename = name + '.%d.%d.dat' % (counter / data_size, counter % data_size)
+        filename = path + basename + '.%d.%d.dat' % (counter / data_size, counter % data_size)
 
         # Write file with physical content corresponding to index number (gevp_col)
         if counter < data_size:
@@ -208,18 +204,19 @@ def write_ascii_gevp(path, name, data, verbose=1):
 
         # TODO: with to_csv this becomes a onliner but Liumings head format will
         # be annoying. Also the loop can probably run over data.iterrows()
-        write_ascii_correlators(path, filename, data.ix[counter], verbose)
+        write_ascii_correlators(filename, data.ix[counter], verbose)
 
 ################################################################################
 # Convenience function to create pdf files
 
 
-def create_pdfplot(path, filename):
+def create_pdfplot(filename):
     """
     Helper function to create a pdfplot object and ensure existence of the path
     """
 
+    path = os.path.dirname(filename)
     ensure_dir(path)
-    pdfplot = PdfPages(path + filename)
+    pdfplot = PdfPages(filename)
 
     return pdfplot
