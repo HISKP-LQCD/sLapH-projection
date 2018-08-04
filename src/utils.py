@@ -124,37 +124,66 @@ def write_ascii_gevp(path, basename, data, verbose=1):
     ensure_dir(path)
 
     # Cast data into longish data format with only gevp_row and gevp_col as index
-    data = data.T.reset_index().set_index(['cnfg', 'T']).stack(level=['gevp_row', 'gevp_col', 'p_{cm}', '\mu']).reset_index(['p_{cm}', '\mu', 'cnfg', 'T'])
-
+    data = data.T.reset_index().set_index(['cnfg', 'T']).stack(
+        level=['gevp_row', 'gevp_col', 'p_{cm}', '\mu']).reset_index(['p_{cm}', '\mu', 'cnfg', 'T'])
     data[['p_x', 'p_y', 'p_z']] = data['p_{cm}'].apply(literal_eval).apply(pd.Series)
     del data['p_{cm}']
-    data.rename(columns={0 : 'value', '\mu' : 'alpha'}, inplace=True)
-    
+    data.rename(columns={0: 'value', '\mu': 'alpha'}, inplace=True)
+
     gevp_indices = data.index.unique()
+    operator_indices = data.loc[gevp_indices[0]].set_index(
+        ['p_x', 'p_y', 'p_z', 'alpha']).index.unique()
 
     assert np.all(data.notnull()), ('Gevp contains null entires')
     assert gmpy.is_square(len(gevp_indices)), 'Gevp is not a square matrix'
 
-    data_size = gmpy.sqrt(len(gevp_indices))
+    gevp_size = gmpy.sqrt(len(gevp_indices))
+
+    # Write file with physical content corresponding to gevp index number (gevp_col)
+    gevp_elements = [i[1] for i in gevp_indices.values[:gevp_size]]
+    np.savetxt(os.path.join(path,
+                            basename + '_gevp-indices.tsv'),
+               np.array(zip(range(gevp_size),
+                            gevp_elements)),
+               fmt='%s',
+               delimiter='\t',
+               header='id\telement')
+
+    # Write file with physical content corresponding to operator (p_cm, alpha)
+    operator_elements = np.array([tuple(i) for i in operator_indices.values])
+    np.savetxt(
+        os.path.join(
+            path,
+            basename +
+            '_operator-indices.tsv'),
+        np.column_stack(
+            (np.arange(
+                operator_elements.shape[0]),
+                operator_elements)),
+        fmt='%s',
+        delimiter='\t',
+        header='id\tp_x\tp_y\tp_z\talpha')
 
     if verbose:
-        print 'Creating a %d x %d Gevp' % (data_size, data_size)
+        print 'Creating a {} x {} Gevp from {} operators'.format(
+            gevp_size, gevp_size, operator_elements.shape[0])
 
-    # Write file with physical content corresponding to index number (gevp_col)
-    gevp_elements = [i[1] for i in gevp_indices.values[:data_size]]
-    np.savetxt(os.path.join(path, basename + '_gevp-indices.tsv'), np.array(zip(range(data_size), gevp_elements)), fmt='%s', delimiter='\t', header='id\telement')
-
-    operator_indices = data.loc[gevp_indices[0]].set_index(['p_x', 'p_y', 'p_z', 'alpha']).index.unique()
-    # Write file with physical content corresponding to operator (p_cm, alpha) 
-    operator_elements = np.array([tuple(i) for i in operator_indices.values])
-    np.savetxt(os.path.join(path, basename + '_operator-indices.tsv'), np.column_stack((np.arange(operator_elements.shape[0]), operator_elements)), fmt='%s', delimiter='\t', header='id\tp_x\tp_y\tp_z\talpha')
-
+    # Loop over all projected operators and gevp elements and write an ascii file
     for gevp_counter, gevp_index in enumerate(gevp_indices):
         for operator_counter, operator_index in enumerate(operator_indices):
 
-            filename = os.path.join(path, basename + '_op%d_gevp%d.%d.tsv' % (operator_counter, gevp_counter / data_size, gevp_counter % data_size))
+            filename = os.path.join(
+                path,
+                basename +
+                '_op%d_gevp%d.%d.tsv' %
+                (operator_counter,
+                 gevp_counter /
+                 gevp_size,
+                 gevp_counter %
+                 gevp_size))
 
-            df = data.loc[gevp_index].set_index(['p_x', 'p_y', 'p_z', 'alpha']).loc[operator_index]
+            df = data.loc[gevp_index].set_index(
+                ['p_x', 'p_y', 'p_z', 'alpha']).loc[operator_index]
 
             df.to_csv(filename, sep='\t', index=False)
 
