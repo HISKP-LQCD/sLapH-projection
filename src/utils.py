@@ -49,7 +49,7 @@ def ensure_dir(f):
 # IO routines
 
 
-def read_hdf5_correlators(path, key='key'):
+def read_hdf5_correlators(filename, key='key'):
     """
     Read pd.DataFrame from hdf5 file
 
@@ -67,7 +67,7 @@ def read_hdf5_correlators(path, key='key'):
         The data contained in the hdf5 file under the given key
     """
 
-    data = pd.read_hdf(path, key)
+    data = pd.read_hdf(filename, key)
 
     return data
 
@@ -100,49 +100,6 @@ def write_hdf5_correlators(filename, data, verbose=0, key='key'):
 # TODO: write that for a pandas dataframe with hierarchical index nb_cnfg x T
 
 
-def write_data_ascii(data, filename, verbose=0):
-    """
-    Writes the data into a file.
-
-    Parameters
-    ----------
-    data: np.array
-        A 2d numpy array with data. shape = (nsamples, T)
-    filename: string
-        The filename of the file.
-
-    Notes
-    -----
-    Taken from Christians analysis-code https://github.com/chjost/analysis-code
-
-    The file is written to have L. Liu's data format so that the first line
-    has information about the number of samples and the length of each sample.
-    """
-    if verbose:
-        print("Saving to file " + str(filename))
-
-    # in case the dimension is 1, treat the data as one sample
-    # to make the rest easier we add an extra axis
-    if len(data.shape) == 1:
-        data = data.reshape(1, -1)
-    # init variables
-    nsamples = data.shape[0]
-    T = data.shape[1]
-    L = int(T / 2)
-    # write header
-    head = "%i %i %i %i %i" % (nsamples, T, 0, L, 0)
-    # prepare data and counter
-    #_data = data.flatten()
-    _data = data.reshape((T * nsamples), -1)
-    _counter = np.fromfunction(lambda i, *j: i % T,
-                               (_data.shape[0],) + (1,) * (len(_data.shape) - 1), dtype=int)
-    _fdata = np.concatenate((_counter, _data), axis=1)
-    # generate format string
-    fmt = ('%.0f',) + ('%.14f',) * _data[0].size
-    # write data to file
-    np.savetxt(filename, _fdata, header=head, comments='', fmt=fmt)
-
-
 def pd_series_to_np_array(series):
     """
     Converts a pandas Series to a numpy array
@@ -162,71 +119,44 @@ def pd_series_to_np_array(series):
     return np.asarray(series.values).reshape(series.unstack().shape)
 
 
-def write_ascii_correlators(filename, data, verbose=1):
-    """
-    write pd.DataFrame as ascii file in Liuming's format
-
-    Parameters
-    ----------
-    path : string
-        Path to store the hdf5 file
-    filename : string
-        Name to save the hdf5 file as
-    data : pd.DataFrame
-        The data to write
-    """
-
-    path = os.path.dirname(filename)
-    ensure_dir(path)
-    write_data_ascii(np.asarray(pd_series_to_np_array(data)), filename, verbose)
-
-
 def write_ascii_gevp(path, basename, data, verbose=1):
 
     ensure_dir(path)
 
     # Cast data into longish data format with only gevp_row and gevp_col as index
-    print data
     data = data.T.reset_index().set_index(['cnfg', 'T']).stack(level=['gevp_row', 'gevp_col', 'p_{cm}', '\mu']).reset_index(['p_{cm}', '\mu', 'cnfg', 'T'])
 
-    print data['p_{cm}'].apply(literal_eval).apply(pd.Series)
     data[['p_x', 'p_y', 'p_z']] = data['p_{cm}'].apply(literal_eval).apply(pd.Series)
     del data['p_{cm}']
     data.rename(columns={0 : 'value', '\mu' : 'alpha'}, inplace=True)
     
-    indices = data.index.unique()
-    print indices
+    gevp_indices = data.index.unique()
 
     assert np.all(data.notnull()), ('Gevp contains null entires')
-    assert gmpy.is_square(len(indices)), 'Gevp is not a square matrix'
+    assert gmpy.is_square(len(gevp_indices)), 'Gevp is not a square matrix'
 
-    data_size = gmpy.sqrt(len(indices))
+    data_size = gmpy.sqrt(len(gevp_indices))
 
     if verbose:
         print 'Creating a %d x %d Gevp' % (data_size, data_size)
 
     # Write file with physical content corresponding to index number (gevp_col)
-    gevp_elements = [i[1] for i in indices.values[:data_size]]
-    np.savetxt(os.path.join(path, basename + '_indices.txt'), np.array(zip(range(data_size), gevp_elements)), fmt='%s', delimiter='\t')
+    gevp_elements = [i[1] for i in gevp_indices.values[:data_size]]
+    np.savetxt(os.path.join(path, basename + '_gevp-indices.tsv'), np.array(zip(range(data_size), gevp_elements)), fmt='%s', delimiter='\t', header='id\telement')
 
-    print np.loadtxt(os.path.join(path, basename + '_indices.txt'), dtype=str, delimiter='\t')
-    exit(0)
+    operator_indices = data.loc[gevp_indices[0]].set_index(['p_x', 'p_y', 'p_z', 'alpha']).index.unique()
+    # Write file with physical content corresponding to operator (p_cm, alpha) 
+    operator_elements = np.array([tuple(i) for i in operator_indices.values])
+    np.savetxt(os.path.join(path, basename + '_operator-indices.tsv'), np.column_stack((np.arange(operator_elements.shape[0]), operator_elements)), fmt='%s', delimiter='\t', header='id\tp_x\tp_y\tp_z\talpha')
 
-    for counter, index in enumerate(indices):
+    for gevp_counter, gevp_index in enumerate(gevp_indices):
+        for operator_counter, operator_index in enumerate(operator_indices):
 
-        filename = os.path.join(path, basename + '.%d.%d.dat' % (counter / data_size, counter % data_size))
+            filename = os.path.join(path, basename + '_op%d_gevp%d.%d.tsv' % (operator_counter, gevp_counter / data_size, gevp_counter % data_size))
 
+            df = data.loc[gevp_index].set_index(['p_x', 'p_y', 'p_z', 'alpha']).loc[operator_index]
 
-        tmp = data.loc[index].set_index(['p_x', 'p_y', 'p_z', 'alpha'])
-        el_indicies = tmp.index.unique()
-
-        exit(0)
-            
-#        data.to_csv(filename, data.loc[index])
-
-        # TODO: with to_csv this becomes a onliner but Liumings head format will
-        # be annoying. Also the loop can probably run over data.iterrows()
-#        write_ascii_correlators(filename, data.ix[counter], verbose)
+            df.to_csv(filename, sep='\t', index=False)
 
 ################################################################################
 # Convenience function to create pdf files
