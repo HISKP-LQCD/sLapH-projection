@@ -35,10 +35,11 @@ def set_lookup_corr(coefficients_irrep, qn, verbose=1):
     """
 
     # associate clebsch-gordan coefficients with the correct qn index
-    # TODO: Check whether left merge results in nan somewhere as in this case
-    # data is missing
     lookup_corr = pd.merge(coefficients_irrep.reset_index(), qn.reset_index(),
                            how='left')
+    if (lookup_corr.isnull().values.any()):
+        print 'Error in set_lookup_corr: Quantum numbers missing'
+        exit(1)
 
     # Add two additional columns with the same string if the quantum numbers
     # describe equivalent physical constellations: gevp_row and gevp_col
