@@ -149,6 +149,7 @@ def write_ascii_gevp(path, basename, data, verbose=1):
                             gevp_elements)),
                fmt='%s',
                delimiter='\t',
+               comments='',
                header='id\telement')
 
     # Write file with physical content corresponding to operator (p_cm, alpha)
@@ -161,6 +162,7 @@ def write_ascii_gevp(path, basename, data, verbose=1):
                 operator_elements)),
         fmt='%s',
         delimiter='\t',
+        comments='',
         header='id\tp_x\tp_y\tp_z\talpha')
 
     if verbose:
