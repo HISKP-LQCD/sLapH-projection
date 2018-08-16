@@ -119,6 +119,8 @@ def pd_series_to_np_array(series):
     return np.asarray(series.values).reshape(series.unstack().shape)
 
 
+# TODO: The loop structure is really hacky because I essentially want two multindices
+# to loop over
 def write_ascii_gevp(path, basename, data, verbose=1):
 
     ensure_dir(path)
@@ -152,10 +154,7 @@ def write_ascii_gevp(path, basename, data, verbose=1):
     # Write file with physical content corresponding to operator (p_cm, alpha)
     operator_elements = np.array([tuple(i) for i in operator_indices.values])
     np.savetxt(
-        os.path.join(
-            path,
-            basename +
-            '_operator-indices.tsv'),
+        os.path.join(path, basename + '_operator-indices.tsv'),
         np.column_stack(
             (np.arange(
                 operator_elements.shape[0]),

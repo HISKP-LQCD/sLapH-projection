@@ -65,8 +65,15 @@ def set_lookup_g(gamma_labels, diagram):
         J_si = 1
 
         gamma_so = pd.concat([gamma_dic[gl_so] for gl_so in gamma_labels[J_so]])
-        gamma_so = gamma_so.rename(columns={'\gamma': '\gamma^{0}_{so}'})
-        gamma_so['\gamma^{1}_{so}'] = gamma_so['\gamma^{0}_{so}']
+
+        gamma_so['tmp'] = 0
+        gamma_so = pd.merge(gamma_so, gamma_so,
+                            how='outer',
+                            on=['tmp'],
+                            suffixes=['^{0}', '^{1}'])
+        gamma_so = gamma_so.rename(columns={'\gamma^{0}': '\gamma^{0}_{so}',
+                                            '\gamma^{1}': '\gamma^{1}_{so}'})
+        del(gamma_so['tmp'])
 
         gamma_si = pd.concat([gamma_dic[gl_si] for gl_si in gamma_labels[J_si]])
         gamma_si = gamma_si.rename(columns={'\gamma': '\gamma^{0}_{si}'})
@@ -77,12 +84,24 @@ def set_lookup_g(gamma_labels, diagram):
         J_si = 0
 
         gamma_so = pd.concat([gamma_dic[gl_so] for gl_so in gamma_labels[J_so]])
-        gamma_so = gamma_so.rename(columns={'\gamma': '\gamma^{0}_{so}'})
-        gamma_so['\gamma^{1}_{so}'] = gamma_so['\gamma^{0}_{so}']
+        gamma_so['tmp'] = 0
+        gamma_so = pd.merge(gamma_so, gamma_so,
+                            how='outer',
+                            on=['tmp'],
+                            suffixes=['^{0}', '^{1}'])
+        gamma_so = gamma_so.rename(columns={'\gamma^{0}': '\gamma^{0}_{so}',
+                                            '\gamma^{1}': '\gamma^{1}_{so}'})
+        del(gamma_so['tmp'])
 
         gamma_si = pd.concat([gamma_dic[gl_si] for gl_si in gamma_labels[J_si]])
-        gamma_si = gamma_si.rename(columns={'\gamma': '\gamma^{0}_{si}'})
-        gamma_si['\gamma^{1}_{si}'] = gamma_si['\gamma^{0}_{si}']
+        gamma_si['tmp'] = 0
+        gamma_si = pd.merge(gamma_si, gamma_si,
+                            how='outer',
+                            on=['tmp'],
+                            suffixes=['^{0}', '^{1}'])
+        gamma_si = gamma_si.rename(columns={'\gamma^{0}': '\gamma^{0}_{si}',
+                                            '\gamma^{1}': '\gamma^{1}_{si}'})
+        del(gamma_si['tmp'])
 
     else:
         print 'in set_lookup_g: diagram unknown! Quantum numbers corrupted.'
@@ -94,6 +113,7 @@ def set_lookup_g(gamma_labels, diagram):
                         how='outer',
                         on=['tmp'],
                         suffixes=['_{so}', '_{si}'])
+
     del(lookup_g['tmp'])
 
     return lookup_g
