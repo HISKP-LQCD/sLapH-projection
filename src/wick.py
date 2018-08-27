@@ -1,6 +1,7 @@
 import itertools as it
 import pandas as pd
 from pandas import Series, DataFrame
+import numpy as np
 
 import utils
 
@@ -144,6 +145,7 @@ def rho_3pt(data, verbose=1):
     The gamma strucures that can appear in \rho(t) are hardcoded
     """
 
+    gamma_0 = [0]
     gamma_5 = [5]
     gamma_i = [1, 2, 3]
     gamma_50i = [13, 14, 15]
@@ -155,10 +157,29 @@ def rho_3pt(data, verbose=1):
     # Warning: 1j hardcoded
     wick[wick.index.get_level_values('\gamma^{0}_{so}').isin(gamma_5) &
          wick.index.get_level_values('\gamma^{1}_{so}').isin(gamma_5) &
-         wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_i)] *= (2.) * (-1j)
+         wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_i)] *=  np.sqrt(2.) * (1j)
+    wick[wick.index.get_level_values('\gamma^{0}_{so}').isin(gamma_5) &
+         wick.index.get_level_values('\gamma^{1}_{so}').isin(gamma_0) &
+         wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_i)] *= -np.sqrt(2.)
+    wick[wick.index.get_level_values('\gamma^{0}_{so}').isin(gamma_0) &
+         wick.index.get_level_values('\gamma^{1}_{so}').isin(gamma_5) &
+         wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_i)] *= -np.sqrt(2.)
+    wick[wick.index.get_level_values('\gamma^{0}_{so}').isin(gamma_0) &
+         wick.index.get_level_values('\gamma^{1}_{so}').isin(gamma_0) &
+         wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_i)] *=  np.sqrt(2.) * (1j)
+
     wick[wick.index.get_level_values('\gamma^{0}_{so}').isin(gamma_5) &
          wick.index.get_level_values('\gamma^{1}_{so}').isin(gamma_5) &
-         wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_50i)] *= (2. * 1j) * (-1j)
+         wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_50i)] *= -np.sqrt(2.)
+    wick[wick.index.get_level_values('\gamma^{0}_{so}').isin(gamma_5) &
+         wick.index.get_level_values('\gamma^{1}_{so}').isin(gamma_0) &
+         wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_50i)] *= -np.sqrt(2.) * (1j)
+    wick[wick.index.get_level_values('\gamma^{0}_{so}').isin(gamma_0) &
+         wick.index.get_level_values('\gamma^{1}_{so}').isin(gamma_5) &
+         wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_50i)] *= -np.sqrt(2.) * (1j)
+    wick[wick.index.get_level_values('\gamma^{0}_{so}').isin(gamma_0) &
+         wick.index.get_level_values('\gamma^{1}_{so}').isin(gamma_0) &
+         wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_50i)] *= -np.sqrt(2.)
 
     if verbose >= 2:
         print "wick['C3']"
@@ -169,7 +190,7 @@ def rho_3pt(data, verbose=1):
 
     return wick
 
-################################################################################
+##########################################################################################
 
 # TODO: catch if keys were not found
 
@@ -200,17 +221,67 @@ def rho_4pt(data, verbose=0):
     The gamma strucures that can appear in \rho(t) are hardcoded
     """
 
+    gamma_0 = [0]
+    gamma_5 = [5]
+
     assert {'C4cD', 'C4cB'} <= set(
         data.keys()), 'Subduced data must contain C4cD and C4cB'
 
     data_box = data['C4cB']
-    data_dia = data['C4cD']
+
+    data_box[data_box.index.get_level_values('\gamma^{0}_{so}') ==
+         data_box.index.get_level_values('\gamma^{1}_{so}')] *= 1j
+    data_box[data_box.index.get_level_values('\gamma^{0}_{si}') ==
+         data_box.index.get_level_values('\gamma^{1}_{si}')] *= 1j
+
+#    data_box_sign = (data_box.index.get_level_values('\gamma^{0}_{so}').isin(gamma_0)
+#                    + data_box.index.get_level_values('\gamma^{1}_{so}').isin(gamma_0)
+#                    + data_box.index.get_level_values('\gamma^{0}_{si}').isin(gamma_0)
+#                    + data_box.index.get_level_values('\gamma^{1}_{si}').isin(gamma_0) 
+#                    + 1)%2 + \
+#                    (data_box.index.get_level_values('\gamma^{0}_{so}').isin(gamma_0)
+#                    + data_box.index.get_level_values('\gamma^{1}_{so}').isin(gamma_0)
+#                    + data_box.index.get_level_values('\gamma^{0}_{si}').isin(gamma_0)
+#                    + data_box.index.get_level_values('\gamma^{1}_{si}').isin(gamma_0))%2 * (1j)
+#    data_box_sign *= -2
+#
+#    data_box = data_box.multiply(data_box_sign, axis=0)
+
+    data_box = data_box * -2
 
     # TODO: support read in if the passed data is incomplete
 #  data_box = pd.read_hdf('readdata/%s_p%1i.h5' % (diagrams[0], p_cm), 'data')
 #  data_dia = pd.read_hdf('readdata/%s_p%1i.h5' % (diagrams[1], p_cm), 'data')
 
-    wick = ((-2.) * data_box).add(data_dia, fill_value=0)
+    data_dia = data['C4cD']
+
+    data_dia[data_dia.index.get_level_values('\gamma^{0}_{so}') ==
+         data_dia.index.get_level_values('\gamma^{1}_{so}')] *= 1j
+    data_dia[data_dia.index.get_level_values('\gamma^{0}_{si}') ==
+         data_dia.index.get_level_values('\gamma^{1}_{si}')] *= 1j
+
+    data_dia[data_dia.index.get_level_values('\gamma^{1}_{so}').isin(gamma_0)] *= -1
+    data_dia[data_dia.index.get_level_values('\gamma^{1}_{si}').isin(gamma_0)] *= -1
+
+#    data_dia_sign = (data_dia.index.get_level_values('\gamma^{0}_{so}').isin(gamma_0)
+#                    + data_dia.index.get_level_values('\gamma^{1}_{so}').isin(gamma_0)
+#                    + data_dia.index.get_level_values('\gamma^{0}_{si}').isin(gamma_0)
+#                    + data_dia.index.get_level_values('\gamma^{1}_{si}').isin(gamma_0) 
+#                    + 1)%2 +  \
+#                    (data_dia.index.get_level_values('\gamma^{0}_{so}').isin(gamma_0)
+#                    + data_dia.index.get_level_values('\gamma^{1}_{so}').isin(gamma_0)
+#                    + data_dia.index.get_level_values('\gamma^{0}_{si}').isin(gamma_0)
+#                    + data_dia.index.get_level_values('\gamma^{1}_{si}').isin(gamma_0))%2 * (1j)
+#
+#    data_dia = data_dia.multiply(data_dia_sign, axis=0)
+
+    wick = data_dia.add(data_box, fill_value=0)
+
+#    wick[wick.index.get_level_values('\gamma^{0}_{so}').isin(gamma_0) &
+#             wick.index.get_level_values('\gamma^{1}_{so}').isin(gamma_0)] *= 1j
+#    wick[wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_0) &
+#             wick.index.get_level_values('\gamma^{1}_{si}').isin(gamma_0)] *= 1j
+
 
     if verbose >= 2:
         print "wick['C4']"
