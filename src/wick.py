@@ -260,6 +260,7 @@ def rho_4pt(data, verbose=0):
     data_dia[data_dia.index.get_level_values('\gamma^{0}_{si}') ==
          data_dia.index.get_level_values('\gamma^{1}_{si}')] *= 1j
 
+    # Bug in contractions: C4cD built for pi^+ pi^+
     data_dia[data_dia.index.get_level_values('\gamma^{1}_{so}').isin(gamma_0)] *= -1
     data_dia[data_dia.index.get_level_values('\gamma^{1}_{si}').isin(gamma_0)] *= -1
 

@@ -389,14 +389,18 @@ def project_isospin(operator_so, operator_si):
     if label in operator_so.columns:
 
         # sign from twisted mass rotation
+#        operator_so.loc[operator_so[r'\gamma^{0}_{so}'].isin([0]), 'coefficient'] *= (-1)
         operator_so.loc[operator_so[r'\gamma^{1}_{so}'].isin([0]), 'coefficient'] *= (-1)
 
         operator_so[label] = operator_so[label].apply(literal_eval)
         
         isospin_neg = operator_so[operator_so[label] <= (0, 0, 0)]
-        isospin_neg.loc[:, 'coefficient'] = isospin_neg.loc[:, 'coefficient'] * -1
+        isospin_neg.loc[:, 'coefficient'] *= -1
+#        isospin_neg.loc[(isospin_neg['\gamma^{0}_{so}'] == isospin_neg['\gamma^{1}_{so}']), 'coefficient'] *= -1
 #        isospin_neg.rename(columns={'\gamma^{0}_{so}': '\gamma^{1}_{so}',
 #                                    '\gamma^{1}_{so}': '\gamma^{0}_{so}'}, inplace=True)
+#        isospin_neg.rename(columns={'operator_label^{0}': 'operator_label^{1}',
+#                                    'operator_label^{1}': 'operator_label^{0}'}, inplace=True)
         isospin_neg.loc[:, label] = isospin_neg.loc[:, label].apply(utils._minus)
 
         isospin_pos = operator_so[operator_so[label] >= (0, 0, 0)]
@@ -405,26 +409,44 @@ def project_isospin(operator_so, operator_si):
         operator_so[label] = operator_so[label].apply(str)
         operator_so['coefficient'] /= np.sqrt(2)
 
+        # average g^0 g^5 and g^5 g^0 by flipping label for the former
+        operator_so.loc[(operator_so['\gamma^{0}_{so}'] == 0) & (operator_so['\gamma^{1}_{so}'] == 5), ['operator_label^{0}', 'operator_label^{1}']] = operator_so.loc[(operator_so['\gamma^{0}_{so}'] == 0) & (operator_so['\gamma^{1}_{so}'] == 5), ['operator_label^{1}', 'operator_label^{0}']].values
+        operator_so.loc[(operator_so['operator_label^{0}'] == '\gamma_{5}') & (operator_so['operator_label^{1}'] == '\gamma_{0}'), 'coefficient'] /= 2. 
+
+
     # Code doubled. May be refactored out.
     # Todo: Do I need to change the sign of q? I don't think so, because the daggering
     # taken care off when reading the data
     label = 'q_{si}'
     if label in operator_si.columns:
-        operator_si[label] = operator_si[label].apply(literal_eval)
 
-        operator_si.loc[operator_si[r'\gamma^{0}_{si}'].isin([0]), 'coefficient'] *= (-1)
+        operator_si.loc[operator_si[r'\gamma^{1}_{si}'].isin([0]), 'coefficient'] *= (-1)
+
+        operator_si[label] = operator_si[label].apply(literal_eval)
 
         isospin_neg = operator_si[operator_si[label] <= (0, 0, 0)]
         isospin_neg.loc[:, label] = isospin_neg.loc[:, label].apply(utils._minus)
+#        isospin_neg.loc[(isospin_neg['\gamma^{0}_{si}'] == isospin_neg['\gamma^{1}_{si}']), 'coefficient'] *= -1
+#        isospin_neg.rename(columns={'\gamma^{0}_{si}': '\gamma^{1}_{si}',
+#                                    '\gamma^{1}_{si}': '\gamma^{0}_{si}'}, inplace=True)
+#        isospin_neg.rename(columns={'operator_label^{0}': 'operator_label^{1}',
+#                                    'operator_label^{1}': 'operator_label^{0}'}, inplace=True)
 
         isospin_pos = operator_si[operator_si[label] >= (0, 0, 0)]
         isospin_pos.loc[:, 'coefficient'] = isospin_pos.loc[:, 'coefficient'] * -1
+
+#        isospin_pos.loc[(isospin_pos['\gamma^{0}_{si}'] == isospin_pos['\gamma^{1}_{si}']), 'coefficient'] *= -1
 #        isospin_pos.rename(columns={'\gamma^{0}_{si}': '\gamma^{1}_{si}',
 #                                    '\gamma^{1}_{si}': '\gamma^{0}_{si}'}, inplace=True)
+#        isospin_pos.rename(columns={'operator_label^{0}': 'operator_label^{1}',
+#                                    'operator_label^{1}': 'operator_label^{0}'}, inplace=True)
 
         operator_si = pd.concat([isospin_pos, isospin_neg])
         operator_si[label] = operator_si[label].apply(str)
         operator_si['coefficient'] /= np.sqrt(2)
+
+        operator_si.loc[(operator_si['\gamma^{0}_{si}'] == 0) & (operator_si['\gamma^{1}_{si}'] == 5), ['operator_label^{0}', 'operator_label^{1}']] = operator_si.loc[(operator_si['\gamma^{0}_{si}'] == 0) & (operator_si['\gamma^{1}_{si}'] == 5), ['operator_label^{1}', 'operator_label^{0}']].values
+        operator_si.loc[(operator_si['operator_label^{0}'] == '\gamma_{5}') & (operator_si['operator_label^{1}'] == '\gamma_{0}'), 'coefficient'] /= 2. 
 
     return operator_so, operator_si
 
@@ -447,6 +469,7 @@ def select_q(list_of_q, operators_so, operators_si):
             operators_si.loc[:, label] = operators_si[label].apply(str)
 
     return operators_so, operators_si
+
 
 def set_operator_labels(operators):
 
@@ -517,8 +540,8 @@ def project(j, correlator, continuum_basis_string, gamma_input, list_of_pcm, lis
 
     operators_so, operators_si = select_q(list_of_q, operators_so, operators_si)
 
-    set_operator_labels(operators_so)
-    set_operator_labels(operators_si)
+    operators_so = set_operator_labels(operators_so)
+    operators_si = set_operator_labels(operators_si)
     
     lattice_operators = correlate_operators(operators_so, operators_si, verbose)
 
