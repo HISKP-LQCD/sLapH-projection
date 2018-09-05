@@ -62,15 +62,15 @@ def read(infile, verbose):
     list_of_pcm_sq = config.get('ensemble and frame', 'p_cm^2')
     list_of_pcm_sq = [int(p) for p in list_of_pcm_sq.split(',')]
     p_cutoff = config.getint('ensemble and frame', 'p_cutoff')
-    list_of_irreps = config.get('ensemble and frame', 'irreps')
-    list_of_irreps = list_of_irreps.split(',')
+    default_list_of_irreps = config.get('ensemble and frame', 'irreps')
+    default_list_of_irreps = default_list_of_irreps.split(',')
 
     if verbose >= 2:
         print ensemble
         print T
         print 'p_cm = ', list_of_pcm_sq
         print 'p_cutoff = ', p_cutoff
-        print 'irreps = ', list_of_irreps
+        print 'irreps = ', default_list_of_irreps
 
     default_list_of_pcm = config.get('gevp parameters', 'list of p_cm')
     operators_J0 = config.get('gevp parameters', 'Operators J0')
@@ -143,7 +143,7 @@ def read(infile, verbose):
         'ensemble': ensemble,
         'T': T,
         'list_of_pcm_sq': list_of_pcm_sq,
-        'list_of_irreps' : list_of_irreps,
+        'default_list_of_irreps' : default_list_of_irreps,
         'p_cutoff': p_cutoff,
         'default_list_of_pcm': default_list_of_pcm,
         'gamma_input': gamma_input,

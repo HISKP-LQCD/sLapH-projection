@@ -24,7 +24,7 @@ import src.plot_bokeh as bokeh
 
 
 def main(process, flag, sta_cnfg, end_cnfg, del_cnfg, missing_configs, ensemble,
-         T, list_of_pcm_sq, list_of_irreps, p_cutoff, default_list_of_pcm, gamma_input, default_list_of_q,
+         T, list_of_pcm_sq, default_list_of_irreps, p_cutoff, default_list_of_pcm, gamma_input, default_list_of_q,
          default_beta, list_of_diagrams, directories, path_to_sc, path_to_sc_2, outpath,
          plot_p_and_g, plot_pcm_and_mu, plot_avg, plot_experimental, logscale,
          bootstrapsize, continuum_basis_string, verbose, **kwargs):
@@ -66,12 +66,12 @@ def main(process, flag, sta_cnfg, end_cnfg, del_cnfg, missing_configs, ensemble,
             (process, p_cm_sq, list_of_diagrams[0]))
         lookup_qn = utils.read_hdf5_correlators(filename)
 
-        if list_of_irreps == ['default']:
+        if default_list_of_irreps == ['default']:
             list_of_irreps = projection.get_list_of_irreps(
                 lookup_qn['p_{cm}'].unique(), path_to_sc, j)
-        elif not set(list_of_irreps) <= set(projection.get_list_of_irreps(
+        elif not set(default_list_of_irreps) <= set(projection.get_list_of_irreps(
                     lookup_qn['p_{cm}'].unique(), path_to_sc, j)):
-            print list_of_irreps, ' not defined'
+            print default_list_of_irreps, ' not defined'
             exit(1)
 
         correlators = wick.set_lookup_correlators(list_of_diagrams)
