@@ -15,6 +15,8 @@ import functools
 import pandas as pd
 from pandas import Series, DataFrame
 
+from multiprocessing.dummy import Pool as ThreadPool 
+
 # TODO: nb_cnfg is spurious, can just use len(lookup_cnfg)
 
 
@@ -220,29 +222,27 @@ def read_diagram(lookup_cnfg, lookup_qn, diagram, T, directory, verbose=0):
 
     groupname = lookup_qn.apply(functools.partial(set_groupname, diagram), axis=1)
 
-    data = []
-
-    for cnfg in lookup_cnfg:
+    def read_configuration(cnfg):
         # filename and path
         filename = directory + '/' + diagram + '_cnfg%04i' % cnfg + '.h5'
         try:
-            fh = h5py.File(filename, "r")
+            fh = h5py.File(filename, "r")#, driver='core')
         except IOError:
             print 'file %s not found' % filename
             raise
 
-        data_fh = DataFrame()
+        data_fh = []
 
         for op in lookup_qn.index:
-
             # read data from file as numpy array and interpret as complex
             # numbers for easier treatment
             try:
-                tmp = np.asarray(fh[groupname[op]]).view(complex)
+    #            tmp = np.asarray(fh[groupname[op]]).view(complex)
+                tmp = fh[groupname[op]][()].view(complex)
             except KeyError:
                 print("could not read %s for config %d" % (groupname, cnfg))
-                continue
-
+                exit(1)
+    
             # C4+D is the diagram factorizing into a product of two traces. The imaginary
             # part of the individual traces is 0 in the isosping limit. To suppress noise,
             # The real part of C4+D are calculated as product of real parts of the single
@@ -254,11 +254,19 @@ def read_diagram(lookup_cnfg, lookup_qn, diagram, T, directory, verbose=0):
                 tmp = tmp.reshape((-1, 2))
                 # extracting right combination, assuming ImIm contains only noise
                 dtmp = 1.j * (tmp[:, 1].real + tmp[:, 0].imag) + tmp[:, 0].real
-                tmp = dtmp.copy()
+                tmp = dtmp
 
-            # save data into data frame
-            data_fh[op] = pd.Series(tmp)
-        data.append(data_fh)
+            data_fh.append(tmp)
+
+        return DataFrame(np.column_stack(data_fh), columns=lookup_qn.index)
+
+    pool = ThreadPool() 
+
+    data = pool.map(read_configuration, lookup_cnfg)
+
+    pool.close() 
+    pool.join() 
+
     data = pd.concat(data, keys=lookup_cnfg, axis=0, names=['cnfg', 'T'])
 
     data.sort_index(level=[0, 1], inplace=True)
