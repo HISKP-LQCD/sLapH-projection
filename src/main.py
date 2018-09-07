@@ -73,6 +73,8 @@ def main(process, flag, sta_cnfg, end_cnfg, del_cnfg, missing_configs, ensemble,
                     lookup_qn['p_{cm}'].unique(), path_to_sc, j)):
             print default_list_of_irreps, ' not defined'
             exit(1)
+        else:
+            list_of_irreps = default_list_of_irreps
 
         correlators = wick.set_lookup_correlators(list_of_diagrams)
 
