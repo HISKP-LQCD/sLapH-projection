@@ -40,13 +40,13 @@ def rho_2pt(data, verbose=1):
 
     # Warning: 1j hardcoded
     wick[wick.index.get_level_values('\gamma^{0}_{so}').isin(gamma_i) &
-         wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_i)] *= (2.)
+         wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_i)] *= (1.)
     wick[wick.index.get_level_values('\gamma^{0}_{so}').isin(gamma_i) &
-         wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_50i)] *= (2. * 1j)
+         wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_50i)] *= (1j)
     wick[wick.index.get_level_values('\gamma^{0}_{so}').isin(gamma_50i) &
-         wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_i)] *= (2. * 1j)
+         wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_i)] *= (1j)
     wick[wick.index.get_level_values('\gamma^{0}_{so}').isin(gamma_50i) &
-         wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_50i)] *= (2.)
+         wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_50i)] *= (1.)
 
     if verbose >= 2:
         print "wick['C2']"
@@ -229,11 +229,6 @@ def rho_4pt(data, verbose=0):
 
     data_box = data['C4cB']
 
-    data_box[data_box.index.get_level_values('\gamma^{0}_{so}') ==
-         data_box.index.get_level_values('\gamma^{1}_{so}')] *= 1j
-    data_box[data_box.index.get_level_values('\gamma^{0}_{si}') ==
-         data_box.index.get_level_values('\gamma^{1}_{si}')] *= 1j
-
 #    data_box_sign = (data_box.index.get_level_values('\gamma^{0}_{so}').isin(gamma_0)
 #                    + data_box.index.get_level_values('\gamma^{1}_{so}').isin(gamma_0)
 #                    + data_box.index.get_level_values('\gamma^{0}_{si}').isin(gamma_0)
@@ -243,11 +238,14 @@ def rho_4pt(data, verbose=0):
 #                    + data_box.index.get_level_values('\gamma^{1}_{so}').isin(gamma_0)
 #                    + data_box.index.get_level_values('\gamma^{0}_{si}').isin(gamma_0)
 #                    + data_box.index.get_level_values('\gamma^{1}_{si}').isin(gamma_0))%2 * (1j)
-#    data_box_sign *= -2
+#    data_box_sign *= -8
 #
 #    data_box = data_box.multiply(data_box_sign, axis=0)
 
-    data_box = data_box * -2
+    data_box_sign = ((data_box.reset_index()[['\gamma^{0}_{so}', '\gamma^{1}_{so}', '\gamma^{0}_{si}', '\gamma^{1}_{si}']].isin(gamma_0).sum(axis=1) % 2) != 0).values
+    data_box[data_box_sign] *= 1j
+
+    data_box *= -8
 
     # TODO: support read in if the passed data is incomplete
 #  data_box = pd.read_hdf('readdata/%s_p%1i.h5' % (diagrams[0], p_cm), 'data')
@@ -255,26 +253,51 @@ def rho_4pt(data, verbose=0):
 
     data_dia = data['C4cD']
 
-    data_dia[data_dia.index.get_level_values('\gamma^{0}_{so}') ==
-         data_dia.index.get_level_values('\gamma^{1}_{so}')] *= 1j
-    data_dia[data_dia.index.get_level_values('\gamma^{0}_{si}') ==
-         data_dia.index.get_level_values('\gamma^{1}_{si}')] *= 1j
-
-    # Bug in contractions: C4cD built for pi^+ pi^+
-    data_dia[data_dia.index.get_level_values('\gamma^{1}_{so}').isin(gamma_0)] *= -1
-    data_dia[data_dia.index.get_level_values('\gamma^{1}_{si}').isin(gamma_0)] *= -1
-
-#    data_dia_sign = (data_dia.index.get_level_values('\gamma^{0}_{so}').isin(gamma_0)
-#                    + data_dia.index.get_level_values('\gamma^{1}_{so}').isin(gamma_0)
+#    data_dia_sign = (+ data_dia.index.get_level_values('\gamma^{0}_{so}').isin(gamma_0)
+#                    + data_dia.index.get_level_values('\gamma^{1}_{so}').isin(gamma_0) 
 #                    + data_dia.index.get_level_values('\gamma^{0}_{si}').isin(gamma_0)
-#                    + data_dia.index.get_level_values('\gamma^{1}_{si}').isin(gamma_0) 
-#                    + 1)%2 +  \
+#                    + data_dia.index.get_level_values('\gamma^{1}_{si}').isin(gamma_0)
+#                    + 1)%2 + \
 #                    (data_dia.index.get_level_values('\gamma^{0}_{so}').isin(gamma_0)
 #                    + data_dia.index.get_level_values('\gamma^{1}_{so}').isin(gamma_0)
 #                    + data_dia.index.get_level_values('\gamma^{0}_{si}').isin(gamma_0)
-#                    + data_dia.index.get_level_values('\gamma^{1}_{si}').isin(gamma_0))%2 * (1j)
+#                    + data_dia.index.get_level_values('\gamma^{1}_{si}').isin(gamma_0))%2 *(1j)
+
+    # Bug in contractions: C4cD built for pi^+ pi^+. Flipping back by complex conjugation
+    # of one term. This changes to sign of the complete term if g^0 must be commuted with
+    # g^5
+#    data_dia_sign = (+ data_dia.index.get_level_values('\gamma^{0}_{so}').isin(gamma_0)
+#                    + data_dia.index.get_level_values('\gamma^{1}_{so}').isin(gamma_0) 
+#                    + 1)%2 + \
+#                    (data_dia.index.get_level_values('\gamma^{0}_{so}').isin(gamma_0)
+#                    + data_dia.index.get_level_values('\gamma^{1}_{so}').isin(gamma_0))%2 *(1j)
 #
+#    data_dia_sign *= (data_dia.index.get_level_values('\gamma^{0}_{si}').isin(gamma_0)
+#                    + data_dia.index.get_level_values('\gamma^{1}_{si}').isin(gamma_0) 
+#                    + 1)%2 + \
+#                    (data_dia.index.get_level_values('\gamma^{0}_{si}').isin(gamma_0)
+#                    + data_dia.index.get_level_values('\gamma^{1}_{si}').isin(gamma_0))%2 * (1j)
+
+#    data_dia_sign *= 4
+
+
 #    data_dia = data_dia.multiply(data_dia_sign, axis=0)
+
+#    data_dia[data_dia.index.get_level_values('\gamma^{0}_{so}').isin(gamma_5)
+#             & data_dia.index.get_level_values('\gamma^{0}_{si}').isin(gamma_5)
+#             & data_dia.index.get_level_values('\gamma^{1}_{so}').isin(gamma_5)
+#             & data_dia.index.get_level_values('\gamma^{1}_{si}').isin(gamma_5)] *= 1j
+#
+
+    data_dia_sign = ((data_dia.reset_index()[['\gamma^{0}_{so}', '\gamma^{1}_{so}', '\gamma^{0}_{si}', '\gamma^{1}_{si}']].isin(gamma_0).sum(axis=1) % 2) != 0).values
+    data_dia[data_dia_sign] *= 1j
+
+#    data_dia_sign = ((data_dia.reset_index()[['\gamma^{0}_{so}', '\gamma^{0}_{si}']].isin(gamma_0).sum(axis=1) % 2) != 0).values
+#    data_dia[data_dia_sign] *= 1j
+#    data_dia_sign = ((data_dia.reset_index()[['\gamma^{0}_{so}', '\gamma^{0}_{si}']].isin(gamma_0).sum(axis=1) % 2) != 0).values
+#    data_dia[data_dia_sign] *= 1j
+
+    data_dia *= 4
 
     wick = data_dia.add(data_box, fill_value=0)
 

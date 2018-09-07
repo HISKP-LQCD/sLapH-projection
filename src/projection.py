@@ -420,12 +420,14 @@ def project_isospin(operator_so, operator_si):
     label = 'q_{si}'
     if label in operator_si.columns:
 
-        operator_si.loc[operator_si[r'\gamma^{1}_{si}'].isin([0]), 'coefficient'] *= (-1)
+        operator_si.loc[operator_si[r'\gamma^{0}_{si}'].isin([0]), 'coefficient'] *= (-1)
 
         operator_si[label] = operator_si[label].apply(literal_eval)
 
         isospin_neg = operator_si[operator_si[label] <= (0, 0, 0)]
+#        isospin_neg.loc[:, 'coefficient'] *= -1
         isospin_neg.loc[:, label] = isospin_neg.loc[:, label].apply(utils._minus)
+
 #        isospin_neg.loc[(isospin_neg['\gamma^{0}_{si}'] == isospin_neg['\gamma^{1}_{si}']), 'coefficient'] *= -1
 #        isospin_neg.rename(columns={'\gamma^{0}_{si}': '\gamma^{1}_{si}',
 #                                    '\gamma^{1}_{si}': '\gamma^{0}_{si}'}, inplace=True)
@@ -433,7 +435,8 @@ def project_isospin(operator_so, operator_si):
 #                                    'operator_label^{1}': 'operator_label^{0}'}, inplace=True)
 
         isospin_pos = operator_si[operator_si[label] >= (0, 0, 0)]
-        isospin_pos.loc[:, 'coefficient'] = isospin_pos.loc[:, 'coefficient'] * -1
+        isospin_pos.loc[:, 'coefficient'] *= -1
+#        isospin_pos.loc[isospin_pos['\gamma^{0}_{si}'] != isospin_pos['\gamma^{1}_{si}'], 'coefficient'] *= -1
 
 #        isospin_pos.loc[(isospin_pos['\gamma^{0}_{si}'] == isospin_pos['\gamma^{1}_{si}']), 'coefficient'] *= -1
 #        isospin_pos.rename(columns={'\gamma^{0}_{si}': '\gamma^{1}_{si}',
