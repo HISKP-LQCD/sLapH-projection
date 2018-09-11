@@ -60,6 +60,7 @@ def main():
         conf_step=options.conf_step,
         conf_skip=options.conf_skip,
         ensemble=options.ensemble,
+        T=options.T
         datapath=options.datapath,
         codepath=os.path.dirname(options.exe),
         outpath=options.outdir
@@ -112,6 +113,7 @@ def _parse_args():
 
     group_ensemble = parser.add_argument_group('Ensemble', 'Options that discribe the physical choices made')
     group_ensemble.add_argument('--ensemble', required=True, help='Name of the gauge ensemble')
+    group_ensemble.add_argument('--T', required=True, help='Time extent of the ensemble')
     group_ensemble.add_argument('--datapath', required=True, help='Path to contracted diagrams')
 #    group_ensemble.add_argument('-p', '--momentum', type=int, nargs='+')
 #    group_ensemble.add_argument('-d', '--diagram', nargs='+')
