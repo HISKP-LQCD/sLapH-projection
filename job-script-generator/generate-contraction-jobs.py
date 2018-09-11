@@ -76,7 +76,7 @@ def main():
             rendered_jobscript = template_jobscript.render(
                 rundir=options.rundir,
                 executable=options.exe,
-                jobname=options.jobname + '_',
+                jobname=options.jobname + '_' + options.ensemble + '_p' + momentum + '_' + diagram,
                 email_address=options.email,
                 infile=os.path.join(options.rundir, rho),
                 momentum=momentum,
@@ -122,7 +122,7 @@ def _parse_args():
     group_job.add_argument('--rundir', required=True, help='Base path for infiles.')
     group_job.add_argument('--outdir', required=True, help='Base path for output.')
     group_job.add_argument('--exe', required=True, help='Path to the executable. This will be copied into the hierarchy to prevent accidential overwrites.')
-    group_job.add_argument('--jobname', default='contraction', help='Name of the submitted job. Default: %(default)s')
+    group_job.add_argument('--jobname', default='projection', help='Name of the submitted job. Default: %(default)s')
     group_job.add_argument('--email', default='', help='Email address to send job notifications to. If this is not given, no emails will be send.')
    
     options = parser.parse_args()
