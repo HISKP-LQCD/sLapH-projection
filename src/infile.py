@@ -4,7 +4,7 @@ import ConfigParser
 # Reading infile #################################################################
 
 
-def read(infile, list_of_pcm_sq, verbose):
+def read(infile, list_of_pcm_sq, list_of_diagrams, verbose):
 
     config = ConfigParser.SafeConfigParser(
         {'list of p_cm': None,
@@ -92,8 +92,9 @@ def read(infile, list_of_pcm_sq, verbose):
         print 'list of q = ', default_list_of_q
         print 'beta = ', default_beta
 
-    list_of_diagrams = config.get('contraction details', 'Diagram')
-    list_of_diagrams = list_of_diagrams.replace(" ", "").split(',')
+    if list_of_diagrams == None:
+        list_of_diagrams = config.get('contraction details', 'Diagram')
+        list_of_diagrams = list_of_diagrams.replace(" ", "").split(',')
     directories = config.get('contraction details', 'Input Path')
     directories = directories.replace(" ", "").replace("\n", "")
     directories = directories.split(',')

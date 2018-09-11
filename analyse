@@ -25,14 +25,16 @@ if __name__ == '__main__':
                               default='marcus-con',
                               help="continuum basis to be used in the program")
         parser.add_argument('-p', '--momentum', type=int, nargs='+')
+        parser.add_argument('-d', '--diagram', nargs='+')
     
         args = parser.parse_args()
 
         verbose = args.verbose
         continuum_basis_string = args.basis
         list_of_pcm_sq = args.momentum
+        list_of_diagrams = args.diagram
 
-        main(continuum_basis_string=continuum_basis_string, verbose=verbose, **infile.read(args.infile, list_of_pcm_sq, verbose))
+        main(continuum_basis_string=continuum_basis_string, verbose=verbose, **infile.read(args.infile, list_of_pcm_sq, list_of_diagrams, verbose))
  
     except KeyboardInterrupt:
         pass
