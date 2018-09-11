@@ -24,13 +24,15 @@ if __name__ == '__main__':
                               'cyclic-christian', 'dudek', 'marcus-cov', 'marcus-con', 'test'], \
                               default='marcus-con',
                               help="continuum basis to be used in the program")
+        parser.add_argument('-p', '--momentum', type=int, nargs='+')
     
         args = parser.parse_args()
 
         verbose = args.verbose
         continuum_basis_string = args.basis
+        list_of_pcm_sq = args.momentum
 
-        main(continuum_basis_string=continuum_basis_string, verbose=verbose, **infile.read(args.infile, verbose))
+        main(continuum_basis_string=continuum_basis_string, verbose=verbose, **infile.read(args.infile, list_of_pcm_sq, verbose))
  
     except KeyboardInterrupt:
         pass

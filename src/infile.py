@@ -4,7 +4,7 @@ import ConfigParser
 # Reading infile #################################################################
 
 
-def read(infile, verbose):
+def read(infile, list_of_pcm_sq, verbose):
 
     config = ConfigParser.SafeConfigParser(
         {'list of p_cm': None,
@@ -59,8 +59,11 @@ def read(infile, verbose):
 
     ensemble = config.get('ensemble and frame', 'Ensemble Name')
     T = config.getint('ensemble and frame', 'T')
-    list_of_pcm_sq = config.get('ensemble and frame', 'p_cm^2')
-    list_of_pcm_sq = [int(p) for p in list_of_pcm_sq.split(',')]
+    # list_of_pcm_sq may be overwritten on the command line. Only read from infile if 
+    # nothing was given.
+    if list_of_pcm_sq == None:
+        list_of_pcm_sq = config.get('ensemble and frame', 'p_cm^2')
+        list_of_pcm_sq = [int(p) for p in list_of_pcm_sq.split(',')]
     p_cutoff = config.getint('ensemble and frame', 'p_cutoff')
     default_list_of_irreps = config.get('ensemble and frame', 'irreps')
     default_list_of_irreps = default_list_of_irreps.split(',')
