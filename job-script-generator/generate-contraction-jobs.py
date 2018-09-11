@@ -73,6 +73,7 @@ def main():
         for diagram in ['C20', 'C3c', 'C4cD', 'C4cB']:
             jobscriptfile = 'job_script_qbig_slurm_p{}_{}.sh'.format(momentum, diagram)
             rendered_jobscript = template_jobscript.render(
+                rundir=options.rundir,
                 executable=options.exe,
                 jobname=options.jobname + '_',
                 email_address=options.email,
