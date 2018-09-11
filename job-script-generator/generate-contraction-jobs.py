@@ -47,13 +47,10 @@ def main():
     env = jinja2.Environment(loader=jinja2.FileSystemLoader(
         os.path.dirname(os.path.abspath(sys.argv[0]))))
 
-    jobscriptfile = 'job_script_qbig_slurm.sh'
-    template_jobscript = env.get_template(jobscriptfile + '.j2')
-
-    rho = 'rho.ini'
-    template_rho = env.get_template('general.ini.j2')
 
     # Create an infile.
+    template_rho = env.get_template('general.ini.j2')
+    rho = 'rho.ini'
     rendered_rho = template_rho.render(
         process='Rho',
         conf_start=options.conf_start,
@@ -63,20 +60,26 @@ def main():
         ensemble=options.ensemble,
         datapath=options.datapath,
         codepath=os.path.dirname(options.exe),
-        outpath=options.outpath
+        outpath=options.outdir
     )
     with open(os.path.join(options.rundir, rho), 'w') as f:
         f.write(rendered_rho)
 
     # Create a job script for the scheduler.
-    rendered_jobscript = template_jobscript.render(
-        executable=options.exe,
-        jobname=options.jobname + '_',
-        email_address=options.email,
-        infile=os.path.join(options.rundir, rho),
-    )
-    with open(os.path.join(options.rundir, jobscriptfile), 'w') as f:
-        f.write(rendered_jobscript)
+    template_jobscript = env.get_template('job_script_qbig_slurm.sh.j2')
+    for momentum in range(5):
+        for diagram in ['C20', 'C3c', 'C4cD', 'C4cB']:
+            jobscriptfile = 'job_script_qbig_slurm_p{}_{}.sh'.format(momentum, diagram)
+            rendered_jobscript = template_jobscript.render(
+                executable=options.exe,
+                jobname=options.jobname + '_',
+                email_address=options.email,
+                infile=os.path.join(options.rundir, rho),
+                momentum=momentum,
+                diagram=diagram
+            )
+            with open(os.path.join(options.rundir, jobscriptfile), 'w') as f:
+                f.write(rendered_jobscript)
 
 
 def do_consistency_checks(options):
@@ -107,6 +110,8 @@ def _parse_args():
     group_ensemble = parser.add_argument_group('Ensemble', 'Options that discribe the physical choices made')
     group_ensemble.add_argument('--ensemble', required=True, help='Name of the gauge ensemble')
     group_ensemble.add_argument('--datapath', required=True, help='Path to contracted diagrams')
+#    group_ensemble.add_argument('-p', '--momentum', type=int, nargs='+')
+#    group_ensemble.add_argument('-d', '--diagram', nargs='+')
 
     group_job = parser.add_argument_group('Job', 'Options for the jobs to create.')
     group_job.add_argument('--rundir', required=True, help='Base path for infiles.')
