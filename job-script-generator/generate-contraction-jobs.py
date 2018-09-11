@@ -42,11 +42,13 @@ def main():
             f.write("%s " % arg)
         f.write("\n")
 
+    # Copy the start_runs script into the right spot.
+    shutil.copy(os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), 'start_runs.sh'), os.path.join(options.rundir, 'start_runs.sh'))
+
     # Load the templates from the directory that this script is located in.
     # This path can be queried from the zeroth command line argument.
     env = jinja2.Environment(loader=jinja2.FileSystemLoader(
         os.path.dirname(os.path.abspath(sys.argv[0]))))
-
 
     # Create an infile.
     template_rho = env.get_template('general.ini.j2')
