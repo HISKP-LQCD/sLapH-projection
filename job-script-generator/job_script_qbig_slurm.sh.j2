@@ -1,0 +1,28 @@
+#!/bin/bash
+#SBATCH -J {{ jobname }}
+#SBATCH --time=24:00:00
+#SBATCH --partition=pascal
+#SBATCH --nodes=1
+#SBATCH --mem=64GB
+#SBATCH --cpus-per-task=4
+{% if email_address != '' %}
+#SBATCH --mail-user={{ email_address }}
+#SBATCH --mail-type=FAIL
+{% endif %}
+#SBATCH --output={{ rundir }}/{{ jobname }}.out
+#SBATCH --error={{ rundir }}/{{ jobname }}.err
+
+set -e
+set -u
+
+export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK}
+
+cd {{ rundir }}
+
+date
+
+python {{ executable }} {{ infile }}
+
+wait
+
+date
