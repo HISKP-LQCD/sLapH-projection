@@ -60,7 +60,7 @@ def main():
         conf_step=options.conf_step,
         conf_skip=options.conf_skip,
         ensemble=options.ensemble,
-        T=options.T
+        T=options.T,
         datapath=options.datapath,
         codepath=os.path.dirname(options.exe),
         outpath=options.outdir
