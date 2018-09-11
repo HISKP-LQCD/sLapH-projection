@@ -71,7 +71,7 @@ class TestIntegration(unittest.TestCase):
 
     def testPi(self):
 
-        test_parameters = infile.read('tests/integration/pi.ini', verbose=0)
+        test_parameters = infile.read('tests/integration/pi.ini', None, None, verbose=0)
         # Modify test parameters to work with temporary paths
         test_parameters.update({'outpath' : self.outpath})
         test_parameters.update({'ensemble' : self.ensemble})
@@ -90,7 +90,7 @@ class TestIntegration(unittest.TestCase):
 
     def testRho(self):
 
-        test_parameters = infile.read('tests/integration/rho.ini', verbose=0)
+        test_parameters = infile.read('tests/integration/rho.ini', None, None, verbose=0)
         # Modify test parameters to work with temporary paths
         test_parameters.update({'outpath' : self.outpath})
         test_parameters.update({'ensemble' : self.ensemble})
