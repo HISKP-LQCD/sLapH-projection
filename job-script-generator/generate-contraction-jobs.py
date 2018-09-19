@@ -50,8 +50,8 @@ def main():
     env = jinja2.Environment(loader=jinja2.FileSystemLoader(
         os.path.dirname(os.path.abspath(sys.argv[0]))))
 
-    # Create an infile.
-    template_rho = env.get_template('general.ini.j2')
+    # Create an ini-file to read the diagrams seperately
+    template_rho = env.get_template('read.ini.j2')
     rho = 'rho.ini'
     rendered_rho = template_rho.render(
         process='Rho',
@@ -72,18 +72,59 @@ def main():
     template_jobscript = env.get_template('job_script_qbig_slurm.sh.j2')
     for momentum in range(5):
         for diagram in ['C20', 'C3c', 'C4cD', 'C4cB']:
+            if diagram.startswith('C4'):
+                memory = 252
+            elif diagram.startswith('C3'):
+                memory = 123
+            else:
+                memory = 56
             jobscriptfile = 'job_script_qbig_slurm_p{}_{}.sh'.format(momentum, diagram)
             rendered_jobscript = template_jobscript.render(
                 rundir=options.rundir,
                 executable=options.exe,
-                jobname=options.jobname + '_' + options.ensemble + '_p' + momentum + '_' + diagram,
+                jobname=options.jobname + '_' + options.ensemble + '_p' + str(momentum) + '_' + diagram,
                 email_address=options.email,
+                memory=memory,
                 infile=os.path.join(options.rundir, rho),
                 momentum=momentum,
                 diagram=diagram
             )
             with open(os.path.join(options.rundir, jobscriptfile), 'w') as f:
                 f.write(rendered_jobscript)
+
+    # Create an ini-file for the subduction
+    template_rho = env.get_template('general.ini.j2')
+    rendered_rho = template_rho.render(
+        process='Rho',
+        conf_start=options.conf_start,
+        conf_end=options.conf_end,
+        conf_step=options.conf_step,
+        conf_skip=options.conf_skip,
+        ensemble=options.ensemble,
+        T=options.T,
+        datapath=options.datapath,
+        codepath=os.path.dirname(options.exe),
+        outpath=options.outdir
+    )
+    with open(os.path.join(optionsoutndir, 'rho.ini'), 'w') as f:
+        f.write(rendered_rho)
+
+    # Create an ini-file for the pion gevp
+    template_pi = env.get_template('general.ini.j2')
+    rendered_pi = template_rho.render(
+        process='Pi',
+        conf_start=options.conf_start,
+        conf_end=options.conf_end,
+        conf_step=options.conf_step,
+        conf_skip=options.conf_skip,
+        ensemble=options.ensemble,
+        T=options.T,
+        datapath=options.datapath,
+        codepath=os.path.dirname(options.exe),
+        outpath=options.outdir
+    )
+    with open(os.path.join(options.oudir, 'pi.ini'), 'w') as f:
+        f.write(rendered_pi)
 
 
 def do_consistency_checks(options):

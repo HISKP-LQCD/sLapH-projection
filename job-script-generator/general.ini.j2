@@ -1,10 +1,15 @@
 [parameters]
 Process to analyse: {{ process }}
 
+{% if process == 'Rho' %}
+Read rho    = False
+{% endif %}
+{% if process == 'Pi' %}
 Read rho    = True
-Subduce     = False  
-Contract    = False  
-Create Gevp = False
+{% endif %}
+Subduce     = True  
+Contract    = True  
+Create Gevp = True
 Plot data   = False
 
 [gauge configuration numbers]
@@ -24,7 +29,7 @@ p_cutoff        = 4
 irreps          = default
 
 [gevp parameters]
-Operators J0 = gamma_5; gamma_0
+Operators J0 = gamma_5
 Operators J1 = gamma_i; gamma_50i
 
 [contraction details]

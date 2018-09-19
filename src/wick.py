@@ -154,7 +154,9 @@ def rho_3pt(data, verbose=1):
 
     wick = data['C3c']
 
-    # Warning: 1j hardcoded
+    # This is only the lower left part of the Gevp. For the upper right 3pt part the
+    # coefficient have to be complex conjugated and one needs to calculate <rho pipi>
+    # which will amount to the same result.
     wick[wick.index.get_level_values('\gamma^{0}_{so}').isin(gamma_5) &
          wick.index.get_level_values('\gamma^{1}_{so}').isin(gamma_5) &
          wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_i)] *=  np.sqrt(2.) * (1j)
