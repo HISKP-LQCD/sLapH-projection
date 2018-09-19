@@ -44,7 +44,7 @@ def rho_2pt(data, verbose=1):
     wick[wick.index.get_level_values('\gamma^{0}_{so}').isin(gamma_i) &
          wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_50i)] *= (1j)
     wick[wick.index.get_level_values('\gamma^{0}_{so}').isin(gamma_50i) &
-         wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_i)] *= (1j)
+         wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_i)] *= -(1j)
     wick[wick.index.get_level_values('\gamma^{0}_{so}').isin(gamma_50i) &
          wick.index.get_level_values('\gamma^{0}_{si}').isin(gamma_50i)] *= (1.)
 
