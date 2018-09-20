@@ -84,6 +84,10 @@ class TestIntegration(unittest.TestCase):
                 test_parameters['ensemble'] + '/3_gevp-data/pi_p0_A1g.h5')
 
         expected = utils.read_hdf5_correlators('tests/integration/pi_p0_A1g.h5')
+
+        print 'Compare ', test_parameters['outpath'] + '/' + \
+                test_parameters['ensemble'] + '/3_gevp-data/pi_p0_A1g.h5', ' with ', \
+                'tests/integration/pi_p0_A1g.h5'
         
         assert_frame_equal(expected, calculated)
 
@@ -103,6 +107,10 @@ class TestIntegration(unittest.TestCase):
                 test_parameters['ensemble'] + '/3_gevp-data/rho_p1_A1.h5')
 
         expected = utils.read_hdf5_correlators('tests/integration/rho_p1_A1.h5')
+
+        print 'Compare ', test_parameters['outpath'] + '/' + \
+                test_parameters['ensemble'] + '/3_gevp-data/rho_p1_A1.h5', ' with ', \
+                'tests/integration/rho_p1_A1.h5'
 
         assert_frame_equal(expected, calculated)
 
