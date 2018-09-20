@@ -247,7 +247,7 @@ def rho_4pt(data, verbose=0):
     data_box_sign = ((data_box.reset_index()[['\gamma^{0}_{so}', '\gamma^{1}_{so}', '\gamma^{0}_{si}', '\gamma^{1}_{si}']].isin(gamma_0).sum(axis=1) % 2) != 0).values
     data_box[data_box_sign] *= 1j
 
-    data_box *= -8
+    data_box *= -2
 
     # TODO: support read in if the passed data is incomplete
 #  data_box = pd.read_hdf('readdata/%s_p%1i.h5' % (diagrams[0], p_cm), 'data')
@@ -298,8 +298,6 @@ def rho_4pt(data, verbose=0):
 #    data_dia[data_dia_sign] *= 1j
 #    data_dia_sign = ((data_dia.reset_index()[['\gamma^{0}_{so}', '\gamma^{0}_{si}']].isin(gamma_0).sum(axis=1) % 2) != 0).values
 #    data_dia[data_dia_sign] *= 1j
-
-    data_dia *= 4
 
     wick = data_dia.add(data_box, fill_value=0)
 
