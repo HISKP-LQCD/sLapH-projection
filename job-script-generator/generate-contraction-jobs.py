@@ -33,7 +33,7 @@ def main():
 
     # Create the main work directory.
     mkdir_p(options.rundir)
-    mkdir_p(options.outdir)
+    mkdir_p(os.path.join(options.outdir, options.ensemble))
 
     # Write the command line parameters the script was exected with
     with open(os.path.join(options.rundir, 'generate-contraction-jobs.log'), 'w') as f:
@@ -106,7 +106,7 @@ def main():
         codepath=os.path.dirname(options.exe),
         outpath=options.outdir
     )
-    with open(os.path.join(optionsoutndir, 'rho.ini'), 'w') as f:
+    with open(os.path.join(os.path.join(options.outdir, options.ensemble), 'rho.ini'), 'w') as f:
         f.write(rendered_rho)
 
     # Create an ini-file for the pion gevp
@@ -123,7 +123,7 @@ def main():
         codepath=os.path.dirname(options.exe),
         outpath=options.outdir
     )
-    with open(os.path.join(options.oudir, 'pi.ini'), 'w') as f:
+    with open(os.path.join(os.path.join(options.outdir, options.ensemble), 'pi.ini'), 'w') as f:
         f.write(rendered_pi)
 
 

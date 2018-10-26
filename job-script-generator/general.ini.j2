@@ -34,7 +34,12 @@ Operators J1 = gamma_i; gamma_50i
 
 [contraction details]
 # diagram to be analysed, may also be ,-seperated list
+{% if process == 'Rho' %}
 Diagram = C20, C3c, C4cB, C4cD
+{% endif %}
+{% if process == 'Pi' %}
+Diagram = C2c
+{% endif %}
 # path to contraction files. Either one path or a ,-seperated list of the same 
 # lenght as diagram
 Input Path = {{ datapath }}
