@@ -14,14 +14,10 @@
 set -e
 set -u
 
-export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK}
-
 cd {{ rundir }}
 
 date
 
 python {{ executable }} {{ infile }} -p {{ momentum }} -d {{ diagram }} -v
-
-wait
 
 date
