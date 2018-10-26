@@ -69,7 +69,7 @@ def main():
         f.write(rendered_rho)
 
     # Create a job script for the scheduler.
-    template_jobscript = env.get_template('job_script_qbig_slurm.sh.j2')
+    template_jobscript = env.get_template('read_qbig_slurm.sh.j2')
     for momentum in range(5):
         for diagram in ['C20', 'C3c', 'C4cD', 'C4cB']:
             if diagram.startswith('C4'):
@@ -78,7 +78,7 @@ def main():
                 memory = 123
             else:
                 memory = 56
-            jobscriptfile = 'job_script_qbig_slurm_p{}_{}.sh'.format(momentum, diagram)
+            jobscriptfile = 'read_qbig_slurm_p{}_{}.sh'.format(momentum, diagram)
             rendered_jobscript = template_jobscript.render(
                 rundir=options.rundir,
                 executable=options.exe,
@@ -91,6 +91,21 @@ def main():
             )
             with open(os.path.join(options.rundir, jobscriptfile), 'w') as f:
                 f.write(rendered_jobscript)
+
+    ###################################################################################### 
+
+    # Copy the files per ensemble into the right spot.
+    shutil.copy(os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), 'rho_p0_T1u.ini'), os.path.join(os.path.join(options.outdir, options.ensemble), 'rho_p0_T1u.ini'))
+    shutil.copy(os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), 'rho_p1_A1.ini'), os.path.join(os.path.join(options.outdir, options.ensemble), 'rho_p1_A1.ini'))
+    shutil.copy(os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), 'rho_p1_E.ini'), os.path.join(os.path.join(options.outdir, options.ensemble), 'rho_p1_E.ini'))
+    shutil.copy(os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), 'rho_p2_A1.ini'), os.path.join(os.path.join(options.outdir, options.ensemble), 'rho_p2_A1.ini'))
+    shutil.copy(os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), 'rho_p2_B1.ini'), os.path.join(os.path.join(options.outdir, options.ensemble), 'rho_p2_B1.ini'))
+    shutil.copy(os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), 'rho_p2_B2.ini'), os.path.join(os.path.join(options.outdir, options.ensemble), 'rho_p2_B2.ini'))
+    shutil.copy(os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), 'rho_p3_A1.ini'), os.path.join(os.path.join(options.outdir, options.ensemble), 'rho_p3_A1.ini'))
+    shutil.copy(os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), 'rho_p3_E.ini'), os.path.join(os.path.join(options.outdir, options.ensemble), 'rho_p3_E.ini'))
+    shutil.copy(os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), 'rho_p4_A1.ini'), os.path.join(os.path.join(options.outdir, options.ensemble), 'rho_p4_A1.ini'))
+    shutil.copy(os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), 'rho_p4_E.ini'), os.path.join(os.path.join(options.outdir, options.ensemble), 'rho_p4_E.ini'))
+
 
     # Create an ini-file for the subduction
     template_rho = env.get_template('general.ini.j2')
@@ -125,6 +140,18 @@ def main():
     )
     with open(os.path.join(os.path.join(options.outdir, options.ensemble), 'pi.ini'), 'w') as f:
         f.write(rendered_pi)
+
+    # Create a job script for the scheduler.
+    template_jobscript = env.get_template('project_qbig_slurm.sh.j2')
+    jobscriptfile = 'project_qbig_slurm.sh'
+    rendered_jobscript = template_jobscript.render(
+        rundir=os.path.join(options.outdir, options.ensemble),
+        executable=options.exe,
+        jobname=options.jobname + '_' + options.ensemble,
+        email_address=options.email,
+    )
+    with open(os.path.join(os.path.join(options.outdir, options.ensemble), jobscriptfile), 'w') as f:
+        f.write(rendered_jobscript)
 
 
 def do_consistency_checks(options):
