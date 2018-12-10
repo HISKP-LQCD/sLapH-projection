@@ -265,7 +265,7 @@ def read_diagram(lookup_cnfg, lookup_qn, diagram, T, directory, use_imim=True, v
         return DataFrame(np.column_stack(data_fh), columns=lookup_qn.index)
 
     # Parellelize using one threads for each gauge configuration
-    pool = ThreadPool() 
+    pool = ThreadPool(1) 
 
     data = pool.map(read_configuration, lookup_cnfg)
 

@@ -1,9 +1,9 @@
 #!/bin/bash
 #SBATCH -J {{ jobname }}
-#SBATCH --time=3-00:00:00
+#SBATCH --time=2-00:00:00
 #SBATCH --nodes=1
 #SBATCH --mem={{ memory }}GB
-#SBATCH --cpus-per-task=4
+#SBATCH --cpus-per-task=1
 {% if email_address != '' %}
 #SBATCH --mail-user={{ email_address }}
 #SBATCH --mail-type=FAIL

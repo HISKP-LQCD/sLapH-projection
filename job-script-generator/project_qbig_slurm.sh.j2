@@ -3,7 +3,7 @@
 #SBATCH --time=1-00:00:00
 #SBATCH --nodes=1
 #SBATCH --mem=700GB
-#SBATCH --cpus-per-task=8
+#SBATCH --cpus-per-task=1
 {% if email_address != '' %}
 #SBATCH --mail-user={{ email_address }}
 #SBATCH --mail-type=FAIL
