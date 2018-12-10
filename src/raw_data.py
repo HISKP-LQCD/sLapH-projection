@@ -193,7 +193,7 @@ def set_groupname(diagram, s):
 # reading configurations
 
 
-def read_diagram(lookup_cnfg, lookup_qn, diagram, T, directory, verbose=0):
+def read_diagram(lookup_cnfg, lookup_qn, diagram, T, directory, use_imim=True, verbose=0):
     """
     Read resulting correlators from contraction code and creates a pd.DataFrame
 
@@ -244,16 +244,20 @@ def read_diagram(lookup_cnfg, lookup_qn, diagram, T, directory, verbose=0):
                 exit(1)
     
             # C4+D is the diagram factorizing into a product of two traces. The imaginary
-            # part of the individual traces is 0 in the isosping limit. To suppress noise,
+            # part of the individual traces is 0 in the isosping limit. 
             # The real part of C4+D are calculated as product of real parts of the single
-            # traces:
+            # traces. 
             # (a+ib)*(c+id) ~= (ac) +i(bc+ad)
-            # because b, d are noise
+            # If b, d are noise, they can be left out by setting use_imim = True
             if comb:
                 # reshaping so we can extract the data easier
                 tmp = tmp.reshape((-1, 2))
-                # extracting right combination, assuming ImIm contains only noise
-                dtmp = 1.j * (tmp[:, 1].real + tmp[:, 0].imag) + tmp[:, 0].real
+                if use_imim:
+                    dtmp = 1.j * (tmp[:, 1].real + tmp[:, 0].imag) \
+                            + (tmp[:, 0].real - tmp[:, 1].imag)
+                else:
+                    dtmp = 1.j * (tmp[:, 1].real + tmp[:, 0].imag) \
+                            + tmp[:, 0].real
                 tmp = dtmp
 
             data_fh.append(tmp)
@@ -289,7 +293,7 @@ def read_diagram(lookup_cnfg, lookup_qn, diagram, T, directory, verbose=0):
 
 
 def read(process, path, T, diagrams, directories, sta_cnfg, end_cnfg, del_cnfg, missing_configs,
-         p_cm, p_cutoff, gamma_input, verbose):
+         p_cm, p_cutoff, gamma_input, use_imim, verbose):
 
     for diagram, directory in zip(diagrams, directories):
 
@@ -309,7 +313,7 @@ def read(process, path, T, diagrams, directories, sta_cnfg, end_cnfg, del_cnfg, 
             process=process,
             verbose=verbose)
 
-        data = read_diagram(lookup_cnfg, lookup_qn, diagram, T, directory, verbose)
+        data = read_diagram(lookup_cnfg, lookup_qn, diagram, T, directory, use_imim, verbose)
 
         # write data
         # TODO: Writing into same file only works in append mode

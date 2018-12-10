@@ -27,7 +27,7 @@ def main(process, flag, sta_cnfg, end_cnfg, del_cnfg, missing_configs, ensemble,
          T, list_of_pcm_sq, default_list_of_irreps, p_cutoff, default_list_of_pcm, gamma_input, default_list_of_q,
          default_beta, list_of_diagrams, directories, path_to_sc, path_to_sc_2, outpath,
          plot_p_and_g, plot_pcm_and_mu, plot_avg, plot_experimental, logscale,
-         bootstrapsize, continuum_basis_string, verbose, **kwargs):
+         bootstrapsize, use_imim, continuum_basis_string, verbose, **kwargs):
 
     # Angular momentum for particles of interest
     if process == 'rho':
@@ -57,6 +57,7 @@ def main(process, flag, sta_cnfg, end_cnfg, del_cnfg, missing_configs, ensemble,
                 p_cm_sq,
                 p_cutoff,
                 gamma_input,
+                use_imim,
                 verbose)
 
         ########################################################################

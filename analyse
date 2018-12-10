@@ -19,6 +19,8 @@ if __name__ == '__main__':
         # verbosity is also parsed
         parser.add_argument("-v", "--verbose", action="count", default=0, \
                                                        help="increase output verbosity")
+        parser.add_argument("--use-imim", action="store_true", \
+            help="Assume that of 2pt function contains physically relevant information")
         # TODO: Only allow certain options, specify standard behavior, etc.
         parser.add_argument("-b", "--basis", choices=['cartesian', 'cyclic', \
                               'cyclic-christian', 'dudek', 'marcus-cov', 'marcus-con', 'test'], \
@@ -28,13 +30,14 @@ if __name__ == '__main__':
         parser.add_argument('-d', '--diagram', nargs='+')
     
         args = parser.parse_args()
-
+        
         verbose = args.verbose
+        use_imim = args.use_imim
         continuum_basis_string = args.basis
         list_of_pcm_sq = args.momentum
         list_of_diagrams = args.diagram
 
-        main(continuum_basis_string=continuum_basis_string, verbose=verbose, **infile.read(args.infile, list_of_pcm_sq, list_of_diagrams, verbose))
+        main(continuum_basis_string=continuum_basis_string, use_imim=use_imim, verbose=verbose, **infile.read(args.infile, list_of_pcm_sq, list_of_diagrams, verbose))
  
     except KeyboardInterrupt:
         pass
