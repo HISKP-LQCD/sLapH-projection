@@ -182,7 +182,7 @@ def set_groupname(diagram, s):
             + '_uuuu_p%1i%1i%1i.d000.g%1i' % (p_so_0 + (g_so_0,)) \
             + '_p%1i%1i%1i.d000.g%1i' % (p_si_0 + (g_si_0,)) \
             + '_p%1i%1i%1i.d000.g%1i' % (p_si_1 + (g_si_1,)) \
-            + '_p%1i%1i%1i.d000.g%1i' % (p_so_1 + (g_so_0,))
+            + '_p%1i%1i%1i.d000.g%1i' % (p_so_1 + (g_so_1,))
     else:
         print 'in set_groupname: diagram unknown! Quantum numbers corrupted.'
         return
